@@ -80,7 +80,7 @@ public:
 	GameGui();
 	~GameGui();
 
-	void Draw(ControlDrawData* cdd=NULL);
+	void Draw(ControlDrawData* cdd=nullptr);
 	void Update(float dt);
 	bool NeedCursor() const;
 	void Event(GuiEvent e);
@@ -94,7 +94,7 @@ public:
 	{
 		return !HavePanelOpen();
 	}
-	void ClosePanels();
+	void ClosePanels(bool close_mp_box=false);
 	void LoadData(LoadTasks tasks);
 	void GetGamePanels(vector<GamePanel*>& panels);
 	OpenPanel GetOpenPanel();

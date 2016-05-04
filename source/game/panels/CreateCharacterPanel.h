@@ -65,7 +65,7 @@ public:
 
 	explicit CreateCharacterPanel(DialogInfo& info);
 	~CreateCharacterPanel();
-	void Draw(ControlDrawData* cdd = NULL);
+	void Draw(ControlDrawData* cdd = nullptr);
 	void Update(float dt);
 	void Event(GuiEvent e);
 
@@ -80,7 +80,7 @@ public:
 	// results
 	CreatedCharacter cc;
 	Class clas;
-	string name;
+	string player_name;
 	Unit* unit;
 	int hair_index;
 
@@ -132,7 +132,6 @@ private:
 	// unit
 	DOLL_ANIM anim, anim2;
 	float t, dist;
-	//int height;
 	// controls
 	Button btCancel, btNext, btBack, btCreate, btRandomSet;
 	CheckBox checkbox;

@@ -19,7 +19,7 @@ public:
 	};
 
 	explicit PickServerPanel(const DialogInfo& info);
-	void Draw(ControlDrawData* cdd = NULL);
+	void Draw(ControlDrawData* cdd = nullptr);
 	void Update(float dt);
 	void Event(GuiEvent e);
 	
@@ -29,5 +29,5 @@ public:
 	Grid grid;
 	vector<ServerData> servers;
 	float ping_timer;
-	cstring txUnknownPacket, txUnknownResponse, txUnknownResponse2, txBrokenResponse;
+	cstring txUnknownResponse, txUnknownResponse2, txBrokenResponse;
 };

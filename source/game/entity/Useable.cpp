@@ -10,7 +10,7 @@
 Animesh* Useable::GetMesh() const
 {
 	Obj* base_obj = GetBaseObj();
-	if(IS_SET(base_obj->flagi2, OBJ2_VARIANT))
+	if(IS_SET(base_obj->flags2, OBJ2_VARIANT))
 	{
 		assert(in_range(variant, 0, (int)base_obj->variant->count));
 		return base_obj->variant->entries[variant].mesh;
@@ -22,62 +22,67 @@ Animesh* Useable::GetMesh() const
 //=================================================================================================
 void Useable::Save(HANDLE file, bool local)
 {
-	WriteFile(file, &type, sizeof(type), &tmp, NULL);
-	WriteFile(file, &pos, sizeof(pos), &tmp, NULL);
-	WriteFile(file, &rot, sizeof(rot), &tmp, NULL);
-	WriteFile(file, &netid, sizeof(netid), &tmp, NULL);
+	WriteFile(file, &type, sizeof(type), &tmp, nullptr);
+	WriteFile(file, &pos, sizeof(pos), &tmp, nullptr);
+	WriteFile(file, &rot, sizeof(rot), &tmp, nullptr);
+	WriteFile(file, &netid, sizeof(netid), &tmp, nullptr);
 	Obj* base_obj = GetBaseObj();
-	if(IS_SET(base_obj->flagi2, OBJ2_VARIANT))
-		WriteFile(file, &variant, sizeof(variant), &tmp, NULL);
+	if(IS_SET(base_obj->flags2, OBJ2_VARIANT))
+		WriteFile(file, &variant, sizeof(variant), &tmp, nullptr);
 
 	if(local)
 	{
 		int refid = (user ? user->refid : -1);
-		WriteFile(file, &refid, sizeof(refid), &tmp, NULL);
+		WriteFile(file, &refid, sizeof(refid), &tmp, nullptr);
 	}
 }
 
 //=================================================================================================
 void Useable::Load(HANDLE file, bool local)
 {
-	ReadFile(file, &type, sizeof(type), &tmp, NULL);
-	ReadFile(file, &pos, sizeof(pos), &tmp, NULL);
-	ReadFile(file, &rot, sizeof(rot), &tmp, NULL);
-	ReadFile(file, &netid, sizeof(netid), &tmp, NULL);
-	if(LOAD_VERSION >= V_0_2_20 && IS_SET(GetBaseObj()->flagi2, OBJ2_VARIANT))
-		ReadFile(file, &variant, sizeof(variant), &tmp, NULL);
+	ReadFile(file, &type, sizeof(type), &tmp, nullptr);
+	ReadFile(file, &pos, sizeof(pos), &tmp, nullptr);
+	ReadFile(file, &rot, sizeof(rot), &tmp, nullptr);
+	ReadFile(file, &netid, sizeof(netid), &tmp, nullptr);
+	if(LOAD_VERSION >= V_0_2_20 && IS_SET(GetBaseObj()->flags2, OBJ2_VARIANT))
+		ReadFile(file, &variant, sizeof(variant), &tmp, nullptr);
 	else
 		variant = -1;
 
 	if(local)
 	{
 		int refid;
-		ReadFile(file, &refid, sizeof(refid), &tmp, NULL);
+		ReadFile(file, &refid, sizeof(refid), &tmp, nullptr);
 		user = Unit::GetByRefid(refid);
 	}
 	else
-		user = NULL;
+		user = nullptr;
 }
 
 //=================================================================================================
-void Useable::Write(BitStream& s) const
+void Useable::Write(BitStream& stream) const
 {
-	s.Write(netid);
-	WriteStruct(s, pos);
-	s.Write(rot);
-	s.WriteCasted<byte>(type);
-	s.WriteCasted<byte>(variant);
+	stream.Write(netid);
+	stream.Write(pos);
+	stream.Write(rot);
+	stream.WriteCasted<byte>(type);
+	stream.WriteCasted<byte>(variant);
 }
 
 //=================================================================================================
-bool Useable::Read(BitStream& s)
+bool Useable::Read(BitStream& stream)
 {
-	if(!s.Read(netid) ||
-		!ReadStruct(s, pos) ||
-		!s.Read(rot) ||
-		!s.ReadCasted<byte>(type) ||
-		!s.ReadCasted<byte>(variant))
+	if(!stream.Read(netid)
+		|| !stream.Read(pos)
+		|| !stream.Read(rot)
+		|| !stream.ReadCasted<byte>(type)
+		|| !stream.ReadCasted<byte>(variant))
 		return false;
-	user = NULL;
+	user = nullptr;
+	if(type >= U_MAX)
+	{
+		ERROR(Format("Invalid useable type %d.", type));
+		return false;
+	}
 	return true;
 }

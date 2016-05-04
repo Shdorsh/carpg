@@ -55,7 +55,7 @@ void Quest_Wanted::Start()
 	level = random(5, 15);
 	crazy = (rand2()%5 == 0);
 	clas = ClassInfo::GetRandomEvil();
-	target_unit = NULL;
+	target_unit = nullptr;
 	in_location = -1;
 }
 
@@ -72,7 +72,7 @@ DialogEntry* Quest_Wanted::GetDialog(int type2)
 		return wanted_end;
 	default:
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -106,18 +106,12 @@ void Quest_Wanted::SetProgress(int prog2)
 			name = game->txQuest[257];
 
 			// dodaj list
-			letter.ani = NULL;
-			letter.flags = ITEM_QUEST|ITEM_IMPORTANT|ITEM_TEX_ONLY;
+			const Item* base_item = FindItem("wanted_letter");
+			CreateItemCopy(letter, base_item);
 			letter.id = "$wanted_letter";
-			letter.mesh.clear();
 			letter.name = game->txQuest[258];
 			letter.refid = refid;
-			letter.tex = game->tListGonczy;
-			letter.type = IT_OTHER;
-			letter.value = 0;
-			letter.weight = 1;
 			letter.desc = Format(game->txQuest[259], level*100, unit_name.c_str());
-			letter.other_type = OtherItems;
 			game->current_dialog->pc->unit->AddItem(&letter, 1, true);
 
 			quest_index = game->quests.size();
@@ -134,7 +128,7 @@ void Quest_Wanted::SetProgress(int prog2)
 			if(game->IsOnline())
 			{
 				game->Net_AddQuest(refid);
-				game->Net_RegisterItem(&letter);
+				game->Net_RegisterItem(&letter, base_item);
 				if(!game->current_dialog->is_local)
 				{
 					game->Net_AddItem(game->current_dialog->pc, &letter, true);
@@ -154,7 +148,7 @@ void Quest_Wanted::SetProgress(int prog2)
 
 			Location& target = GetTargetLocation();
 			if(target.active_quest == this)
-				target.active_quest = NULL;
+				target.active_quest = nullptr;
 
 			msgs.push_back(Format(game->txQuest[261], unit_name.c_str()));
 			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
@@ -224,7 +218,7 @@ cstring Quest_Wanted::FormatString(const string& str)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -247,8 +241,8 @@ bool Quest_Wanted::OnTimeout(TimeoutType ttype)
 			game->RemoveUnit(game->ForLevel(in_location), target_unit);
 		}
 		else
-			target_unit->event_handler = NULL;
-		target_unit = NULL;
+			target_unit->event_handler = nullptr;
+		target_unit = nullptr;
 	}
 
 	msgs.push_back(game->txQuest[277]);
@@ -277,7 +271,7 @@ void Quest_Wanted::HandleUnitEvent(UnitEventHandler::TYPE type, Unit* unit)
 	{
 	case UnitEventHandler::SPAWN:
 		unit->hero->name = unit_name;
-		GetTargetLocation().active_quest = NULL;
+		GetTargetLocation().active_quest = nullptr;
 		target_unit = unit;
 		in_location = game->current_location;
 		break;
@@ -285,7 +279,7 @@ void Quest_Wanted::HandleUnitEvent(UnitEventHandler::TYPE type, Unit* unit)
 		if(!unit->hero->team_member)
 		{
 			SetProgress(Progress::Killed);
-			target_unit = NULL;
+			target_unit = nullptr;
 		}
 		break;
 	case UnitEventHandler::RECRUIT:
@@ -301,7 +295,7 @@ void Quest_Wanted::HandleUnitEvent(UnitEventHandler::TYPE type, Unit* unit)
 	case UnitEventHandler::LEAVE:
 		if(state == Quest::Failed)
 			((City*)game->locations[start_loc])->quest_captain = CityQuestState::Failed;
-		target_unit = NULL;
+		target_unit = nullptr;
 		break;
 	}
 }
@@ -329,11 +323,11 @@ void Quest_Wanted::Load(HANDLE file)
 	f >> level;
 	f >> crazy;
 	f >> clas;
-	if(LOAD_VERSION < V_DEVEL)
+	if(LOAD_VERSION < V_0_4)
 		clas = ClassInfo::OldToNew(clas);
 	f >> unit_name;
 	f >> target_unit;
-	if(LOAD_VERSION >= V_DEVEL)
+	if(LOAD_VERSION >= V_0_4)
 		f >> in_location;
 	else if(!target_unit || target_unit->hero->team_member)
 		in_location = -1;
@@ -350,19 +344,13 @@ void Quest_Wanted::Load(HANDLE file)
 	}
 
 	// list
-	letter.ani = NULL;
-	letter.flags = ITEM_QUEST|ITEM_IMPORTANT|ITEM_TEX_ONLY;
+	const Item* base_item = FindItem("wanted_letter");
+	CreateItemCopy(letter, base_item);
 	letter.id = "$wanted_letter";
-	letter.mesh.clear();
 	letter.name = game->txQuest[258];
 	letter.refid = refid;
-	letter.tex = game->tListGonczy;
-	letter.type = IT_OTHER;
-	letter.value = 0;
-	letter.weight = 1;
 	letter.desc = Format(game->txQuest[259], level*100, unit_name.c_str());
-	letter.other_type = OtherItems;
 
 	if(game->mp_load)
-		game->Net_RegisterItem(&letter);
+		game->Net_RegisterItem(&letter, base_item);
 }

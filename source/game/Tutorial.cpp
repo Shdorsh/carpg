@@ -126,9 +126,9 @@ void Game::StartTutorial()
 	in_tutorial = true;
 	tut_state = 0;
 	ttexts.clear();
-	tut_tarcza = NULL;
-	tut_tarcza2 = NULL;
-	chlanie_stan = 0;
+	tut_shield = nullptr;
+	tut_shield2 = nullptr;
+	contest_state = CONTEST_NOT_DONE;
 
 	// ekwipunek
 	pc->unit->ClearInventory();
@@ -148,7 +148,7 @@ void Game::StartTutorial()
 	current_location = 0;
 	open_location = 0;
 	location = loc;
-	city_ctx = NULL;
+	city_ctx = nullptr;
 	local_ctx_valid = true;
 	InsideLocationLevel& lvl = loc->GetLevelData();
 	lvl.w = lvl.h = 22;
@@ -241,12 +241,12 @@ void Game::StartTutorial()
 						}
 						break;
 					case 2:
-						tut_manekin = VEC3(2.f*x+1,0,2.f*y+1);
-						SpawnObject(local_ctx, FindObject("melee_target"), tut_manekin, PI/2);
+						tut_dummy = VEC3(2.f*x+1,0,2.f*y+1);
+						SpawnObject(local_ctx, FindObject("melee_target"), tut_dummy, PI/2);
 						break;
 					case 3:
 						{
-							Unit* u = SpawnUnitNearLocation(local_ctx, VEC3(2.f*x+1,0,2.f*y+1), *FindUnitData("tut_goblin"), NULL, 1);
+							Unit* u = SpawnUnitNearLocation(local_ctx, VEC3(2.f*x+1,0,2.f*y+1), *FindUnitData("tut_goblin"), nullptr, 1);
 							u->rot = PI;
 							u->event_handler = &tut_unit_handler;
 						}
@@ -264,15 +264,15 @@ void Game::StartTutorial()
 					case 5:
 						{
 							Object* o = SpawnObject(local_ctx, FindObject("bow_target"), VEC3(2.f*x+1,0,2.f*y+1), -PI/2);
-							if(tut_tarcza)
-								tut_tarcza2 = o;
+							if(tut_shield)
+								tut_shield2 = o;
 							else
-								tut_tarcza = o;
+								tut_shield = o;
 						}
 						break;
 					case 6:
 						{
-							Unit* u = SpawnUnitNearLocation(local_ctx, VEC3(2.f*x+1,0,2.f*y+1), *FindUnitData("tut_czlowiek"), NULL, 1);
+							Unit* u = SpawnUnitNearLocation(local_ctx, VEC3(2.f*x+1,0,2.f*y+1), *FindUnitData("tut_czlowiek"), nullptr, 1);
 							u->rot = PI;
 						}
 						break;
@@ -317,7 +317,7 @@ void Game::StartTutorial()
 	SpawnDungeonColliders();
 	CreateDungeonMinimap();
 	AddPlayerTeam(VEC3(2.f*start_tile.x+1,0,2.f*start_tile.y+1), 0, false, true);
-	location_event_handler = NULL;
+	location_event_handler = nullptr;
 	SetMusic();
 	main_menu->visible = false;
 	game_gui->visible = true;
@@ -348,7 +348,7 @@ tut_state:
 void Game::UpdateTutorial()
 {
 	// atakowanie manekina
-	if(pc->unit->action == A_ATTACK && pc->unit->animation_state == 1 && !pc->unit->hitted && pc->unit->ani->GetProgress2() >= pc->unit->GetAttackFrame(1) && distance(pc->unit->pos, tut_manekin) < 5.f)
+	if(pc->unit->action == A_ATTACK && pc->unit->animation_state == 1 && !pc->unit->hitted && pc->unit->ani->GetProgress2() >= pc->unit->GetAttackFrame(1) && distance(pc->unit->pos, tut_dummy) < 5.f)
 	{
 		Animesh::Point* hitbox, *point;
 		hitbox = pc->unit->GetWeapon().ani->FindPoint("hit");
@@ -378,7 +378,7 @@ void Game::UpdateTutorial()
 		obox1.rot = m1;
 
 		// stwórz obrócony box
-		obox2.pos = tut_manekin;
+		obox2.pos = tut_dummy;
 		obox2.pos.y += 1.f;
 		obox2.size = VEC3(0.6f,2.f,0.6f);
 		D3DXMatrixIdentity(&obox2.rot);
@@ -435,10 +435,10 @@ void Game::UpdateTutorial()
 		if(it->state == 1 && distance(it->pos, pc->unit->pos) < 3.f)
 		{
 			DialogInfo info;
-			info.event = NULL;
+			info.event = nullptr;
 			info.name = "tut";
 			info.order = ORDER_TOP;
-			info.parent = NULL;
+			info.parent = nullptr;
 			info.pause = true;
 			info.text = it->text;
 			info.type = DIALOG_OK;
@@ -571,7 +571,7 @@ void Game::TutEvent(int id)
 			info.event = DialogEvent(this, &Game::EndOfTutorial);
 			info.name = "tut_end";
 			info.order = ORDER_TOP;
-			info.parent = NULL;
+			info.parent = nullptr;
 			info.pause = true;
 			info.text = txTut[9];
 			info.type = DIALOG_OK;

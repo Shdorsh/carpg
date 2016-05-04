@@ -85,7 +85,7 @@ void Quest_Crazies::SetProgress(int prog2)
 	case Progress::Finished: // schowano kamieñ do skrzyni
 		{
 			state = Quest::Completed;
-			GetTargetLocation().active_quest = NULL;
+			GetTargetLocation().active_quest = nullptr;
 
 			crazies_state = State::End;
 
@@ -110,7 +110,7 @@ cstring Quest_Crazies::FormatString(const string& str)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -137,7 +137,7 @@ void Quest_Crazies::Load(HANDLE file)
 {
 	Quest_Dungeon::Load(file);
 
-	if(LOAD_VERSION >= V_DEVEL)
+	if(LOAD_VERSION >= V_0_4)
 	{
 		GameReader f(file);
 

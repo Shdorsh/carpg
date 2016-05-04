@@ -54,6 +54,7 @@
       <PrecompiledHeaderFile>Pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>..\source;..\source\core;..\source\game;..\source\game\entity;..\source\game\generator;..\source\game\location;..\source\game\net;..\source\game\panels;..\source\game\quests;..\source\game\stats;..\source\gui;..\source\gui\dialogs;..\source\resource;..\source\inclue;..\external\Bullet\src;..\external\DirectX\Include;..\external\FastDelegate;..\external\FMod\inc;..\external\RakNet\Source;..\external\Visual Leak Detector\include;..\external\zlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -88,6 +89,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -114,6 +116,7 @@
   <ItemGroup>
     <ClInclude Include="..\source\core\Animesh.h" />
     <ClInclude Include="..\source\core\Base.h" />
+    <ClInclude Include="..\source\core\Config.h" />
     <ClInclude Include="..\source\core\Crc.h" />
     <ClInclude Include="..\source\core\Engine.h" />
     <ClInclude Include="..\source\core\KeyStates.h" />
@@ -128,6 +131,7 @@
     <ClInclude Include="..\source\core\Timer.h" />
     <ClInclude Include="..\source\core\Tokenizer.h" />
     <ClInclude Include="..\source\core\VertexDeclaration.h" />
+    <ClInclude Include="..\source\ErrorHandler.h" />
     <ClInclude Include="..\source\game\Collision.h" />
     <ClInclude Include="..\source\game\ConsoleCommands.h" />
     <ClInclude Include="..\source\game\Dialog.h" />
@@ -144,6 +148,7 @@
     <ClInclude Include="..\source\game\entity\HeroPlayerCommon.h" />
     <ClInclude Include="..\source\game\entity\HumanData.h" />
     <ClInclude Include="..\source\game\entity\ItemSlot.h" />
+    <ClInclude Include="..\source\game\entity\Light.h" />
     <ClInclude Include="..\source\game\entity\LoadTask.h" />
     <ClInclude Include="..\source\game\entity\Object.h" />
     <ClInclude Include="..\source\game\entity\PlayerController.h" />
@@ -154,7 +159,6 @@
     <ClInclude Include="..\source\game\entity\Unit.h" />
     <ClInclude Include="..\source\game\entity\Useable.h" />
     <ClInclude Include="..\source\game\Game.h" />
-    <ClInclude Include="..\source\game\Game3.h" />
     <ClInclude Include="..\source\game\GameCommon.h" />
     <ClInclude Include="..\source\game\GameFile.h" />
     <ClInclude Include="..\source\game\GameKeys.h" />
@@ -256,7 +260,6 @@
     <ClInclude Include="..\source\gui\CheckBox.h" />
     <ClInclude Include="..\source\gui\Container.h" />
     <ClInclude Include="..\source\gui\Control.h" />
-    <ClInclude Include="..\source\gui\Control2.h" />
     <ClInclude Include="..\source\gui\Dialog2.h" />
     <ClInclude Include="..\source\gui\dialogs\GetNumberDialog.h" />
     <ClInclude Include="..\source\gui\dialogs\GetTextDialog.h" />
@@ -285,6 +288,7 @@
     <ClCompile Include="..\source\core\Base.cpp" />
     <ClCompile Include="..\source\core\BoxToBox.cpp" />
     <ClCompile Include="..\source\core\Bresenham.cpp" />
+    <ClCompile Include="..\source\core\Config.cpp" />
     <ClCompile Include="..\source\core\Crc.cpp" />
     <ClCompile Include="..\source\core\Engine.cpp" />
     <ClCompile Include="..\source\core\ParticleSystem.cpp" />
@@ -295,6 +299,7 @@
     <ClCompile Include="..\source\core\TerrainTile.cpp" />
     <ClCompile Include="..\source\core\Timer.cpp" />
     <ClCompile Include="..\source\core\Tokenizer.cpp" />
+    <ClCompile Include="..\source\ErrorHandler.cpp" />
     <ClCompile Include="..\source\game\Ai.cpp" />
     <ClCompile Include="..\source\game\ConsoleCommands.cpp" />
     <ClCompile Include="..\source\game\Dialogi.cpp" />
@@ -309,6 +314,7 @@
     <ClCompile Include="..\source\game\entity\HeroData.cpp" />
     <ClCompile Include="..\source\game\entity\HumanData.cpp" />
     <ClCompile Include="..\source\game\entity\ItemSlot.cpp" />
+    <ClCompile Include="..\source\game\entity\Light.cpp" />
     <ClCompile Include="..\source\game\entity\Object.cpp" />
     <ClCompile Include="..\source\game\entity\PlayerController.cpp" />
     <ClCompile Include="..\source\game\entity\PlayerInfo.cpp" />
@@ -319,7 +325,6 @@
     <ClCompile Include="..\source\game\FOV.cpp" />
     <ClCompile Include="..\source\game\Game.cpp" />
     <ClCompile Include="..\source\game\Game2.cpp" />
-    <ClCompile Include="..\source\game\Game3.cpp" />
     <ClCompile Include="..\source\game\GameCommon.cpp" />
     <ClCompile Include="..\source\game\Game_LevelArea.cpp" />
     <ClCompile Include="..\source\game\generator\CityGenerator.cpp" />
@@ -430,6 +435,10 @@
     <ClCompile Include="..\source\gui\InputTextBox.cpp" />
     <ClCompile Include="..\source\gui\ListBox.cpp" />
     <ClCompile Include="..\source\gui\MenuList.cpp" />
+    <ClCompile Include="..\source\gui\NewGui.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\source\gui\Scrollbar.cpp" />
     <ClCompile Include="..\source\gui\Slider.cpp" />
     <ClCompile Include="..\source\gui\StaticText.cpp" />

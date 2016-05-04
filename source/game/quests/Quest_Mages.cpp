@@ -154,16 +154,16 @@ void Quest_Mages::SetProgress(int prog2)
 			game->quest_mages2->scholar = game->current_dialog->talker;
 			game->quest_mages2->mages_state = Quest_Mages2::State::ScholarWaits;
 
-			GetTargetLocation().active_quest = NULL;
+			GetTargetLocation().active_quest = nullptr;
 
 			game->AddReward(1500);
 			msgs.push_back(game->txQuest[168]);
 			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
 			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-			if(!game->plotka_questowa[P_MAGOWIE])
+			if(!game->quest_rumor[P_MAGOWIE])
 			{
-				game->plotka_questowa[P_MAGOWIE] = true;
-				--game->ile_plotek_questowych;
+				game->quest_rumor[P_MAGOWIE] = true;
+				--game->quest_rumor_counter;
 			}
 
 			if(game->IsOnline())
@@ -180,8 +180,8 @@ void Quest_Mages::SetProgress(int prog2)
 			q->quest_index = game->quests.size();
 			game->quests.push_back(q);
 			RemoveElementTry(game->unaccepted_quests, (Quest*)q);
-			game->plotka_questowa[P_MAGOWIE2] = false;
-			++game->ile_plotek_questowych;
+			game->quest_rumor[P_MAGOWIE2] = false;
+			++game->quest_rumor_counter;
 			q->msgs.push_back(Format(game->txQuest[170], game->day+1, game->month+1, game->year));
 			q->msgs.push_back(game->txQuest[171]);
 			game->game_gui->journal->NeedUpdate(Journal::Quests, q->quest_index);
@@ -205,7 +205,7 @@ cstring Quest_Mages::FormatString(const string& str)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -501,7 +501,7 @@ void Quest_Mages2::Start()
 	quest_id = Q_MAGES2;
 	talked = Quest_Mages2::Talked::No;
 	mages_state = State::None;
-	scholar = NULL;
+	scholar = nullptr;
 	paid = false;
 }
 
@@ -675,7 +675,7 @@ void Quest_Mages2::SetProgress(int prog2)
 			msgs.push_back(game->txQuest[181]);
 			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
 			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-			GetTargetLocation().active_quest = NULL;
+			GetTargetLocation().active_quest = nullptr;
 			target_loc = game->CreateLocation(L_DUNGEON, VEC2(0,0), -64.f, MAGE_TOWER, SG_MAGOWIE_I_GOLEMY);
 			Location& loc = GetTargetLocation();
 			loc.state = LS_HIDDEN;
@@ -791,7 +791,7 @@ void Quest_Mages2::SetProgress(int prog2)
 			Unit* u = game->current_dialog->talker;
 			game->RemoveTeamMember(u);
 			u->hero->mode = HeroData::Leave;
-			scholar = NULL;
+			scholar = nullptr;
 
 			if(game->IsOnline())
 				game->Net_UpdateQuest(refid);
@@ -800,22 +800,22 @@ void Quest_Mages2::SetProgress(int prog2)
 	case Progress::Finished:
 		// odebrano nagrodê
 		{
-			GetTargetLocation().active_quest = NULL;
+			GetTargetLocation().active_quest = nullptr;
 			state = Quest::Completed;
 			if(scholar)
 			{
 				scholar->temporary = true;
-				scholar = NULL;
+				scholar = nullptr;
 			}
 			game->AddReward(5000);
 			msgs.push_back(game->txQuest[188]);
 			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
 			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
 			game->EndUniqueQuest();
-			if(!game->plotka_questowa[P_MAGOWIE2])
+			if(!game->quest_rumor[P_MAGOWIE2])
 			{
-				game->plotka_questowa[P_MAGOWIE2] = true;
-				--game->ile_plotek_questowych;
+				game->quest_rumor[P_MAGOWIE2] = true;
+				--game->quest_rumor_counter;
 			}
 
 			if(game->IsOnline())
@@ -851,7 +851,7 @@ cstring Quest_Mages2::FormatString(const string& str)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -886,13 +886,13 @@ void Quest_Mages2::HandleUnitEvent(UnitEventHandler::TYPE type, Unit* unit)
 		{
 			unit->ApplyHumanData(hd_mage);
 			mages_state = State::MageLeft;
-			scholar = NULL;
+			scholar = nullptr;
 		}
 	}
 	else if(unit->data->id == "q_magowie_boss" && type == UnitEventHandler::DIE && prog != Progress::KilledBoss)
 	{
 		SetProgress(Progress::KilledBoss);
-		unit->event_handler = NULL;
+		unit->event_handler = nullptr;
 	}
 }
 
@@ -928,7 +928,7 @@ void Quest_Mages2::Load(HANDLE file)
 	else
 		talked = Talked::No;
 
-	if(LOAD_VERSION >= V_DEVEL)
+	if(LOAD_VERSION >= V_0_4)
 	{
 		f >> mages_state;
 		f >> days;

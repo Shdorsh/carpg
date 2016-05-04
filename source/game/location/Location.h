@@ -71,6 +71,8 @@ struct Portal
 	int target_loc; // docelowa lokacja
 	Portal* next_portal;
 
+	static const int MIN_SIZE = 17;
+
 	void Save(HANDLE file);
 	void Load(Location* loc, HANDLE file);
 
@@ -102,7 +104,7 @@ struct Location : public ILevel
 	bool outside; // czy poziom jest otwarty
 	bool dont_clean;
 
-	explicit Location(bool outside) : active_quest(NULL), last_visit(-1), reset(false), state(LS_UNKNOWN), outside(outside), st(0), spawn(SG_BRAK), portal(NULL), dont_clean(false)
+	explicit Location(bool outside) : active_quest(nullptr), last_visit(-1), reset(false), state(LS_UNKNOWN), outside(outside), st(0), spawn(SG_BRAK), portal(nullptr), dont_clean(false)
 	{
 
 	}
@@ -146,7 +148,7 @@ struct Location : public ILevel
 	}
 
 	virtual void BuildRefidTable() = 0;
-	virtual bool FindUnit(Unit* unit, int* level = NULL) = 0;
+	virtual bool FindUnit(Unit* unit, int* level = nullptr) = 0;
 	virtual Unit* FindUnit(UnitData* data, int& at_level) = 0;
 
 	virtual LOCATION_TOKEN GetToken() const
@@ -154,6 +156,9 @@ struct Location : public ILevel
 		return LT_NULL;
 	}
 	Portal* GetPortal(int index);
+	Portal* TryGetPortal(int index) const;
+	void WritePortals(BitStream& stream) const;
+	bool ReadPortals(BitStream& stream, int at_level);
 
 	inline bool IsSingleLevel() const
 	{

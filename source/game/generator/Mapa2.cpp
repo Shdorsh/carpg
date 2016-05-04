@@ -265,18 +265,19 @@ namespace Mapa
 
 		// szukaj po³¹czeñ pomiêdzy pokojami/korytarzami
 		int index = 0;
-		for(vector<Room>::iterator it = opcje->rooms->begin(), end = opcje->rooms->end(); it != end; ++it, ++index)
+		for(Room& room : *opcje->rooms)
 		{
-			for(int x=1; x<it->size.x-1; ++x)
+			for(int x=1; x<room.size.x-1; ++x)
 			{
-				szukaj_polaczenia(it->pos.x+x, it->pos.y, index);
-				szukaj_polaczenia(it->pos.x+x, it->pos.y+it->size.y-1, index);
+				szukaj_polaczenia(room.pos.x+x, room.pos.y, index);
+				szukaj_polaczenia(room.pos.x+x, room.pos.y+room.size.y-1, index);
 			}
-			for(int y=1; y<it->size.y-1; ++y)
+			for(int y=1; y<room.size.y-1; ++y)
 			{
-				szukaj_polaczenia(it->pos.x, it->pos.y+y, index);
-				szukaj_polaczenia(it->pos.x+it->size.x-1, it->pos.y+y, index);
+				szukaj_polaczenia(room.pos.x, room.pos.y+y, index);
+				szukaj_polaczenia(room.pos.x+room.size.x-1, room.pos.y+y, index);
 			}
+			++index;
 		}
 
 		// po³¹cz korytarze
@@ -1579,7 +1580,7 @@ void generate_labirynth(Pole*& mapa, const INT2& size, const INT2& room_size, IN
 						}
 					}
 					++p;
-					if(p == size.x-1)
+					if(p == size.x)
 						p = 1;
 				}
 				while(p != start);
@@ -1612,7 +1613,7 @@ void generate_labirynth(Pole*& mapa, const INT2& size, const INT2& room_size, IN
 						}
 					}
 					++p;
-					if(p == size.x-1)
+					if(p == size.x)
 						p = 1;
 				}
 				while(p != start);
@@ -1645,7 +1646,7 @@ void generate_labirynth(Pole*& mapa, const INT2& size, const INT2& room_size, IN
 						}
 					}
 					++p;
-					if(p == size.x-1)
+					if(p == size.x)
 						p = 1;
 				}
 				while(p != start);
@@ -1678,7 +1679,7 @@ void generate_labirynth(Pole*& mapa, const INT2& size, const INT2& room_size, IN
 						}
 					}
 					++p;
-					if(p == size.x-1)
+					if(p == size.x)
 						p = 1;
 				}
 				while(p != start);
@@ -1686,6 +1687,8 @@ void generate_labirynth(Pole*& mapa, const INT2& size, const INT2& room_size, IN
 			break;
 		}
 	}
+	if(!ok)
+		throw "Failed to generate labirynth.";
 	mapa[stairs.x + stairs.y*size.x].type = SCHODY_GORA;
 
 	// ustal kierunek schodów
@@ -1739,7 +1742,7 @@ void generate_labirynth(Pole*& mapa, const INT2& size, const INT2& room_size, IN
 namespace Cave
 {
 	int size = 45, size2 = size*size;
-	bool* m1 = NULL, *m2 = NULL;
+	bool* m1 = nullptr, *m2 = nullptr;
 	int fill = 50;
 	int iter = 3;
 	int minx, miny, maxx, maxy;
@@ -2107,60 +2110,48 @@ extern DWORD tmp;
 //=================================================================================================
 void Room::Save(HANDLE file)
 {
-	WriteFile(file, &pos, sizeof(pos), &tmp, NULL);
-	WriteFile(file, &size, sizeof(size), &tmp, NULL);
+	WriteFile(file, &pos, sizeof(pos), &tmp, nullptr);
+	WriteFile(file, &size, sizeof(size), &tmp, nullptr);
 	uint ile = connected.size();
-	WriteFile(file, &ile, sizeof(ile), &tmp, NULL);
+	WriteFile(file, &ile, sizeof(ile), &tmp, nullptr);
 	if(ile)
-		WriteFile(file, &connected[0], sizeof(int)*ile, &tmp, NULL);
-	WriteFile(file, &target, sizeof(target), &tmp, NULL);
-	WriteFile(file, &corridor, sizeof(corridor), &tmp, NULL);
+		WriteFile(file, &connected[0], sizeof(int)*ile, &tmp, nullptr);
+	WriteFile(file, &target, sizeof(target), &tmp, nullptr);
+	WriteFile(file, &corridor, sizeof(corridor), &tmp, nullptr);
 }
 
 //=================================================================================================
 void Room::Load(HANDLE file)
 {
-	ReadFile(file, &pos, sizeof(pos), &tmp, NULL);
-	ReadFile(file, &size, sizeof(size), &tmp, NULL);
+	ReadFile(file, &pos, sizeof(pos), &tmp, nullptr);
+	ReadFile(file, &size, sizeof(size), &tmp, nullptr);
 	uint ile;
-	ReadFile(file, &ile, sizeof(ile), &tmp, NULL);
+	ReadFile(file, &ile, sizeof(ile), &tmp, nullptr);
 	connected.resize(ile);
 	if(ile)
-		ReadFile(file, &connected[0], sizeof(int)*ile, &tmp, NULL);
-	ReadFile(file, &target, sizeof(target), &tmp, NULL);
-	ReadFile(file, &corridor, sizeof(corridor), &tmp, NULL);
+		ReadFile(file, &connected[0], sizeof(int)*ile, &tmp, nullptr);
+	ReadFile(file, &target, sizeof(target), &tmp, nullptr);
+	ReadFile(file, &corridor, sizeof(corridor), &tmp, nullptr);
 }
 
 //=================================================================================================
-void Room::Write(BitStream& s) const
+void Room::Write(BitStream& stream) const
 {
-	WriteStruct(s, pos);
-	WriteStruct(s, size);
-	s.WriteCasted<byte>(connected.size());
-	for(int index : connected)
-		s.WriteCasted<byte>(index);
-	s.WriteCasted<byte>(target);
-	WriteBool(s, corridor);
+	stream.Write(pos);
+	stream.Write(size);
+	WriteVectorCast<byte, byte>(stream, connected);
+	stream.WriteCasted<byte>(target);
+	WriteBool(stream, corridor);
 }
 
 //=================================================================================================
-bool Room::Read(BitStream& s)
+bool Room::Read(BitStream& stream)
 {
-	byte count;
-	if(!ReadStruct(s, pos)
-		|| !ReadStruct(s, size)
-		|| !s.Read(count))
-		return false;
-	connected.resize(count);
-	for(byte i = 0; i<count; ++i)
-	{
-		if(!s.ReadCasted<byte>(connected[i]))
-			return false;
-	}
-	if(!s.ReadCasted<byte>(target)
-		|| !ReadBool(s, corridor))
-		return false;
-	return true;
+	return stream.Read(pos)
+		&& stream.Read(size)
+		&& ReadVectorCast<byte, byte>(stream, connected)
+		&& stream.ReadCasted<byte>(target)
+		&& ReadBool(stream, corridor);
 }
 
 // zwraca pole oznaczone ?
@@ -2222,36 +2213,4 @@ void ustaw_flagi(Pole* mapa, uint wh)
 	Mapa::opcje = &opcje;
 	Mapa::mapa = mapa;
 	Mapa::ustaw_flagi();
-}
-
-//=================================================================================================
-void Light::Save(FileWriter& f)
-{
-	f << pos;
-	f << color;
-	f << range;
-}
-
-//=================================================================================================
-void Light::Load(FileReader& f)
-{
-	f >> pos;
-	f >> color;
-	f >> range;
-}
-
-//=================================================================================================
-void Light::Write(BitStream& s) const
-{
-	WriteStruct(s, pos);
-	WriteStruct(s, color);
-	s.Write(range);
-}
-
-//=================================================================================================
-bool Light::Read(BitStream& s)
-{
-	return ReadStruct(s, pos)
-		&& ReadStruct(s, color)
-		&& s.Read(range);
 }

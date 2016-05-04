@@ -1,6 +1,5 @@
 ZNANE B£EDY:
 - wyszukiwanie œcie¿ek ai nie dzia³a zbyt dobrze i mog¹ siê zablokowaæ
-- rozmiar postaci czasami siê dziwnie zmienia
 - cz³onkowie dru¿yny ¿eby siê odblokowaæ przechodz¹ przez obiekty i inne jednostki
 - wydobywaniem rudy mo¿na zablokowaæ kogoœ kto tam stoi
 OMINIÊTE:
@@ -19,14 +18,14 @@ OMINIÊTE:
 //****************************************************
 POTRZEBA PRZYK£ADÓW:
 - zapyta³em gostka o miejsca i powiedzia³ o krypcie na zachód, a jest na wschód [to by³o w release, potrzeba wiêcej testów]
-- raz jeden z herosów mia³ NULL w items._Myfirst, doda³em logowanie gdy siê to wydarzy
+- raz jeden z herosów mia³ nullptr w items._Myfirst, doda³em logowanie gdy siê to wydarzy
 - sp³aci³em kredyt i mia³em -14 kredytu w MP
 - po zrekrutowaniu heros nie mia³ podœwietlanego nicka (darmowy?, po którejœ grze? po samouczku? nie darmowy?)
 ? madman skrzynia -> crash
 - ai look at angle nie jest clipowane, albo coœ?
 - jednostka po walce na arenie mia³a in_building 1, ale pozycjê przed aren¹, zcrashowa³o na FindLocalPath bo dystans by³ za du¿y
 - check unit ai error, bohater po walce na arenie, nie ma ai; czasami hero nie ma ai
-- crash na UpdateSpeechBoubbles, boubble->unit->ani = NULL
+- crash na UpdateSpeechBoubbles, boubble->unit->ani = nullptr
 - u leinnana po wczytaniu w mp nie by³o minimapy w mieœcie
 - brak synchronizacji terenu pomiêdzy klientem a serwerem
 - [Minister of Death] In sometimes happen in multiplayer that someone get stuck to the wall when he dies, making that person unable to revive,
@@ -42,23 +41,65 @@ POTRZEBA PRZYK£ADÓW:
 - crash w trail-particle (las? u leinana mp, ale u mnie byæ mo¿e sp)
 - b³¹d ¿e po powrocie do lokacji wyskakiwa³o ¿e postaæ nie u¿ywa obiektu, chyba naprawione, trzeba sprawdziæ
 - autojoin do wczytywanej gry, klient ma u siebie niegotowy, nie zawsze
-- crash20150202202832
-	I got another one while entering a dungeon. What's really special with this one is how I couldn't click the "ok" button. I had to use the task manager to close it.
 - po wy³¹czeniu gry zcrashowa³o (log by³ ju¿ zamkniêty), windowsowy b³¹d, u mnie i u piotrka (szkoda ¿e zamkn¹³em :S)
 - w karczmie po powrocie nie by³o jedzenia, w mieœcie
-? crash gdy piotrek gada³ z wiesniakiem
-	crash20150503195717.dmp crash20150503195717.txt
-	my_tile by³o 0x80000000, 0x80000000
-	testowanie w mieœcie, doda³em sprawdzanie, odpali siê w release na jakiœ czas i mo¿e wyskoczy;
-	sprawdzalem przez godzine w mp sam i nic sie nie stalo
 - showing item box in tutorial (and else?) cause fps drop to 18; can i redo this?
+- mp crash for leinnan friend (why is unknown, looks like corrupted packet)
+	add more checking and logging
+	? full dump
+	PrepareLevelData(net_stream);
+	HANDLE file = CreateFile(Format("f%u", net_stream.GetNumberOfBytesUsed()), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	WriteFile(file, net_stream.GetData(), net_stream.GetNumberOfBytesUsed(), &tmp, nullptr);
+	CloseHandle(file);
+- crash for Paradox Edge, need full dump
+- magic bullets and fireballs don't hit on client, aims ground, ? argh happened once & i can't reproduce it
+- sawmill, messanger spawned inside client
 //****************************************************
-? test item shares
-+ decline need to remove similar records (pc decline npc share, remove other)
-? play on release, play game & check if stats grow too fast/slow
-? mp + piotrek
-
-NEXT:
++ better timeout in MP when loading, server/client sends ping every 5 seconds, if not respond in X time it will disconnect
++ CANCEL_ACTION, maybe it can be differently, player send in normal update packet info about current action and if there is missmatch then server will take action
++ cheats -> devmode
++ new lobby, create character (joined together)
+	+ in left bottom new chat
+	+ in right bottom options
+	+ in middle there is player character and other characters, there is name in bottom of them and orb (color depends on status, gray - removed,
+		red - no character/creating, yellow-not ready,green-ready)
+	+ players that left and are in save are gray and transparent
+	+ there is some 3d background
+	+ players can reconnect and have their character remembered
+	+ create character have icons to the left what to pick
+	+ new lobby char png in doc
++ keep all files in save (what is text now will be header)
++ allow loading mp game witout exit to menu if players match
+	need to keep info about players in save, and current leader
+? test quests save & load
+- with big lag (there is limit to 0.3 dt) player can move thru units, doors, objects (like in deus ex, save game while moving into barrier and after saving
+	you are on other side)
+	- zombie attack animation end but attack is not complete, it will stay and do nothing
++ MP: better checking
+	ENTER_BUILDING, EXIT_BUILDING, LEAVE_LOCATION - need to be in area
+	TALK, LOOT_CHEST, LOOT_UNIT, PICKUP_ITEM, USE_DOOR - check distance
+	IDLE, CONSUME_ITEM, DROP_ITEM - need to do nothing else
+	GET_ITEM - check gold
+	WARP, TRAIN_MOVE, REST - need to be server side
+	RANDOM_NUMBER - server side, send player id
+	STAND_UP - check if can
+	LEAVE_LOCATION - check type & position
+	CLOSE_ENCOUNTER - check if can, clicking by client don't close for him, but after receiving replay
+	CHEAT_CHANGE_LEVEL, CHEAT_WARP_TO_STAIRS - check is city or smth
+	GIVE_GOLD - test & make it work (i think it's broken now)
+	TRAVEL, CHEAT_TRAVEL - check game state, test CHEAT_TRAVEL with 3 players
+	GAIN_STAT, STAT_CHANGED - check stat type
+	RemoveItem checking i_index
++ better MP packet handling
+	divide NetChange client and server
+	define layout for messages, use bigger items and uint (like Item, ItemCount, ItemSlot, ItemList), unit netid is checked and return Unit* (can be -1 too)
+	presave
++ translate messages from cmds that show in chat ?
++ tabs like in smite for whisper [system, dialogs, Tomashu]
++ remove logic from WorldMapGui and change IS_DEBUG to cheats
++ bitstream marking as eof but returning 0, checking at one place per object ?
++ propably i wrongly use fmodex, all music handles are always open
++ turning off cheat is not cheating
 + join Room target & corridor
 + loading datafiles in load screen, not before
 + divide Object to StaticObject and Object, this will allow fast loading of current level ?
@@ -83,6 +124,7 @@ NEXT:
 	+ dungeon objects - like objects but texture are from dungeon, can be split like door wall between two textures
 + using iterator for ForLevel
 + dialogs changed
++ better info about getting gold from dividing, from pay credit
 
 + quests extension:
 	+ wanted: move between locations, have some bad reputation (when that will be implemented), guards attacks him, can talk about
@@ -105,6 +147,7 @@ NEXT:
 + remove spell int id
 + magic trap run one of spells, not hardcoded for "fireball"
 + better item calculation
++ start arrow trail from back (currently its from start and there is large gap)
 
 + indoors different y (whole room)
 + cave different y
@@ -117,6 +160,10 @@ NEXT:
 + line
 + portal system
 + portals with textures
++ enemies inside inside building
+	- AI_HitReaction don't work inside
+	- CanSee
++ AI_Shout should work on units that lie on ground
 
 consumeable h_green_herb {
 	weight 0.2
@@ -131,6 +178,7 @@ consumeable h_green_herb {
 + item generator for items from file
 + new crystal armor mesh
 + arifact armors: gladiator, thief, antimagic, troll hide, blood crystal armor
+- if character is on ground leaving and going to other location will spawn him on ground and then stand up
 - da sie wlezc w kogos
 - ANGLE!
 + new weapons
@@ -164,6 +212,7 @@ consumeable h_green_herb {
 + GAME_KEY (unlock_cursor, open_menu)
 + shortcuts
 + actions
+	+ action panel GameGui::ShowPanel
 + don't include libs/pdb; allow user to compile dependencies
 + max skill/attribute 255
 + currently there is too small difference between classes, warrior 95 str at 20, barbarian 100, cleric 90; especialy for int/wis/cha
@@ -1396,3 +1445,10 @@ mo¿liwosc stworzenia zywiolaka o ksztalcie czlowieka
 + after entering city ai goes to shop to sell items, buy new etc
 + dialogs between npc when they share items
 + saving team shares
++ item sets: armor, weapon (dual weapons)
++ ai weapon sets (for example hero keeps fire axe & ice hammer for specialized fights)
++ hero preference profiles (warrior can be swordman, axeman, shieled, bower etc)
++ item class (light (mithril shield/armor)) that some ai profiles value (for example modifier x1.2 for value)
++ better IsBetterItem (skills, effects)
+- leaving game on world loading don't add player quit notification
++ unicode, Use Unicode Character Set

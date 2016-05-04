@@ -19,8 +19,11 @@ struct Door
 		Opening2,
 		Open,
 		Closing,
-		Closing2
+		Closing2,
+		Max
 	};
+
+	static const int MIN_SIZE = 31;
 
 	VEC3 pos;
 	float rot;
@@ -34,7 +37,7 @@ struct Door
 	AnimeshInstance* ani;
 	btCollisionObject* phy;
 
-	Door() : door2(false)
+	Door() : door2(false), ani(nullptr)
 	{
 	}
 	~Door()

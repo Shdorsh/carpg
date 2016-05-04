@@ -61,12 +61,12 @@ void Bullet::Load(FileReader& f)
 	if(BUF[0])
 		spell = FindSpell(BUF);
 	else
-		spell = NULL;
+		spell = nullptr;
 	f.ReadStringBUF();
 	if(BUF[0])
 		tex = Game::Get().LoadTex2(BUF);
 	else
-		tex.res = NULL;
+		tex.res = nullptr;
 	f >> refid;
 	trail = TrailParticleEmitter::GetByRefid(refid);
 	f >> refid;
@@ -74,7 +74,7 @@ void Bullet::Load(FileReader& f)
 	f >> refid;
 	pe = ParticleEmitter::GetByRefid(refid);
 	f >> remove;
-	if(LOAD_VERSION >= V_DEVEL)
+	if(LOAD_VERSION >= V_0_4)
 	{
 		f >> level;
 		f >> backstab;

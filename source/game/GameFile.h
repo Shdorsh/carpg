@@ -19,7 +19,7 @@ public:
 
 	inline void LoadArtifact(const Item*& item)
 	{
-		if(LOAD_VERSION >= V_DEVEL)
+		if(LOAD_VERSION >= V_0_4)
 			operator >> (item);
 		else
 		{
@@ -103,7 +103,7 @@ public:
 
 	inline void operator << (const Item* item)
 	{
-		if(item != NULL)
+		if(item != nullptr)
 			WriteString1(item->id);
 		else
 			Write<byte>(0);

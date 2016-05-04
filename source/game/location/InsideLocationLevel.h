@@ -29,7 +29,7 @@ struct InsideLocationLevel : public LevelArea
 	int staircase_up_dir, staircase_down_dir;
 	bool staircase_down_in_wall;
 
-	InsideLocationLevel() : map(NULL)
+	InsideLocationLevel() : map(nullptr)
 	{
 
 	}
@@ -97,13 +97,18 @@ struct InsideLocationLevel : public LevelArea
 			if((*it)->pt == pt)
 				return *it;
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	inline bool IsTileVisible(const VEC3& pos) const
 	{
 		INT2 pt = pos_to_pt(pos);
 		return IS_SET(map[pt(w)].flags, Pole::F_ODKRYTE);
+	}
+
+	inline bool IsValidWalkPos(const VEC3P& pos, float radius) const
+	{
+		return !(pos.x < 2.f+radius || pos.y < 2.f+radius || pos.x > 2.f*w-2.f-radius || pos.y > 2.f*h-2.f-radius);
 	}
 
 	// sprawdza czy pole le¿y przy œcianie, nie uwzglêdnia na ukos, nie mo¿e byæ na krawêdzi mapy!

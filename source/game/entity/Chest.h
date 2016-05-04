@@ -29,10 +29,17 @@ struct Chest
 	int netid;
 	bool looted; // czy skrzynia jest ograbiana - nie trzeba zapisywaæ
 
+	static const int MIN_SIZE = 20;
+
+	Chest() : ani(nullptr)
+	{
+
+	}
 	~Chest()
 	{
 		delete ani;
 	}
+
 	inline bool AddItem(const Item* item, uint count, uint team_count)
 	{
 		return InsertItem(items, item, count, team_count);

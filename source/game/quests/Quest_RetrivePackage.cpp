@@ -11,7 +11,7 @@ DialogEntry retrive_package_start[] = {
 	TALK2(50),
 	CHOICE(51),
 		SET_QUEST_PROGRESS(Quest_RetrivePackage::Progress::Started),
-		IF_SPECIAL("czy_oboz"),
+		IF_SPECIAL("is_camp"),
 			TALK2(52),
 		ELSE,
 			TALK2(53),
@@ -66,7 +66,7 @@ DialogEntry* Quest_RetrivePackage::GetDialog(int type2)
 		return retrive_package_end;
 	default:
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -94,16 +94,11 @@ void Quest_RetrivePackage::SetProgress(int prog2)
 
 			cstring who = (loc.type == L_CITY ? game->txForMayor : game->txForSoltys);
 
-			parcel.name = Format(game->txQuest[8], who, loc.name.c_str());
-			parcel.type = IT_OTHER;
-			parcel.weight = 10;
-			parcel.value = 0;
-			parcel.flags = ITEM_QUEST|ITEM_DONT_DROP|ITEM_IMPORTANT|ITEM_TEX_ONLY;
+			const Item* base_item = FindItem("parcel");
+			CreateItemCopy(parcel, base_item);
 			parcel.id = "$stolen_parcel";
-			parcel.mesh.clear();
-			parcel.tex = game->tPaczka;
+			parcel.name = Format(game->txQuest[8], who, loc.name.c_str());
 			parcel.refid = refid;
-			parcel.other_type = OtherItems;
 			unit_to_spawn = FindUnitData("bandit_hegemon_q");
 			unit_spawn_level = -3;
 			spawn_item = Quest_Dungeon::Item_GiveSpawned;
@@ -137,7 +132,7 @@ void Quest_RetrivePackage::SetProgress(int prog2)
 			if(game->IsOnline())
 			{
 				game->Net_AddQuest(refid);
-				game->Net_RegisterItem(&parcel);
+				game->Net_RegisterItem(&parcel, base_item);
 				if(now_known)
 					game->Net_ChangeLocationState(target_loc, false);
 			}
@@ -153,7 +148,7 @@ void Quest_RetrivePackage::SetProgress(int prog2)
 			{
 				Location& loc = *game->locations[target_loc];
 				if(loc.active_quest == this)
-					loc.active_quest = NULL;
+					loc.active_quest = nullptr;
 			}
 
 			msgs.push_back(game->txQuest[24]);
@@ -177,7 +172,7 @@ void Quest_RetrivePackage::SetProgress(int prog2)
 			{
 				Location& loc = *game->locations[target_loc];
 				if(loc.active_quest == this)
-					loc.active_quest = NULL;
+					loc.active_quest = nullptr;
 			}
 
 			msgs.push_back(game->txQuest[25]);
@@ -210,7 +205,7 @@ cstring Quest_RetrivePackage::FormatString(const string& str)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -256,7 +251,7 @@ void Quest_RetrivePackage::Save(HANDLE file)
 	Quest_Dungeon::Save(file);
 
 	if(prog != Progress::Finished)
-		WriteFile(file, &from_loc, sizeof(from_loc), &tmp, NULL);
+		WriteFile(file, &from_loc, sizeof(from_loc), &tmp, nullptr);
 }
 
 //=================================================================================================
@@ -266,22 +261,17 @@ void Quest_RetrivePackage::Load(HANDLE file)
 
 	if(prog != Progress::Finished)
 	{
-		ReadFile(file, &from_loc, sizeof(from_loc), &tmp, NULL);
+		ReadFile(file, &from_loc, sizeof(from_loc), &tmp, nullptr);
 
+		const Item* base_item = FindItem("parcel");
 		Location& loc = *game->locations[start_loc];
-		parcel.name = Format(game->txQuest[8], loc.type == L_CITY ? game->txForMayor : game->txForSoltys, loc.name.c_str());
-		parcel.type = IT_OTHER;
-		parcel.weight = 10;
-		parcel.value = 0;
-		parcel.flags = ITEM_QUEST | ITEM_DONT_DROP | ITEM_IMPORTANT | ITEM_TEX_ONLY;
+		CreateItemCopy(parcel, base_item);
 		parcel.id = "$stolen_parcel";
-		parcel.mesh.clear();
-		parcel.tex = game->tPaczka;
+		parcel.name = Format(game->txQuest[8], loc.type == L_CITY ? game->txForMayor : game->txForSoltys, loc.name.c_str());
 		parcel.refid = refid;
-		parcel.other_type = OtherItems;
 
 		if(game->mp_load)
-			game->Net_RegisterItem(&parcel);
+			game->Net_RegisterItem(&parcel, base_item);
 
 		item_to_give[0] = &parcel;
 		unit_to_spawn = FindUnitData("bandit_hegemon_q");

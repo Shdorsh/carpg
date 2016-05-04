@@ -57,7 +57,7 @@ void Game::AddCommands()
 	cmds.push_back(ConsoleCommand(CMD_HEALUNIT, "healunit", "heal unit in front of player", F_GAME|F_CHEAT));
 	cmds.push_back(ConsoleCommand(CMD_SUICIDE, "suicide", "kill player", F_GAME|F_CHEAT));
 	cmds.push_back(ConsoleCommand(CMD_CITIZEN, "citizen", "citizens/crazies don't attack player or his team", F_GAME|F_CHEAT|F_WORLD_MAP));
-	cmds.push_back(ConsoleCommand(CMD_CHEATS, "cheats", "cheats mode (cheats 0/1)", F_GAME|F_SERVER|F_WORLD_MAP|F_NO_ECHO));
+	cmds.push_back(ConsoleCommand(CMD_CHEATS, "cheats", "cheats mode (cheats 0/1)", F_GAME|F_SERVER|F_WORLD_MAP|F_NO_ECHO|F_MENU));
 	cmds.push_back(ConsoleCommand(CMD_SCREENSHOT, "screenshot", "save screenshot", F_ANYWHERE));
 	cmds.push_back(ConsoleCommand(CMD_SCARE, "scare", "enemies escape", F_GAME|F_CHEAT));
 	cmds.push_back(ConsoleCommand(CMD_INVISIBLE, "invisible", "ai can't see player (invisible 0/1)", F_GAME|F_CHEAT|F_NO_ECHO));
@@ -90,8 +90,9 @@ void Game::AddCommands()
 	cmds.push_back(ConsoleCommand(CMD_BREAK_ACTION, "break_action", "break unit current action ('break 1' targets self)", F_GAME|F_CHEAT));
 	cmds.push_back(ConsoleCommand(CMD_FALL, "fall", "unit fall on ground for some time ('fall 1' targets self)", F_GAME|F_CHEAT));
 	cmds.push_back(ConsoleCommand(CMD_RELOAD_SHADERS, "reload_shaders", "reload shaders", F_ANYWHERE|F_WORLD_MAP));
-	cmds.push_back(ConsoleCommand(CMD_TILE_INFO, "tile_info", "display info about map tile", F_GAME));
-	cmds.push_back(ConsoleCommand(CMD_SET_SEED, "set_seed", "set randomness seed", F_ANYWHERE|F_WORLD_MAP));
+	cmds.push_back(ConsoleCommand(CMD_TILE_INFO, "tile_info", "display info about map tile", F_GAME|F_CHEAT));
+	cmds.push_back(ConsoleCommand(CMD_SET_SEED, "set_seed", "set randomness seed", F_ANYWHERE|F_WORLD_MAP|F_CHEAT));
+	cmds.push_back(ConsoleCommand(CMD_CRASH, "crash", "crash game to death!", F_ANYWHERE|F_WORLD_MAP|F_CHEAT));
 }
 
 //=================================================================================================
@@ -355,8 +356,6 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 								ile = t.MustGetInt();
 								if(ile < 1)
 									ile = 1;
-								else if(ile > 255)
-									ile = 255;
 							}
 							else
 								ile = 1;
@@ -366,7 +365,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 							else
 							{
 								NetChange& c = Add1(net_changes);
-								c.type = NetChange::CHEAT_ADD_ITEM;
+								c.type = NetChange::CHEAT_ADDITEM;
 								c.base_item = item;
 								c.ile = ile;
 								c.id = 0;
@@ -391,8 +390,6 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 								ile = t.MustGetInt();
 								if(ile < 1)
 									ile = 1;
-								else if(ile > 255)
-									ile = 255;
 							}
 							else
 								ile = 1;
@@ -402,7 +399,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 							else
 							{
 								NetChange& c = Add1(net_changes);
-								c.type = NetChange::CHEAT_ADD_ITEM;
+								c.type = NetChange::CHEAT_ADDITEM;
 								c.base_item = item;
 								c.ile = ile;
 								c.id = 1;
@@ -421,7 +418,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 						else
 						{
 							NetChange& c = Add1(net_changes);
-							c.type = NetChange::CHEAT_ADD_GOLD;
+							c.type = NetChange::CHEAT_ADDGOLD;
 							c.id = ile;
 						}
 					}
@@ -432,7 +429,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 					if(t.Next())
 					{
 						int ile = t.MustGetInt();
-						if(ile < 0)
+						if(ile <= 0)
 							MSG("Gold count must by positive!");
 						else
 						{
@@ -441,7 +438,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 							else
 							{
 								NetChange& c = Add1(net_changes);
-								c.type = NetChange::CHEAT_ADD_GOLD_TEAM;
+								c.type = NetChange::CHEAT_ADDGOLD_TEAM;
 								c.id = ile;
 							}
 						}
@@ -542,7 +539,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 							else
 							{
 								NetChange& c = Add1(net_changes);
-								c.type = (it->cmd == CMD_SETSTAT ? NetChange::CHEAT_SET_STAT : NetChange::CHEAT_MOD_STAT);
+								c.type = (it->cmd == CMD_SETSTAT ? NetChange::CHEAT_SETSTAT : NetChange::CHEAT_MODSTAT);
 								c.id = co;
 								c.ile = (skill ? 1 : 0);
 								c.i = num;
@@ -619,10 +616,10 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 							s += "\n";
 						}
 
-						HANDLE file = CreateFile("commands.txt", GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+						HANDLE file = CreateFile("commands.txt", GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 						if(file)
 						{
-							WriteFile(file, s.c_str(), s.length(), &tmp, NULL);
+							WriteFile(file, s.c_str(), s.length(), &tmp, nullptr);
 							CloseHandle(file);
 						}
 					}
@@ -721,7 +718,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 					if(selected_target)
 					{
 						if(IsLocal())
-							GiveDmg(GetContext(*pc->unit), NULL, selected_target->hpmax, *selected_target);
+							GiveDmg(GetContext(*pc->unit), nullptr, selected_target->hpmax, *selected_target);
 						else
 						{
 							NetChange& c = Add1(net_changes);
@@ -985,7 +982,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 						else
 						{
 							NetChange& c = Add1(net_changes);
-							c.type = NetChange::CHEAT_HEAL_UNIT;
+							c.type = NetChange::CHEAT_HEALUNIT;
 							c.unit = selected_target;
 						}
 					}
@@ -994,7 +991,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 					break;
 				case CMD_SUICIDE:
 					if(IsLocal())
-						GiveDmg(GetContext(*pc->unit), NULL, pc->unit->hpmax, *pc->unit);
+						GiveDmg(GetContext(*pc->unit), nullptr, pc->unit->hpmax, *pc->unit);
 					else
 						PushNetChange(NetChange::CHEAT_SUICIDE);
 					break;
@@ -1019,18 +1016,21 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 						{
 							int val = t.GetInt();
 							if(val == 0)
+							{
 								cheats = false;
+								debug_info = false;
+							}
 							else if(val == 1)
 							{
 								cheats = true;
 								used_cheats = true;
 
 								// zamykanie sekretnego portalu
-								if(!in_tutorial && sekret_stan >= SS2_WYGENEROWANO && sekret_stan != SS2_ZAMKNIETO)
+								if(!in_tutorial && secret_state >= SECRET_GENERATED && secret_state != SECRET_CLOSED)
 								{
-									if(current_location == sekret_gdzie2)
+									if(current_location == secret_where2)
 									{
-										if(sekret_stan == SS2_WALKA)
+										if(secret_state == SECRET_FIGHT)
 										{
 											for(vector<Unit*>::iterator it3 = at_arena.begin(), end3 = at_arena.end(); it3 != end3; ++it3)
 											{
@@ -1050,22 +1050,22 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 										}
 
 										LeaveLocation();
-										current_location = sekret_gdzie;
+										current_location = secret_where;
 										EnterLocation(2, 0, true);
 									}
 									else
 									{
-										Location* loc = locations[sekret_gdzie];
+										Location* loc = locations[secret_where];
 										delete loc->portal;
-										loc->portal = NULL;
+										loc->portal = nullptr;
 
-										if(current_location == sekret_gdzie && dungeon_level == 2 && IsOnline())
+										if(current_location == secret_where && dungeon_level == 2 && IsOnline())
 											PushNetChange(NetChange::CLOSE_PORTAL);
 									}
 
-									if(sekret_stan == SS2_WYGENEROWANO)
+									if(secret_state == SECRET_GENERATED)
 									{
-										MultiInsideLocation* multi = (MultiInsideLocation*)locations[sekret_gdzie];
+										MultiInsideLocation* multi = (MultiInsideLocation*)locations[secret_where];
 										InsideLocationLevel& lvl = multi->levels[2];
 										Room& r = lvl.rooms[0];
 										for(vector<Chest*>::iterator chest_it = lvl.chests.begin(), chest_end = lvl.chests.end(); chest_it != chest_end; ++chest_it)
@@ -1079,7 +1079,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 													{
 														if((*team_it)->IsPlayer() && (*team_it)->player->action == PlayerController::Action_LootChest && (*team_it)->player->action_chest == c)
 														{
-															BreakPlayerAction((*team_it)->player);
+															BreakAction(**team_it, false, true);
 															break;
 														}
 													}
@@ -1090,7 +1090,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 										}
 									}
 
-									sekret_stan = SS2_ZAMKNIETO;
+									secret_state = SECRET_CLOSED;
 								}
 							}
 #ifdef IS_DEV
@@ -1212,7 +1212,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 						int typ = 0;
 						if(t.Next())
 							typ = t.MustGetInt();
-						Unit* ignore = NULL;
+						Unit* ignore = nullptr;
 						if(before_player == BP_UNIT)
 							ignore = before_player_ptr.unit;
 						if(!Cheat_KillAll(typ, *pc->unit, ignore))
@@ -1319,7 +1319,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 								else
 								{
 									NetChange& c = Add1(net_changes);
-									c.type = NetChange::CHEAT_WARP_TO_BUILDING;
+									c.type = NetChange::CHEAT_WARP;
 									c.id = b;
 								}
 								ok = true;
@@ -1337,7 +1337,6 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 					{
 						const string& player_nick = t.MustGetItem();
 						int index = FindPlayerIndex(player_nick.c_str(), true);
-						t.Next();
 						if(index == -1)
 							MSG(Format("No player with nick '%s'.", player_nick.c_str()));
 						else if(t.NextLine())
@@ -1446,11 +1445,11 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 								AddMsg(Format("Leader changed to '%s'.", info.name.c_str()));
 							}
 							else
-								MSG("You need to enter leader nick.");
+								MSG("You can't change a leader.");
 						}
 					}
 					else
-						MSG("You can't change a leader.");
+						MSG("You need to enter leader nick.");
 					break;
 				case CMD_EXIT:
 					ExitToMenu();
@@ -1526,7 +1525,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 							break;
 						}
 
-						cstring error_text = NULL;
+						cstring error_text = nullptr;
 
 						for(vector<PlayerInfo>::iterator it = game_players.begin(), end = game_players.end(); it != end; ++it)
 						{
@@ -1761,7 +1760,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 								}
 							}
 
-							cstring error_text = NULL;
+							cstring error_text = nullptr;
 
 							for(vector<PlayerInfo>::iterator it = game_players.begin(), end = game_players.end(); it != end; ++it)
 							{
@@ -1838,18 +1837,9 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 						if(IsLocal())
 						{
 							if(it->cmd == CMD_HURT)
-								GiveDmg(GetContext(*u), NULL, 100.f, *u);
+								GiveDmg(GetContext(*u), nullptr, 100.f, *u);
 							else if(it->cmd == CMD_BREAK_ACTION)
-							{
-								BreakAction(*u);
-								if(IsOnline() && u->IsPlayer() && u->player != pc)
-								{
-									NetChangePlayer& c = Add1(net_changes_player);
-									c.type = NetChangePlayer::BREAK_ACTION;
-									c.pc = u->player;
-									GetPlayerInfo(c.pc).NeedUpdate();
-								}
-							}
+								BreakAction(*u, false, true);
 							else
 								UnitFall(*u);
 						}
@@ -1891,6 +1881,10 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 					next_seed_val[1] = t.MustGetInt();
 					t.Next();
 					next_seed_val[2] = t.MustGetInt();
+					break;
+				case CMD_CRASH:
+					void DoCrash();
+					DoCrash();
 					break;
 				default:
 					assert(0);

@@ -49,7 +49,7 @@ inline ITEM_SLOT ItemTypeToSlot(ITEM_TYPE type)
 }
 
 //-----------------------------------------------------------------------------
-inline bool IsValidItemSlot(ITEM_SLOT slot)
+inline bool IsValid(ITEM_SLOT slot)
 {
 	return slot >= IT_WEAPON && slot < SLOT_MAX;
 }
@@ -104,7 +104,7 @@ void LoadItemStatsText();
 
 inline bool IsEmpty(const ItemSlot& slot)
 {
-	return slot.item == NULL;
+	return slot.item == nullptr;
 }
 
 inline void RemoveNullItems(vector<ItemSlot>& items)

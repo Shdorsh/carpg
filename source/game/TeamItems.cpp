@@ -79,10 +79,10 @@ void Game::CheckTeamItemShares()
 			int index = 0;
 			for(ItemSlot& slot : other_unit->items)
 			{
-				if(slot.item && slot.item->IsWearable())
+				if(slot.item && slot.item->IsWearableByHuman())
 				{
 					// don't check if can't buy
-					if((slot.team_count == 0 && slot.item->value / 2 > unit->gold) || unit != other_unit)
+					if(slot.team_count == 0 && slot.item->value / 2 > unit->gold && unit != other_unit)
 						continue;
 
 					int value;
@@ -200,6 +200,8 @@ bool Game::CheckTeamShareItem(TeamShareItem& tsi)
 	}
 	else
 	{
+		while(index > 0 && index >= (int)tsi.from->items.size())
+			--index;
 		while(true)
 		{
 			--index;
@@ -235,7 +237,7 @@ void Game::UpdateTeamItemShares()
 
 	TeamShareItem& tsi = team_shares[team_share_id];
 	int state = 1; // 0-no need to talk, 1-ask about share, 2-wait for time to talk
-	DialogEntry* dialog = NULL;
+	DialogEntry* dialog = nullptr;
 	if(tsi.to->busy != Unit::Busy_No)
 		state = 2;
 	else if(!CheckTeamShareItem(tsi))
@@ -441,7 +443,7 @@ void Game::TeamShareDecline(DialogContext& ctx)
 		if(slot.team_count == 0 || (tsi.from->IsPlayer() && tsi.from != leader))
 		{
 			// player don't want to sell/share this, remove other questions about this item from him
-			for(vector<TeamShareItem>::iterator it = team_shares.begin()+share_id, end = team_shares.end(); it != end;)
+			for(vector<TeamShareItem>::iterator it = team_shares.begin()+share_id+1, end = team_shares.end(); it != end;)
 			{
 				if(tsi.from == it->from && tsi.item == it->item && CheckTeamShareItem(*it))
 				{
@@ -455,7 +457,7 @@ void Game::TeamShareDecline(DialogContext& ctx)
 		else
 		{
 			// leader don't want to share this item, remove other questions about this item from all npc (can only ask other pc's)
-			for(vector<TeamShareItem>::iterator it = team_shares.begin()+share_id, end = team_shares.end(); it != end;)
+			for(vector<TeamShareItem>::iterator it = team_shares.begin()+share_id+1, end = team_shares.end(); it != end;)
 			{
 				if((tsi.from == leader || !tsi.from->IsPlayer()) && tsi.item == it->item && CheckTeamShareItem(*it))
 				{
@@ -628,12 +630,26 @@ void Game::BuyTeamItems()
 		// kup pancerz
 		if(!u.HaveArmor())
 		{
+			cstring item_name;
 			if(IS_SET(u.data->flags, F_MAGE))
-				item = FindItem("al_mage");
-			else if(u.Get(Skill::LIGHT_ARMOR) > u.Get(Skill::HEAVY_ARMOR))
-				item = FindItem("al_leather");
+				item_name = "al_mage";
 			else
-				item = FindItem("am_chainmail");
+			{
+				switch(u.GetBestArmorSkill())
+				{
+				default:
+				case Skill::LIGHT_ARMOR:
+					item_name = "al_padded";
+					break;
+				case Skill::MEDIUM_ARMOR:
+					item_name = "am_hide";
+					break;
+				case Skill::HEAVY_ARMOR:
+					item_name = "am_breastplate";
+					break;
+				}
+			}
+			item = FindItem(item_name);
 		}
 		else
 			item = GetBetterItem(&u.GetArmor());
@@ -734,7 +750,7 @@ void Game::BuyTeamItems()
 	// buying points for cleric
 	if(quest_evil->evil_state == Quest_Evil::State::ClosingPortals || quest_evil->evil_state == Quest_Evil::State::KillBoss)
 	{
-		Unit* u = NULL;
+		Unit* u = nullptr;
 		UnitData* ud = FindUnitData("q_zlo_kaplan");
 		for(vector<Unit*>::iterator it = team.begin(), end = team.end(); it != end; ++it)
 		{
@@ -780,7 +796,7 @@ void Game::ValidateTeamItems()
 		IVector* iv = (IVector*)&(*it)->items;
 		if(!iv->_Myfirst)
 		{
-			ERROR(Format("Hero '%s' items._Myfirst = NULL!", (*it)->GetName()));
+			ERROR(Format("Hero '%s' items._Myfirst = nullptr!", (*it)->GetName()));
 			++errors;
 			continue;
 		}
@@ -790,7 +806,7 @@ void Game::ValidateTeamItems()
 		{
 			if(!it2->item)
 			{
-				ERROR(Format("Hero '%s' has NULL item at index %d.", (*it)->GetName(), index));
+				ERROR(Format("Hero '%s' has nullptr item at index %d.", (*it)->GetName(), index));
 				++errors;
 			}
 			else if(it2->item->IsStackable())
@@ -865,7 +881,7 @@ void Game::CheckUnitOverload(Unit& unit)
 		else
 			team_gold += price;
 		unit.weight -= slot.item->weight;
-		slot.item = NULL;
+		slot.item = nullptr;
 		items_to_sell.pop_back();
 	}
 

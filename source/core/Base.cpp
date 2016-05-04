@@ -64,7 +64,7 @@ cstring Format(cstring str, ...)
 	char* cbuf = format_buf[format_marker];
 	_vsnprintf_s(cbuf, FORMAT_LENGTH, FORMAT_LENGTH - 1, str, list);
 	cbuf[FORMAT_LENGTH-1] = 0;
-	format_marker = (format_marker + 1) % FORMAT_STRINGS;;
+	format_marker = (format_marker + 1) % FORMAT_STRINGS;
 	va_end(list);
 
 	return cbuf;
@@ -77,8 +77,25 @@ cstring FormatList(cstring str, va_list list)
 	char* cbuf = format_buf[format_marker];
 	_vsnprintf_s(cbuf, FORMAT_LENGTH, FORMAT_LENGTH - 1, str, list);
 	cbuf[FORMAT_LENGTH - 1] = 0;
-	format_marker = (format_marker + 1) % FORMAT_STRINGS;;
+	format_marker = (format_marker + 1) % FORMAT_STRINGS;
 
+	return cbuf;
+}
+
+cstring Upper(cstring str)
+{
+	assert(str);
+
+	char* cbuf = format_buf[format_marker];
+	if(*str == 0)
+		cbuf[0] = 0;
+	else
+	{
+		cbuf[0] = toupper(str[0]);
+		strcpy(cbuf+1, str+1);
+	}
+
+	format_marker = (format_marker + 1) % FORMAT_STRINGS;
 	return cbuf;
 }
 
@@ -125,14 +142,14 @@ bool DeleteDirectory(cstring filename)
 	*s = 0;
 
 	SHFILEOPSTRUCT op = {
-		NULL,
+		nullptr,
 		FO_DELETE,
 		BUF,
-		NULL,
+		nullptr,
 		FOF_NOCONFIRMATION|FOF_NOERRORUI|FOF_SILENT,
 		FALSE,
-		NULL,
-		NULL
+		nullptr,
+		nullptr
 	};
 
 	return SHFileOperation(&op) == 0;
@@ -146,6 +163,7 @@ bool DeleteDirectory(cstring filename)
 // Jeœli RayOrig jest wewn¹trz prostopad³oœcianu, funkcja zwraca true i OutT = 0.
 // funkcja z TFQE
 //=================================================================================================
+#ifndef NO_DIRECT_X
 bool RayToBox(const VEC3 &RayOrig, const VEC3 &RayDir, const BOX &Box,float *OutT)
 {
 	// removed xn, yn, zn
@@ -263,6 +281,7 @@ bool RayToBox(const VEC3 &RayOrig, const VEC3 &RayDir, const BOX &Box,float *Out
 	*OutT = t;
 	return true;
 }
+#endif
 
 //=================================================================================================
 // W któr¹ stronê trzeba siê obróciæ ¿eby by³o najszybciej
@@ -350,7 +369,6 @@ void TextLogger::Log(cstring text, LOG_LEVEL level)
 	GetTime(time);
 
 	out << Format("%02d:%02d:%02d %s - %s\n", time.tm_hour, time.tm_min, time.tm_sec, log_level_name[level], text);
-	out.flush();
 }
 
 void TextLogger::Log(cstring text, LOG_LEVEL level, const tm& time)
@@ -358,6 +376,10 @@ void TextLogger::Log(cstring text, LOG_LEVEL level, const tm& time)
 	assert(text);
 
 	out << Format("%02d:%02d:%02d %s - %s\n", time.tm_hour, time.tm_min, time.tm_sec, log_level_name[level], text);
+}
+
+void TextLogger::Flush()
+{
 	out.flush();
 }
 
@@ -370,25 +392,33 @@ void MultiLogger::Log(cstring text, LOG_LEVEL level)
 {
 	assert(text);
 
-	for(vector<Logger*>::iterator it = loggers.begin(), end = loggers.end(); it != end; ++it)
-		(*it)->Log(text, level);
+	for(Logger* logger : loggers)
+		logger->Log(text, level);
 }
 
 void MultiLogger::Log(cstring text, LOG_LEVEL level, const tm& time)
 {
 	assert(text);
 
-	for(vector<Logger*>::iterator it = loggers.begin(), end = loggers.end(); it != end; ++it)
-		(*it)->Log(text, level, time);
+	for(Logger* logger : loggers)
+		logger->Log(text, level, time);
+}
+
+void MultiLogger::Flush()
+{
+	for(Logger* logger : loggers)
+		logger->Flush();
 }
 
 void PreLogger::Apply(Logger* logger)
 {
 	assert(logger);
 
-	for(vector<Prelog*>::iterator it = prelogs.begin(), end = prelogs.end(); it != end; ++it)
-		logger->Log((*it)->str.c_str(), (*it)->level, (*it)->time);
+	for(Prelog* log : prelogs)
+		logger->Log(log->str.c_str(), log->level, log->time);
 
+	if(flush)
+		logger->Flush();
 	DeleteElements(prelogs);
 }
 
@@ -421,213 +451,9 @@ void PreLogger::Log(cstring text, LOG_LEVEL level, const tm& time)
 	prelogs.push_back(p);
 }
 
-void Config::Add(cstring name, cstring value)
+void PreLogger::Flush()
 {
-	assert(name && value);
-
-	for(vector<Entry>::iterator it = entries.begin(), end = entries.end(); it != end; ++it)
-	{
-		if(it->name == name)
-		{
-			it->value = value;
-			return;
-		}
-	}
-
-	Entry& e = Add1(entries);
-	e.name = name;
-	e.value = value;
-}
-
-bool Config::GetBool(cstring name, bool def)
-{
-	Entry* e = GetEntry(name);
-	if(!e)
-		return def;
-
-	if(OR3_EQ(e->value, "0", "false", "FALSE"))
-		return false;
-	else if(OR3_EQ(e->value, "1", "true", "TRUE"))
-		return true;
-	else
-		return def;
-}
-
-Bool3 Config::GetBool3(cstring name, Bool3 def)
-{
-	Entry* e = GetEntry(name);
-	if(!e)
-		return def;
-
-	if(OR3_EQ(e->value, "0", "false", "FALSE"))
-		return False;
-	else if(OR3_EQ(e->value, "1", "true", "TRUE"))
-		return True;
-	else
-		return def;
-}
-
-const string& Config::GetString(cstring name)
-{
-	Entry* e = GetEntry(name);
-	if(!e)
-	{
-		tmpstr.clear();
-		return tmpstr;
-	}
-	else
-		return e->value;
-}
-
-const string& Config::GetString(cstring name, const string& def)
-{
-	Entry* e = GetEntry(name);
-	if(!e)
-	{
-		tmpstr = def;
-		return tmpstr;
-	}
-	else
-		return e->value;
-}
-
-int Config::GetInt(cstring name, int def)
-{
-	Entry* e = GetEntry(name);
-	if(!e)
-		return def;
-	else
-		return atoi(e->value.c_str());
-}
-
-uint Config::GetUint(cstring name, uint def)
-{
-	Entry* e = GetEntry(name);
-	if(!e)
-		return def;
-	else
-		return strtoul(e->value.c_str(), NULL, 10);
-}
-
-__int64 Config::GetInt64(cstring name, int def)
-{
-	Entry* e = GetEntry(name);
-	if(!e)
-		return def;
-	else
-		return _atoi64(e->value.c_str());
-}
-
-float Config::GetFloat(cstring name, float def)
-{
-	Entry* e = GetEntry(name);
-	if(!e)
-		return def;
-	else
-		return (float)atof(e->value.c_str());
-}
-
-Config::Result Config::Open(cstring filename)
-{
-	assert(filename);
-
-	Tokenizer t(Tokenizer::F_JOIN_DOT);
-	if(!t.FromFile(filename))
-		return NO_FILE;
-
-	LocalString item, value;
-
-	try
-	{
-		while(true)
-		{
-			// nazwa zmiennej lub eof
-			t.Next();
-			if(t.IsEof())
-				break;
-			item = t.MustGetItem();
-			t.Next();
-
-			// =
-			t.AssertSymbol('=');
-			t.Next(true);
-
-			// wartoœæ lub eol
-			if(t.IsEol())
-				value->clear();
-			else
-				value = t.GetTokenString();
-
-			bool jest = false;
-			for(vector<Entry>::iterator it = entries.begin(), end = entries.end(); it != end; ++it)
-			{
-				if(item == it->name)
-				{
-					jest = true;
-					break;
-				}
-			}
-
-			if(!jest)
-			{
-				Entry& e = Add1(entries);
-				e.name = item;
-				e.value = value;
-			}
-		}
-	}
-	catch(const Tokenizer::Exception& e)
-	{
-		error = e.ToString();
-		return PARSE_ERROR;
-	}
-
-	return OK;
-}
-
-bool SortEntries(const Config::Entry& e1, const Config::Entry& e2)
-{
-	return e1.name < e2.name;
-}
-
-Config::Result Config::Save(cstring filename)
-{
-	assert(filename);
-
-	DWORD tmp;
-	HANDLE file = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if(file == INVALID_HANDLE_VALUE)
-		return CANT_SAVE;
-
-	std::sort(entries.begin(), entries.end(), SortEntries);
-
-	for(vector<Entry>::iterator it = entries.begin(), end = entries.end(); it != end; ++it)
-	{
-		cstring fmt;
-		if(it->value.find_first_of(" \t") != string::npos)
-			fmt = "%s = \"%s\"\n";
-		else
-			fmt = "%s = %s\n";
-		cstring s = Format(fmt, it->name.c_str(), it->value.c_str());
-		WriteFile(file, s, strlen(s), &tmp, NULL);
-	}
-
-	CloseHandle(file);
-	return OK;
-}
-
-void Config::Remove(cstring name)
-{
-	assert(name);
-	for(vector<Entry>::iterator it = entries.begin(), end = entries.end(); it != end; ++it)
-	{
-		if(it->name == name)
-		{
-			entries.erase(it);
-			return;
-		}
-	}
-	assert(0);
+	flush = true;
 }
 
 bool CircleToRectangle(float circlex, float circley, float radius, float rectx, float recty, float w, float h)
@@ -655,6 +481,7 @@ bool CircleToRectangle(float circlex, float circley, float radius, float rectx, 
 	return (dx*dx + dy*dy) <= (radius*radius);
 }
 
+#ifndef NO_DIRECT_X
 void FrustumPlanes::Set(const MATRIX &WorldViewProj)
 {
 	// Left clipping plane
@@ -776,7 +603,7 @@ void FrustumPlanes::GetPoints(const MATRIX& WorldViewProj,VEC3* points)
 	assert(points);
 
 	MATRIX WorldViewProjInv;
-	D3DXMatrixInverse( &WorldViewProjInv, NULL, &WorldViewProj);
+	D3DXMatrixInverse( &WorldViewProjInv, nullptr, &WorldViewProj);
 
 	D3DXVECTOR3 P[] = {
 		D3DXVECTOR3(-1.f, -1.f, 0.f), D3DXVECTOR3(+1.f, -1.f, 0.f),
@@ -1152,6 +979,7 @@ bool BoxToBox(const BOX& box1, const BOX& box2)
 		(box1.v1.y <= box2.v2.y) && (box1.v2.y >= box2.v1.y) &&
 		(box1.v1.z <= box2.v2.z) && (box1.v2.z >= box2.v1.z);
 }
+#endif
 
 bool RectangleToRectangle(float x1, float y1, float x2, float y2, float a1, float b1, float a2, float b2)
 {
@@ -1163,6 +991,7 @@ inline float clamp2(float left, float val, float right)
 	return clamp(val, left, right);
 }
 
+#ifndef NO_DIRECT_X
 // podpierdolone z CommonLib Regedita
 void ClosestPointInBox(VEC3 *Out, const BOX &Box, const VEC3 &p)
 {
@@ -1187,6 +1016,7 @@ bool SphereToBox(const VEC3 &SphereCenter, float SphereRadius, const BOX &Box)
 	ClosestPointInBox(&PointInBox, Box, SphereCenter);
 	return DistanceSq(SphereCenter, PointInBox) < SphereRadius*SphereRadius;
 }
+#endif
 
 /*
 kwaterniony 
@@ -1264,6 +1094,7 @@ bool CircleToRotatedRectangle(float cx, float cy, float radius, float rx, float 
 	return CircleToRectangle(x, y, radius, rx, ry, w, h);
 }
 
+#ifndef NO_DIRECT_X
 inline void RotateVector2DClockwise(VEC2& v, float ang)
 {
 	float t,
@@ -1356,6 +1187,7 @@ bool RotatedRectanglesCollision(const RotRect& r1, const RotRect& r2)
 	return !((ext1 < BL.y && ext2 < BL.y) ||
 		(ext1 > TR.y && ext2 > TR.y));
 }
+#endif
 
 void Crypt(char* inp, uint inplen, cstring key, uint keylen)
 {
@@ -1379,7 +1211,6 @@ void Crypt(char* inp, uint inplen, cstring key, uint keylen)
 		Sbox[i] = (char)i;
 	}
 
-	j = 0;
 	//initialize the sbox2 with user key
 	for(i = 0; i < 256U ; i++)
 	{
@@ -1425,6 +1256,7 @@ void Crypt(char* inp, uint inplen, cstring key, uint keylen)
 	}    
 }
 
+#ifndef NO_DIRECT_X
 // kolizja promienia (A->B) z cylindrem (P->Q, promieñ R)
 // z Real Time Collision Detection str 197
 //----------------------------------------------
@@ -1573,6 +1405,7 @@ float DistanceRectangleToPoint(const VEC2& pos, const VEC2& size, const VEC2& pt
 	float dy = max(abs(pt.y - pos.y) - size.y/2, 0.f);
 	return sqrt(dx * dx + dy * dy);
 }
+#endif
 
 int StringToNumber(cstring s, __int64& i, float& f)
 {
@@ -1645,14 +1478,14 @@ int StringToNumber(cstring s, __int64& i, float& f)
 //=================================================================================================
 bool LoadFileToString(cstring path, string& str)
 {
-	HANDLE file = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE file = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if(file == INVALID_HANDLE_VALUE)
 		return false;
 
-	DWORD size = GetFileSize(file, NULL);
+	DWORD size = GetFileSize(file, nullptr);
 	str.resize(size);
 
-	ReadFile(file, (char*)str.c_str(), size, &tmp, NULL);
+	ReadFile(file, (char*)str.c_str(), size, &tmp, nullptr);
 
 	CloseHandle(file);
 
@@ -1676,7 +1509,7 @@ void SplitText(char* buf, vector<cstring>& lines)
 				len = 0;
 			}
 			start = buf+1;
-			*buf = NULL;
+			*buf = 0;
 		}
 		else if(c == 0)
 		{
@@ -1750,6 +1583,23 @@ cstring Escape(cstring str)
 	return g_escp.c_str();
 }
 
+//=================================================================================================
+string* ToString(const wchar_t* str)
+{
+	string* s = StringPool.Get();
+	if(str == nullptr)
+	{
+		*s = "null";
+		return s;
+	}
+	int len = lstrlenW(str);
+	s->resize(len);
+	wcstombs((char*)s->c_str(), str, len);
+	return s;
+}
+
+#ifndef COMMON_ONLY
+
 struct Profiler::Entry
 {
 	cstring name;
@@ -1767,7 +1617,7 @@ struct Profiler::Entry
 Profiler g_profiler;
 ObjectPool<Profiler::Entry> entry_pool;
 
-Profiler::Profiler() : started(false), enabled(false), e(NULL), prev_e(NULL)
+Profiler::Profiler() : started(false), enabled(false), e(nullptr), prev_e(nullptr)
 {
 
 }
@@ -1816,14 +1666,14 @@ void Profiler::End()
 		prev_e->Free();
 	}
 	prev_e = e;
-	e = NULL;
+	e = nullptr;
 	if(frames >= 30)
 	{
 		frames = 0;
 		str.clear();
 		Print(prev_e, 0);
 		prev_e->Free();
-		prev_e = NULL;
+		prev_e = nullptr;
 	}
 
 	stac.clear();
@@ -1878,7 +1728,7 @@ void Profiler::Entry::Merge(Entry* e2)
 	frames = e2->frames+1;
 	for(vector<Entry*>::iterator it = e.begin(), end = e.end(); it != end; ++it)
 	{
-		Entry* found_e = NULL;
+		Entry* found_e = nullptr;
 		for(vector<Entry*>::iterator it2 = e2->e.begin(), end2 = e2->e.end(); it2 != end2; ++it2)
 		{
 			if((*it)->name == (*it2)->name)
@@ -1927,6 +1777,8 @@ ProfilerBlock::~ProfilerBlock()
 		g_profiler.Pop();
 }
 
+#endif
+
 float PointLineDistance(float x0, float y0, float x1, float y1, float x2, float y2)
 {
 	float x = x2 - x1;
@@ -1934,6 +1786,7 @@ float PointLineDistance(float x0, float y0, float x1, float y1, float x2, float 
 	return abs(y*x0 - x*y0 + x2*y1 - y2*x1)/sqrt(y*y+x*x);
 }
 
+#ifndef NO_DIRECT_X
 float GetClosestPointOnLineSegment(const VEC2& A, const VEC2& B, const VEC2& P, VEC2& result)
 {
 	VEC2 AP = P - A;       //Vector from A to P   
@@ -2048,3 +1901,4 @@ const VEC2 POISSON_DISC_2D[] = {
 	VEC2(0.9577024f, 0.1808657f)
 };
 const int poisson_disc_count = countof(POISSON_DISC_2D);
+#endif

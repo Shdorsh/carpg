@@ -200,7 +200,7 @@ void Quest_Evil::Start()
 	}
 	told_about_boss = false;
 	evil_state = State::None;
-	cleric = NULL;
+	cleric = nullptr;
 }
 
 //=================================================================================================
@@ -223,7 +223,7 @@ DialogEntry* Quest_Evil::GetDialog(int type2)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -238,19 +238,19 @@ void Quest_Evil::SetProgress(int prog2)
 		// nie zaakceptowano
 		{
 			// dodaj plotkê
-			if(!game->plotka_questowa[P_ZLO])
+			if(!game->quest_rumor[P_ZLO])
 			{
-				game->plotka_questowa[P_ZLO] = true;
-				--game->ile_plotek_questowych;
+				game->quest_rumor[P_ZLO] = true;
+				--game->quest_rumor_counter;
 				cstring text = Format(game->txQuest[232], GetStartLocationName());
-				game->plotki.push_back(Format(game->game_gui->journal->txAddNote, game->day+1, game->month+1, game->year, text));
+				game->rumors.push_back(Format(game->game_gui->journal->txAddNote, game->day+1, game->month+1, game->year, text));
 				game->game_gui->journal->NeedUpdate(Journal::Rumors);
 				game->AddGameMsg3(GMS_ADDED_RUMOR);
 				if(game->IsOnline())
 				{
 					NetChange& c = Add1(game->net_changes);
 					c.type = NetChange::ADD_RUMOR;
-					c.id = int(game->plotki.size())-1;
+					c.id = int(game->rumors.size())-1;
 				}
 			}
 		}
@@ -264,10 +264,10 @@ void Quest_Evil::SetProgress(int prog2)
 			name = game->txQuest[233];
 			state = Quest::Started;
 			// usuñ plotkê
-			if(!game->plotka_questowa[P_ZLO])
+			if(!game->quest_rumor[P_ZLO])
 			{
-				game->plotka_questowa[P_ZLO] = true;
-				--game->ile_plotek_questowych;
+				game->quest_rumor[P_ZLO] = true;
+				--game->quest_rumor_counter;
 			}
 			// lokacja
 			target_loc = game->CreateLocation(L_DUNGEON, game->world_pos, 128.f, OLD_TEMPLE, SG_BRAK, false, 1);
@@ -446,11 +446,8 @@ void Quest_Evil::SetProgress(int prog2)
 		break;
 	case Progress::PortalClosed:
 		// u¿ywane tylko do czyszczenia flagi changed
-		// w mp wysy³a te¿ t¹ aktualizacje z Game::UpdateGame2
 		apply = false;
 		changed = false;
-		if(game->IsOnline())
-			game->Net_UpdateQuest(refid);
 		break;
 	case Progress::AllPortalsClosed:
 		// zamkniêto wszystkie portale
@@ -473,7 +470,7 @@ void Quest_Evil::SetProgress(int prog2)
 			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
 			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
 			for(int i=0; i<3; ++i)
-				game->locations[loc[i].target_loc]->active_quest = NULL;
+				game->locations[loc[i].target_loc]->active_quest = nullptr;
 
 			if(game->IsOnline())
 				game->Net_UpdateQuestMulti(refid, 2);
@@ -487,9 +484,9 @@ void Quest_Evil::SetProgress(int prog2)
 			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
 			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
 			// przywróæ stary o³tarz
-			Location& loc = GetTargetLocation();
-			loc.active_quest = NULL;
-			loc.dont_clean = false;
+			Location& target = GetTargetLocation();
+			target.active_quest = nullptr;
+			target.dont_clean = false;
 			Obj* o = FindObject("bloody_altar");
 			int index = 0;
 			for(vector<Object>::iterator it = game->local_ctx.objects->begin(), end = game->local_ctx.objects->end(); it != end; ++it, ++index)
@@ -502,7 +499,7 @@ void Quest_Evil::SetProgress(int prog2)
 			obj.mesh = obj.base->ani;
 			// usuñ cz¹steczki
 			float best_dist = 999.f;
-			ParticleEmitter* pe = NULL;
+			ParticleEmitter* pe = nullptr;
 			for(vector<ParticleEmitter*>::iterator it = game->local_ctx.pes->begin(), end = game->local_ctx.pes->end(); it != end; ++it)
 			{
 				if((*it)->tex == game->tKrew[BLOOD_RED])
@@ -630,7 +627,7 @@ cstring Quest_Evil::FormatString(const string& str)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -685,7 +682,7 @@ void Quest_Evil::HandleUnitEvent(UnitEventHandler::TYPE type, Unit* unit)
 	if(type == UnitEventHandler::DIE && prog == Progress::AllPortalsClosed)
 	{
 		SetProgress(Progress::KilledBoss);
-		unit->event_handler = NULL;
+		unit->event_handler = nullptr;
 	}
 }
 
@@ -747,7 +744,7 @@ void Quest_Evil::Load(HANDLE file)
 	else
 		told_about_boss = false;
 
-	if(LOAD_VERSION >= V_DEVEL)
+	if(LOAD_VERSION >= V_0_4)
 	{
 		f >> evil_state;
 		f >> pos;
@@ -930,7 +927,7 @@ void Quest_Evil::GeneratePortal()
 	game.SpawnObject(game.local_ctx, FindObject("portal"), pos, rot);
 	inside->portal = new Portal;
 	inside->portal->target_loc = -1;
-	inside->portal->next_portal = NULL;
+	inside->portal->next_portal = nullptr;
 	inside->portal->rot = rot;
 	inside->portal->pos = pos;
 	inside->portal->at_level = game.dungeon_level;

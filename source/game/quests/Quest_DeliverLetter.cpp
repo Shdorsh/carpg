@@ -87,7 +87,7 @@ DialogEntry* Quest_DeliverLetter::GetDialog(int type)
 			return deliver_letter_end;
 	default:
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -101,16 +101,11 @@ void Quest_DeliverLetter::SetProgress(int prog2)
 		// give letter to player
 		{
 			Location& loc = *game->locations[end_loc];
-			letter.name = Format(game->txQuest[0], loc.type == L_CITY ? game->txForMayor : game->txForSoltys, loc.name.c_str());
-			letter.type = IT_OTHER;
-			letter.weight = 1;
-			letter.value = 0;
-			letter.flags = ITEM_QUEST|ITEM_DONT_DROP|ITEM_IMPORTANT|ITEM_TEX_ONLY;
+			const Item* base_item = FindItem("letter");
+			CreateItemCopy(letter, base_item);
 			letter.id = "$letter";
-			letter.mesh.clear();
-			letter.tex = game->tList;
+			letter.name = Format(game->txQuest[0], loc.type == L_CITY ? game->txForMayor : game->txForSoltys, loc.name.c_str());
 			letter.refid = refid;
-			letter.other_type = OtherItems;
 			game->current_dialog->pc->unit->AddItem(&letter, 1, true);
 			start_time = game->worldtime;
 			state = Quest::Started;
@@ -130,7 +125,7 @@ void Quest_DeliverLetter::SetProgress(int prog2)
 			if(game->IsOnline())
 			{
 				game->Net_AddQuest(refid);
-				game->Net_RegisterItem(&letter);
+				game->Net_RegisterItem(&letter, base_item);
 				if(!game->current_dialog->is_local)
 				{
 					game->Net_AddItem(game->current_dialog->pc, &letter, true);
@@ -223,7 +218,7 @@ cstring Quest_DeliverLetter::FormatString(const string& str)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -264,7 +259,7 @@ void Quest_DeliverLetter::Save(HANDLE file)
 	Quest::Save(file);
 
 	if(prog < Progress::Finished)
-		WriteFile(file, &end_loc, sizeof(end_loc), &tmp, NULL);
+		WriteFile(file, &end_loc, sizeof(end_loc), &tmp, nullptr);
 }
 
 //=================================================================================================
@@ -274,22 +269,16 @@ void Quest_DeliverLetter::Load(HANDLE file)
 
 	if(prog < Progress::Finished)
 	{
-		ReadFile(file, &end_loc, sizeof(end_loc), &tmp, NULL);
+		ReadFile(file, &end_loc, sizeof(end_loc), &tmp, nullptr);
 
 		Location& loc = *game->locations[end_loc];
 
-		letter.name = Format(game->txQuest[prog == Progress::GotResponse ? 1 : 0], loc.type == L_CITY ? game->txForMayor : game->txForSoltys, loc.name.c_str());
-		letter.type = IT_OTHER;
-		letter.weight = 1;
-		letter.value = 0;
-		letter.flags = ITEM_QUEST|ITEM_DONT_DROP|ITEM_IMPORTANT|ITEM_TEX_ONLY;
+		const Item* base_item = FindItem("letter");
+		CreateItemCopy(letter, base_item);
 		letter.id = "$letter";
-		letter.mesh.clear();
-		letter.tex = game->tList;
+		letter.name = Format(game->txQuest[prog == Progress::GotResponse ? 1 : 0], loc.type == L_CITY ? game->txForMayor : game->txForSoltys, loc.name.c_str());
 		letter.refid = refid;
-		letter.other_type = OtherItems;
-
 		if(game->mp_load)
-			game->Net_RegisterItem(&letter);
+			game->Net_RegisterItem(&letter, base_item);
 	}
 }

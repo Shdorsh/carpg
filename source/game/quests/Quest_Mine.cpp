@@ -266,7 +266,7 @@ void Quest_Mine::Start()
 	mine_state = State::None;
 	mine_state2 = State2::None;
 	mine_state3 = State3::None;
-	messenger = NULL;
+	messenger = nullptr;
 	days = 0;
 	days_required = 0;
 	days_gold = 0;
@@ -313,7 +313,7 @@ DialogEntry* Quest_Mine::GetDialog(int type2)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -383,10 +383,10 @@ void Quest_Mine::SetProgress(int prog2)
 			mine_state2 = State2::InBuild;
 			days = 0;
 			days_required = random(30, 45);
-			if(!game->plotka_questowa[P_KOPALNIA])
+			if(!game->quest_rumor[P_KOPALNIA])
 			{
-				game->plotka_questowa[P_KOPALNIA] = true;
-				--game->ile_plotek_questowych;
+				game->quest_rumor[P_KOPALNIA] = true;
+				--game->quest_rumor_counter;
 			}
 
 			if(game->IsOnline())
@@ -421,10 +421,10 @@ void Quest_Mine::SetProgress(int prog2)
 			mine_state2 = State2::InBuild;
 			days = 0;
 			days_required = random(30, 45);
-			if(!game->plotka_questowa[P_KOPALNIA])
+			if(!game->quest_rumor[P_KOPALNIA])
 			{
-				game->plotka_questowa[P_KOPALNIA] = true;
-				--game->ile_plotek_questowych;
+				game->quest_rumor[P_KOPALNIA] = true;
+				--game->quest_rumor_counter;
 			}
 
 			if(game->IsOnline())
@@ -573,7 +573,7 @@ cstring Quest_Mine::FormatString(const string& str)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -641,7 +641,7 @@ void Quest_Mine::Load(HANDLE file)
 	f >> sub.done;
 	f >> dungeon_loc;
 
-	if(LOAD_VERSION >= V_DEVEL)
+	if(LOAD_VERSION >= V_0_4)
 	{
 		f >> mine_state;
 		f >> mine_state2;

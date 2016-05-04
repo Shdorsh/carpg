@@ -263,15 +263,22 @@ bool Tokenizer::NextLine()
 		return false;
 	}
 
-	// szukaj czegoœ
-	uint pos2 = FindFirstOf("\n\r", pos);
+	uint pos2 = FindFirstNotOf(" \t", pos);
 	if(pos2 == string::npos)
-		item = str->substr(pos);
+	{
+		pos = string::npos;
+		token = T_EOF;
+		return false;
+	}
+
+	uint pos3 = FindFirstOf("\n\r", pos2+1);
+	if(pos3 == string::npos)
+		item = str->substr(pos2);
 	else
-		item = str->substr(pos, pos2-pos);
+		item = str->substr(pos2, pos3-pos2);
 	
 	token = T_ITEM;
-	pos = pos2;
+	pos = pos3;
 	return !item.empty();
 }
 
@@ -402,7 +409,7 @@ uint Tokenizer::FindFirstOfStr(cstring _str, uint _start)
 				++charpos;
 				++i;
 				++_s;
-				if(*_s == NULL)
+				if(*_s == 0)
 					return i;
 				if(i == end)
 					return string::npos;
@@ -457,7 +464,7 @@ const Tokenizer::Keyword* Tokenizer::FindKeyword(int _id, int _group) const
 			return &*it;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 //=================================================================================================
@@ -474,7 +481,7 @@ void Tokenizer::AddKeywords(int group, std::initializer_list<KeywordToRegister> 
 cstring Tokenizer::FormatToken(TOKEN token, int* what, int* what2)
 {
 	cstring name = GetTokenName(token);
-	if(what == NULL)
+	if(what == nullptr)
 		return name;
 
 	switch(token)
@@ -662,6 +669,7 @@ void Tokenizer::Parse(INT2& i)
 }
 
 //=================================================================================================
+#ifndef NO_DIRECT_X
 void Tokenizer::Parse(VEC2& v)
 {
 	if(IsSymbol('{'))
@@ -680,3 +688,4 @@ void Tokenizer::Parse(VEC2& v)
 		Next();
 	}
 }
+#endif

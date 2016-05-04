@@ -19,6 +19,12 @@ struct Trap
 	Object obj, obj2;
 	bool trigger; // u¿ywane u klienta w MP
 
+	static const int MIN_SIZE = 31;
+
+	Trap() : hitted(nullptr)
+	{
+
+	}
 	~Trap()
 	{
 		delete hitted;

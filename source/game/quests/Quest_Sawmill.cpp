@@ -122,7 +122,7 @@ DialogEntry* Quest_Sawmill::GetDialog(int type2)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -193,10 +193,10 @@ void Quest_Sawmill::SetProgress(int prog2)
 			days = 0;
 			sawmill_state = State::InBuild;
 
-			if(!game->plotka_questowa[P_TARTAK])
+			if(!game->quest_rumor[P_TARTAK])
 			{
-				game->plotka_questowa[P_TARTAK] = true;
-				--game->ile_plotek_questowych;
+				game->quest_rumor[P_TARTAK] = true;
+				--game->quest_rumor_counter;
 			}
 			
 			msgs.push_back(game->txQuest[128]);
@@ -238,7 +238,7 @@ cstring Quest_Sawmill::FormatString(const string& str)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -289,7 +289,7 @@ void Quest_Sawmill::Load(HANDLE file)
 
 	location_event_handler = this;
 
-	if(LOAD_VERSION >= V_DEVEL)
+	if(LOAD_VERSION >= V_0_4)
 	{
 		GameReader f(file);
 

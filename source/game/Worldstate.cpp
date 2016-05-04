@@ -22,11 +22,12 @@ void Game::WorldProgress(int days, WorldProgressMode mode)
 			year += ile;
 			month -= ile*12;
 			// nowe miejsce na chlanie
-			chlanie_gdzie = GetRandomCityLocation(chlanie_gdzie);
+			contest_where = GetRandomCityLocation(contest_where);
 			if(year >= 160)
 			{
 				// koniec gry
 				LOG("Game over: you are too old.");
+				CloseAllPanels(true);
 				koniec_gry = true;
 				death_fade = 0.f;
 				if(IsOnline())

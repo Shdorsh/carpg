@@ -15,7 +15,7 @@ LanguageSections g_language2;
 LanguageMap* tmp_language_map;
 vector<LanguageMap*> g_languages;
 extern string g_system_dir;
-extern vector<string> name_random, nickname_random, crazy_name;
+extern vector<string> name_random, nickname_random, crazy_name, txLocationStart, txLocationEnd;
 string tstr, tstr2;
 
 //=================================================================================================
@@ -106,7 +106,7 @@ bool LoadLanguageFile2(cstring filename, cstring section, LanguageMap* lmap)
 		}
 		else
 		{
-			clmap = NULL;
+			clmap = nullptr;
 			inside = false;
 		}
 		added = true;
@@ -122,7 +122,7 @@ bool LoadLanguageFile2(cstring filename, cstring section, LanguageMap* lmap)
 				if(clmap && !added && clmap->size() != 0)
 				{
 					g_language2[current_section.get_ref()] = clmap;
-					tmp_language_map = NULL;
+					tmp_language_map = nullptr;
 				}
 				// get next section
 				t.Next();
@@ -155,7 +155,7 @@ bool LoadLanguageFile2(cstring filename, cstring section, LanguageMap* lmap)
 					}
 					else
 					{
-						clmap = NULL;
+						clmap = nullptr;
 						inside = false;
 					}
 				}
@@ -187,7 +187,7 @@ bool LoadLanguageFile2(cstring filename, cstring section, LanguageMap* lmap)
 		if(clmap && !added && clmap->size() != 0)
 		{
 			g_language2[current_section.get_ref()] = clmap;
-			tmp_language_map = NULL;
+			tmp_language_map = nullptr;
 		}
 	}
 	catch(const Tokenizer::Exception& e)
@@ -212,7 +212,7 @@ void LoadLanguages()
 		return;
 	}
 
-	LanguageMap* lmap = NULL;
+	LanguageMap* lmap = nullptr;
 
 	do 
 	{
@@ -232,7 +232,7 @@ void LoadLanguages()
 					continue;
 				}
 				g_languages.push_back(lmap);
-				lmap = NULL;
+				lmap = nullptr;
 			}
 		}
 	}
@@ -263,7 +263,9 @@ enum KEYWORD
 	K_RANDOM,
 	K_ITEM,
 	K_PERK,
-	K_UNIT
+	K_UNIT,
+	K_LOCATION_START,
+	K_LOCATION_END
 };
 
 //=================================================================================================
@@ -282,7 +284,9 @@ static void PrepareTokenizer(Tokenizer& t)
 		{ "random", K_RANDOM },
 		{ "item", K_ITEM },
 		{ "perk", K_PERK },
-		{ "unit", K_UNIT }
+		{ "unit", K_UNIT },
+		{ "location_start", K_LOCATION_START },
+		{ "location_end", K_LOCATION_END }
 	});
 }
 
@@ -431,29 +435,42 @@ static void LoadLanguageFile3(Tokenizer& t, cstring filename)
 					break;
 				case K_NAME:
 				case K_NICKNAME:
-					// (sur)name type = {
+					// (nick)name type = {
 					//		"text"
 					//		"text"
 					//		...
 					// }
 					{
 						bool nickname = (k == K_NICKNAME);
-						vector<string>* names = NULL;
+						vector<string>* names = nullptr;
 						t.Next();
 						if(t.IsKeyword())
 						{
-							if(t.GetKeywordId() == K_CRAZY)
+							int id = t.GetKeywordId();
+							if(id == K_CRAZY)
 							{
 								if(nickname)
 									t.Throw("Crazies can't have nicknames.");
 								names = &crazy_name;
 							}
-							else if(t.GetKeywordId() == K_RANDOM)
+							else if(id == K_RANDOM)
 							{
 								if(nickname)
 									names = &nickname_random;
 								else
 									names = &name_random;
+							}
+							else if(id == K_LOCATION_START)
+							{
+								if(nickname)
+									t.Unexpected();
+								names = &txLocationStart;
+							}
+							else if(id == K_LOCATION_END)
+							{
+								if(nickname)
+									t.Unexpected();
+								names = &txLocationEnd;
 							}
 							else
 								t.Unexpected();
@@ -493,7 +510,7 @@ static void LoadLanguageFile3(Tokenizer& t, cstring filename)
 						Item* item = (Item*)FindItem(s.c_str(), false, &lis);
 						if(item)
 						{
-							if(lis.lis == NULL)
+							if(lis.lis == nullptr)
 							{
 								StartBlock(t);
 								GetString(t, K_NAME, item->name);
@@ -581,4 +598,7 @@ void LoadLanguageFiles()
 	LoadLanguageFile3(t, "items.txt");
 	LoadLanguageFile3(t, "perks.txt");
 	LoadLanguageFile3(t, "units.txt");
+
+	if(txLocationStart.empty() || txLocationEnd.empty())
+		throw "Missing locations names.";
 }

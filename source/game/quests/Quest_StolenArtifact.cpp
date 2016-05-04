@@ -84,7 +84,7 @@ DialogEntry* Quest_StolenArtifact::GetDialog(int type2)
 		return stolen_artifact_timeout;
 	default:
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -100,18 +100,9 @@ void Quest_StolenArtifact::SetProgress(int prog2)
 			state = Quest::Started;
 			name = game->txQuest[86];
 
-			quest_item.ani = NULL;
-			quest_item.desc.clear();
-			quest_item.flags = ITEM_QUEST|ITEM_DONT_DROP|ITEM_IMPORTANT|ITEM_TEX_ONLY;
+			CreateItemCopy(quest_item, item);
 			quest_item.id = Format("$%s", item->id.c_str());
-			quest_item.mesh.clear();
-			quest_item.name = item->name;
 			quest_item.refid = refid;
-			quest_item.tex = item->tex;
-			quest_item.type = IT_OTHER;
-			quest_item.value = item->value;
-			quest_item.weight = item->weight;
-			quest_item.other_type = OtherItems;
 			spawn_item = Quest_Dungeon::Item_GiveSpawned;
 			item_to_give[0] = &quest_item;
 			unit_to_spawn = FindUnitData(GetSpawnLeader(group));
@@ -166,7 +157,7 @@ void Quest_StolenArtifact::SetProgress(int prog2)
 			if(game->IsOnline())
 			{
 				game->Net_AddQuest(refid);
-				game->Net_RegisterItem(&quest_item);
+				game->Net_RegisterItem(&quest_item, item);
 				if(now_known)
 					game->Net_ChangeLocationState(target_loc, false);
 			}
@@ -179,7 +170,7 @@ void Quest_StolenArtifact::SetProgress(int prog2)
 			{
 				Location& loc = *game->locations[target_loc];
 				if(loc.active_quest == this)
-					loc.active_quest = NULL;
+					loc.active_quest = nullptr;
 			}
 			RemoveElementTry<Quest_Dungeon*>(game->quests_timeout, this);
 			msgs.push_back(game->txQuest[94]);
@@ -205,7 +196,7 @@ void Quest_StolenArtifact::SetProgress(int prog2)
 			{
 				Location& loc = *game->locations[target_loc];
 				if(loc.active_quest == this)
-					loc.active_quest = NULL;
+					loc.active_quest = nullptr;
 			}
 			RemoveElementTry<Quest_Dungeon*>(game->quests_timeout, this);
 			msgs.push_back(game->txQuest[95]);
@@ -247,7 +238,7 @@ cstring Quest_StolenArtifact::FormatString(const string& str)
 			return game->txQuest[100];
 		default:
 			assert(0);
-			return NULL;
+			return nullptr;
 		}
 	}
 	else if(str == "Ci_bandyci")
@@ -266,13 +257,13 @@ cstring Quest_StolenArtifact::FormatString(const string& str)
 			return game->txQuest[105];
 		default:
 			assert(0);
-			return NULL;
+			return nullptr;
 		}
 	}
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -326,23 +317,14 @@ void Quest_StolenArtifact::Load(HANDLE file)
 	f.LoadArtifact(item);
 	f >> group;
 
-	quest_item.ani = NULL;
-	quest_item.desc.clear();
-	quest_item.flags = ITEM_QUEST|ITEM_DONT_DROP|ITEM_IMPORTANT|ITEM_TEX_ONLY;
+	CreateItemCopy(quest_item, item);
 	quest_item.id = Format("$%s", item->id.c_str());
-	quest_item.mesh.clear();
-	quest_item.name = item->name;
 	quest_item.refid = refid;
-	quest_item.tex = item->tex;
-	quest_item.type = IT_OTHER;
-	quest_item.value = item->value;
-	quest_item.weight = item->weight;
-	quest_item.other_type = OtherItems;
 	spawn_item = Quest_Dungeon::Item_GiveSpawned;
 	item_to_give[0] = &quest_item;
 	unit_to_spawn = FindUnitData(GetSpawnLeader(group));
 	unit_spawn_level = -3;
 
 	if(game->mp_load)
-		game->Net_RegisterItem(&quest_item);
+		game->Net_RegisterItem(&quest_item, item);
 }

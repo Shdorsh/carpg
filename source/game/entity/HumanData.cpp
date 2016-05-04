@@ -35,15 +35,8 @@ const VEC4 g_hair_colors[] = {
 const uint n_hair_colors = countof(g_hair_colors);
 // siwy 0xDED5D0
 
-//=================================================================================================
-// Ustawienie macierzy na podstawie wysokoœci i wagi
-//=================================================================================================
-void Human::ApplyScale(Animesh* ani)
+VEC2 Human::GetScale()
 {
-	assert(ani);
-
-	mat_scale.resize(ani->head.n_bones);
-
 	float h = (height-1)*0.2f+1.f;
 	float w;
 	if(height > 1.f)
@@ -53,14 +46,26 @@ void Human::ApplyScale(Animesh* ani)
 	else
 		w = 1.f;
 
-	MATRIX m;
-	D3DXMatrixScaling(&m, w, h, w);
+	return VEC2(w, h);
+}
 
+//=================================================================================================
+// Ustawienie macierzy na podstawie wysokoœci i wagi
+//=================================================================================================
+void Human::ApplyScale(Animesh* ani)
+{
+	assert(ani);
+
+	mat_scale.resize(ani->head.n_bones);
+	
+	VEC2 scale = GetScale();
+	MATRIX m;
+	D3DXMatrixScaling(&m, scale.x, scale.y, scale.x);
 	for(int i=0; i<ani->head.n_bones; ++i)
 		mat_scale[i] = m;
 
-	w = (w+1)/2;
-	D3DXMatrixScaling(&m, w, h, w);
+	scale.x = (scale.x+1)/2;
+	D3DXMatrixScaling(&m, scale.x, scale.y, scale.x);
 	mat_scale[4] = m;
 	mat_scale[5] = m;
 }
@@ -68,23 +73,23 @@ void Human::ApplyScale(Animesh* ani)
 //=================================================================================================
 void Human::Save(HANDLE file)
 {
-	WriteFile(file, &hair, sizeof(hair), &tmp, NULL);
-	WriteFile(file, &beard, sizeof(beard), &tmp, NULL);
-	WriteFile(file, &mustache, sizeof(mustache), &tmp, NULL);
-	WriteFile(file, &hair_color, sizeof(hair_color), &tmp, NULL);
-	WriteFile(file, &height, sizeof(height), &tmp, NULL);
+	WriteFile(file, &hair, sizeof(hair), &tmp, nullptr);
+	WriteFile(file, &beard, sizeof(beard), &tmp, nullptr);
+	WriteFile(file, &mustache, sizeof(mustache), &tmp, nullptr);
+	WriteFile(file, &hair_color, sizeof(hair_color), &tmp, nullptr);
+	WriteFile(file, &height, sizeof(height), &tmp, nullptr);
 }
 
 //=================================================================================================
 void Human::Load(HANDLE file)
 {
-	ReadFile(file, &hair, sizeof(hair), &tmp, NULL);
-	ReadFile(file, &beard, sizeof(beard), &tmp, NULL);
-	ReadFile(file, &mustache, sizeof(mustache), &tmp, NULL);
-	ReadFile(file, &hair_color, sizeof(hair_color), &tmp, NULL);
+	ReadFile(file, &hair, sizeof(hair), &tmp, nullptr);
+	ReadFile(file, &beard, sizeof(beard), &tmp, nullptr);
+	ReadFile(file, &mustache, sizeof(mustache), &tmp, nullptr);
+	ReadFile(file, &hair_color, sizeof(hair_color), &tmp, nullptr);
 	if(LOAD_VERSION < V_0_2_10)
-		ReadFile(file, &height, sizeof(height), &tmp, NULL); // old weight
-	ReadFile(file, &height, sizeof(height), &tmp, NULL);
+		ReadFile(file, &height, sizeof(height), &tmp, nullptr); // old weight
+	ReadFile(file, &height, sizeof(height), &tmp, nullptr);
 }
 
 //=================================================================================================
@@ -120,47 +125,47 @@ void HumanData::CopyFrom(HumanData& hd)
 //=================================================================================================
 void HumanData::Save(HANDLE file) const
 {
-	WriteFile(file, &hair, sizeof(hair), &tmp, NULL);
-	WriteFile(file, &beard, sizeof(beard), &tmp, NULL);
-	WriteFile(file, &mustache, sizeof(mustache), &tmp, NULL);
-	WriteFile(file, &hair_color, sizeof(hair_color), &tmp, NULL);
-	WriteFile(file, &height, sizeof(height), &tmp, NULL);
+	WriteFile(file, &hair, sizeof(hair), &tmp, nullptr);
+	WriteFile(file, &beard, sizeof(beard), &tmp, nullptr);
+	WriteFile(file, &mustache, sizeof(mustache), &tmp, nullptr);
+	WriteFile(file, &hair_color, sizeof(hair_color), &tmp, nullptr);
+	WriteFile(file, &height, sizeof(height), &tmp, nullptr);
 }
 
 //=================================================================================================
 void HumanData::Load(HANDLE file)
 {
-	ReadFile(file, &hair, sizeof(hair), &tmp, NULL);
-	ReadFile(file, &beard, sizeof(beard), &tmp, NULL);
-	ReadFile(file, &mustache, sizeof(mustache), &tmp, NULL);
-	ReadFile(file, &hair_color, sizeof(hair_color), &tmp, NULL);
+	ReadFile(file, &hair, sizeof(hair), &tmp, nullptr);
+	ReadFile(file, &beard, sizeof(beard), &tmp, nullptr);
+	ReadFile(file, &mustache, sizeof(mustache), &tmp, nullptr);
+	ReadFile(file, &hair_color, sizeof(hair_color), &tmp, nullptr);
 	if(LOAD_VERSION < V_0_2_10)
-		ReadFile(file, &height, sizeof(height), &tmp, NULL); // old weight
-	ReadFile(file, &height, sizeof(height), &tmp, NULL);
+		ReadFile(file, &height, sizeof(height), &tmp, nullptr); // old weight
+	ReadFile(file, &height, sizeof(height), &tmp, nullptr);
 }
 
 //=================================================================================================
-void HumanData::Write(BitStream& s) const
+void HumanData::Write(BitStream& stream) const
 {
-	s.WriteCasted<byte>(hair);
-	s.WriteCasted<byte>(beard);
-	s.WriteCasted<byte>(mustache);
-	s.Write(hair_color.x);
-	s.Write(hair_color.y);
-	s.Write(hair_color.z);
-	s.Write(height);
+	stream.WriteCasted<byte>(hair);
+	stream.WriteCasted<byte>(beard);
+	stream.WriteCasted<byte>(mustache);
+	stream.Write(hair_color.x);
+	stream.Write(hair_color.y);
+	stream.Write(hair_color.z);
+	stream.Write(height);
 }
 
 //=================================================================================================
-int HumanData::Read(BitStream& s)
+int HumanData::Read(BitStream& stream)
 {
-	if( !s.ReadCasted<byte>(hair) ||
-		!s.ReadCasted<byte>(beard) ||
-		!s.ReadCasted<byte>(mustache) ||
-		!s.Read(hair_color.x) ||
-		!s.Read(hair_color.y) ||
-		!s.Read(hair_color.z) ||
-		!s.Read(height))
+	if( !stream.ReadCasted<byte>(hair) ||
+		!stream.ReadCasted<byte>(beard) ||
+		!stream.ReadCasted<byte>(mustache) ||
+		!stream.Read(hair_color.x) ||
+		!stream.Read(hair_color.y) ||
+		!stream.Read(hair_color.z) ||
+		!stream.Read(height))
 		return 1;
 
 	hair_color.w = 1.f;

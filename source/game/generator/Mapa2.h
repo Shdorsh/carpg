@@ -1,5 +1,8 @@
 #pragma once
 
+//-----------------------------------------------------------------------------
+#include "Light.h"
+
 /* BUDOWA MAPY
 
  h = 5+- - - - - +
@@ -123,22 +126,6 @@ inline bool czy_blokuje21(const Pole& p)
 }
 
 //-----------------------------------------------------------------------------
-// Œwiat³o w podziemiach
-struct Light
-{
-	VEC3 pos, color;
-	//int pokoj;
-	float range;
-	// tymczasowe
-	VEC3 t_pos, t_color;
-
-	void Save(FileWriter& f);
-	void Load(FileReader& f);
-	void Write(BitStream& s) const;
-	bool Read(BitStream& s);
-};
-
-//-----------------------------------------------------------------------------
 // Cel pomieszczenia
 #define POKOJ_CEL_BRAK 0
 #define POKOJ_CEL_SCHODY_GORA 1
@@ -157,6 +144,8 @@ struct Room
 	vector<int> connected;
 	int target; // mo¿na by po³¹czyæ cel i korytarz (korytarz by by³ jednym z celi)
 	bool corridor;
+
+	static const int MIN_SIZE = 19;
 
 	inline VEC3 Center() const
 	{
@@ -199,8 +188,8 @@ struct Room
 
 	void Save(HANDLE file);
 	void Load(HANDLE file);
-	void Write(BitStream& s) const;
-	bool Read(BitStream& s);
+	void Write(BitStream& stream) const;
+	bool Read(BitStream& stream);
 };
 
 //-----------------------------------------------------------------------------

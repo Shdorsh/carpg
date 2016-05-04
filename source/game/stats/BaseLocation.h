@@ -46,7 +46,7 @@
 #define CRYPT_2_TEXTURE 15
 
 //-----------------------------------------------------------------------------
-// Flagi lokacji
+// Location flags
 enum BaseLocationOptions
 {
 	BLO_ROUND = 1<<0,
@@ -65,7 +65,7 @@ struct RoomStr
 	cstring id;
 	RoomType* room;
 
-	explicit RoomStr(cstring _id) : id(_id), room(NULL)
+	explicit RoomStr(cstring _id) : id(_id), room(nullptr)
 	{
 
 	}
@@ -78,7 +78,7 @@ struct RoomStrChance
 	RoomType* room;
 	int chance;
 
-	RoomStrChance(cstring _id, int _chance) : id(_id), chance(_chance), room(NULL)
+	RoomStrChance(cstring _id, int _chance) : id(_id), chance(_chance), room(nullptr)
 	{
 
 	}

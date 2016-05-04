@@ -255,10 +255,10 @@ bool CreatedCharacter::HavePerk(Perk perk) const
 //=================================================================================================
 void CreatedCharacter::GetStartingItems(cstring (&items)[4])
 {
-	items[SLOT_WEAPON] = NULL;
-	items[SLOT_BOW] = NULL;
-	items[SLOT_SHIELD] = NULL;
-	items[SLOT_ARMOR] = NULL;
+	items[SLOT_WEAPON] = nullptr;
+	items[SLOT_BOW] = nullptr;
+	items[SLOT_SHIELD] = nullptr;
+	items[SLOT_ARMOR] = nullptr;
 
 	if(HavePerk(Perk::FamilyHeirloom))
 	{
@@ -507,23 +507,23 @@ void CreatedCharacter::GetStartingItems(cstring (&items)[4])
 }
 
 //=================================================================================================
-void WriteCharacterData(BitStream& s, Class c, const HumanData& hd, const CreatedCharacter& cc)
+void WriteCharacterData(BitStream& stream, Class c, const HumanData& hd, const CreatedCharacter& cc)
 {
-	s.WriteCasted<byte>(c);
-	hd.Write(s);
-	cc.Write(s);
+	stream.WriteCasted<byte>(c);
+	hd.Write(stream);
+	cc.Write(stream);
 }
 
 //=================================================================================================
-int ReadCharacterData(BitStream& s, Class& c, HumanData& hd, CreatedCharacter& cc)
+int ReadCharacterData(BitStream& stream, Class& c, HumanData& hd, CreatedCharacter& cc)
 {
-	if(!s.ReadCasted<byte>(c))
+	if(!stream.ReadCasted<byte>(c))
 		return 1;
 	if(!ClassInfo::IsPickable(c))
 		return 2;
 	cc.Clear(c);
 	int result = 1;
-	if((result = hd.Read(s)) != 0 || (result = cc.Read(s)) != 0)
+	if((result = hd.Read(stream)) != 0 || (result = cc.Read(stream)) != 0)
 		return result;
 	return 0;
 }

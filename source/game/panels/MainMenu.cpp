@@ -32,7 +32,7 @@ uint version_check_error, version_new;
 //=================================================================================================
 CheckVersionResult CheckVersion(HINTERNET internet, cstring url, uint& error, uint& version)
 {
-	HINTERNET file = InternetOpenUrl(internet, url, NULL, 0, 0, NULL);
+	HINTERNET file = InternetOpenUrl(internet, url, nullptr, 0, 0, 0);
 	if(!file)
 	{
 		// Nie mo¿na pobraæ pliku z serwera
@@ -67,7 +67,7 @@ CheckVersionResult CheckVersion(HINTERNET internet, cstring url, uint& error, ui
 //=================================================================================================
 uint __stdcall CheckVersion(void*)
 {
-	HINTERNET internet = InternetOpen("carpg", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+	HINTERNET internet = InternetOpen("carpg", INTERNET_OPEN_TYPE_DIRECT, nullptr, nullptr, 0);
 
 	if(!internet)
 	{
@@ -95,7 +95,7 @@ uint __stdcall CheckVersion(void*)
 }
 
 //=================================================================================================
-MainMenu::MainMenu() : check_version(0), check_version_thread(NULL), check_updates(true), skip_version(0)
+MainMenu::MainMenu() : check_version(0), check_version_thread(nullptr), check_updates(true), skip_version(0)
 {
 	focusable = true;
 	visible = false;
@@ -143,7 +143,7 @@ void MainMenu::Draw(ControlDrawData* /*cdd*/)
 
 	RECT r = {0, 0, GUI.wnd_size.x, GUI.wnd_size.y};
 	r.top = r.bottom - 64;
-	GUI.DrawText(GUI.default_font, "Devmode(2013,2015) Tomashu & Leinnan", DT_CENTER|DT_BOTTOM|DT_OUTLINE, WHITE, r);
+	GUI.DrawText(GUI.default_font, "Devmode(2013,2016) Tomashu & Leinnan", DT_CENTER|DT_BOTTOM|DT_OUTLINE, WHITE, r);
 
 	r.left = GUI.wnd_size.x-512-16;
 	r.right = GUI.wnd_size.x-16;
@@ -178,16 +178,17 @@ void MainMenu::Update(float dt)
 		if(check_updates)
 		{
 			version_text = Str("checkingVersion");
-			LOG(version_text.c_str());
+			LOG("Checking CaRpg version.");
 			check_version = 1;
 			csCheckVersion.Create();
-			check_version_thread = (HANDLE)_beginthreadex(NULL, 1024, CheckVersion, NULL, 0, NULL);
+			check_version_thread = (HANDLE)_beginthreadex(nullptr, 1024, CheckVersion, nullptr, 0, nullptr);
 			if(!check_version_thread)
 			{
+				int error = errno;
 				csCheckVersion.Free();
 				check_version = 2;
 				version_text = Str("checkingError");
-				ERROR(version_text.c_str());
+				ERROR(Format("Failed to create version checking thread (%d).", error));
 			}
 		}
 		else
@@ -215,7 +216,7 @@ void MainMenu::Update(float dt)
 						info.event = fastdelegate::FastDelegate1<int>(this, &MainMenu::OnNewVersion);
 						info.name = "new_version";
 						info.order = ORDER_TOP;
-						info.parent = NULL;
+						info.parent = nullptr;
 						info.pause = false;
 						info.text = Format(Str("newVersionDialog"), VERSION_STR, VersionToString(version_new));
 						info.type = DIALOG_YESNO;
@@ -242,7 +243,7 @@ void MainMenu::Update(float dt)
 			{
 				check_version = 2;
 				version_text = Format(Str("checkVersionError"), version_check_result, version_check_error);
-				ERROR(version_text.c_str());
+				ERROR(Format("Failed to check version (%d, %d).", version_check_result, version_check_error));
 			}
 		}
 		csCheckVersion.Leave();
@@ -251,7 +252,7 @@ void MainMenu::Update(float dt)
 		{
 			csCheckVersion.Free();
 			CloseHandle(check_version_thread);
-			check_version_thread = NULL;
+			check_version_thread = nullptr;
 		}
 	}
 }
@@ -283,5 +284,5 @@ void MainMenu::PlaceButtons()
 void MainMenu::OnNewVersion(int id)
 {
 	if(id == BUTTON_YES)
-		ShellExecute(NULL, "open", Str("versionUrl"), NULL, NULL, SW_SHOWNORMAL);
+		ShellExecute(nullptr, "open", Str("versionUrl"), nullptr, nullptr, SW_SHOWNORMAL);
 }

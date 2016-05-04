@@ -65,7 +65,7 @@ DialogEntry* Quest_FindArtifact::GetDialog(int type2)
 		return find_artifact_timeout;
 	default:
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -81,18 +81,9 @@ void Quest_FindArtifact::SetProgress(int prog2)
 			state = Quest::Started;
 			name = game->txQuest[81];
 
-			quest_item.ani = NULL;
-			quest_item.desc.clear();
-			quest_item.flags = ITEM_QUEST|ITEM_DONT_DROP|ITEM_IMPORTANT|ITEM_TEX_ONLY;
+			CreateItemCopy(quest_item, item);
 			quest_item.id = Format("$%s", item->id.c_str());
-			quest_item.mesh.clear();
-			quest_item.name = item->name;
 			quest_item.refid = refid;
-			quest_item.tex = item->tex;
-			quest_item.type = IT_OTHER;
-			quest_item.value = item->value;
-			quest_item.weight = item->weight;
-			quest_item.other_type = OtherItems;
 
 			Location& sl = *game->locations[start_loc];
 
@@ -123,7 +114,7 @@ void Quest_FindArtifact::SetProgress(int prog2)
 			if(tl.state == LS_UNKNOWN)
 			{
 				tl.state = LS_KNOWN;
-				now_known = false;
+				now_known = true;
 			}
 
 			quest_index = game->quests.size();
@@ -140,7 +131,7 @@ void Quest_FindArtifact::SetProgress(int prog2)
 			if(game->IsOnline())
 			{
 				game->Net_AddQuest(refid);
-				game->Net_RegisterItem(&quest_item);
+				game->Net_RegisterItem(&quest_item, item);
 				if(now_known)
 					game->Net_ChangeLocationState(target_loc, false);
 			}
@@ -153,7 +144,7 @@ void Quest_FindArtifact::SetProgress(int prog2)
 			{
 				Location& loc = *game->locations[target_loc];
 				if(loc.active_quest == this)
-					loc.active_quest = NULL;
+					loc.active_quest = nullptr;
 			}
 			RemoveElementTry<Quest_Dungeon*>(game->quests_timeout, this);
 			msgs.push_back(game->txQuest[84]);
@@ -179,7 +170,7 @@ void Quest_FindArtifact::SetProgress(int prog2)
 			{
 				Location& loc = *game->locations[target_loc];
 				if(loc.active_quest == this)
-					loc.active_quest = NULL;
+					loc.active_quest = nullptr;
 			}
 			RemoveElementTry<Quest_Dungeon*>(game->quests_timeout, this);
 			msgs.push_back(game->txQuest[85]);
@@ -208,7 +199,7 @@ cstring Quest_FindArtifact::FormatString(const string& str)
 	else
 	{
 		assert(0);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -263,21 +254,12 @@ void Quest_FindArtifact::Load(HANDLE file)
 	GameReader f(file);
 	f.LoadArtifact(item);
 
-	quest_item.ani = NULL;
-	quest_item.desc.clear();
-	quest_item.flags = ITEM_QUEST|ITEM_DONT_DROP|ITEM_IMPORTANT|ITEM_TEX_ONLY;
+	CreateItemCopy(quest_item, item);
 	quest_item.id = Format("$%s", item->id.c_str());
-	quest_item.mesh.clear();
-	quest_item.name = item->name;
 	quest_item.refid = refid;
-	quest_item.tex = item->tex;
-	quest_item.type = IT_OTHER;
-	quest_item.value = item->value;
-	quest_item.weight = item->weight;
-	quest_item.other_type = OtherItems;
 	spawn_item = Quest_Dungeon::Item_InTreasure;
 	item_to_give[0] = &quest_item;
 
 	if(game->mp_load)
-		game->Net_RegisterItem(&quest_item);
+		game->Net_RegisterItem(&quest_item, item);
 }

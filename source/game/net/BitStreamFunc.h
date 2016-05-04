@@ -36,19 +36,32 @@ inline void WriteStringArray(BitStream& stream, const vector<string>& strs)
 		WriteString<LENGTH_TYPE>(stream, *it);
 }
 
-// zapisywanie struktury
-template<typename T>
-inline void WriteStruct(BitStream& stream, T& struc)
-{
-	stream.Write((char*)&struc, sizeof(struc));
-}
-
 // zapisywanie boola
 // po co to? móg³by ktoœ zapytaæ - ano nie chce zapisywaæ czegoœ na pojedyñczym bicie bo
 // zepsuje siê alingment, póŸniej nie bêdzie wogóle takiej opcji
 inline void WriteBool(BitStream& stream, bool b)
 {
 	stream.WriteCasted<byte>(b ? 1 : 0);
+}
+
+template<typename COUNT_TYPE, typename T>
+inline void WriteVector(BitStream& stream, const vector<T>& v)
+{
+	uint count = v.size();
+	assert(count <= std::numeric_limits<COUNT_TYPE>::max());
+	stream.WriteCasted<COUNT_TYPE>(count);
+	stream.Write(v.data(), sizeof(T)*count);
+}
+
+template<typename CAST_TYPE, typename COUNT_TYPE=uint, typename T>
+inline void WriteVectorCast(BitStream& stream, const vector<T>& v)
+{
+	static_assert(sizeof(CAST_TYPE) < sizeof(T), "CAST_TYPE must be smaller then T");
+	uint count = v.size();
+	assert(count <= std::numeric_limits<COUNT_TYPE>::max());
+	stream.WriteCasted<COUNT_TYPE>(count);
+	for(T value : v)
+		stream.WriteCasted<CAST_TYPE>(value);
 }
 
 //=================================================================================================
@@ -63,6 +76,8 @@ inline bool ReadString(BitStream& stream, string& str)
 		return false;
 	if(len)
 	{
+		if(stream.GetNumberOfUnreadBits() / 8 < len)
+			return false;
 		str.resize(len);
 		return stream.Read((char*)str.c_str(), len);
 	}
@@ -90,6 +105,8 @@ inline bool ReadStringArray(BitStream& stream, vector<string>& strs)
 	COUNT_TYPE count;
 	if(!stream.Read(count))
 		return false;
+	if(stream.GetNumberOfUnreadBits() / 8 < sizeof(LENGTH_TYPE)*count)
+		return false;
 	strs.resize(count);
 	for(vector<string>::iterator it = strs.begin(), end = strs.end(); it != end; ++it)
 	{
@@ -111,13 +128,6 @@ inline bool ReadString1(BitStream& stream)
 	return stream.Read(BUF, len);
 }
 
-// odczytywanie struktury
-template<typename T>
-inline bool ReadStruct(BitStream& stream, T& struc)
-{
-	return stream.Read((char*)&struc, sizeof(struc));
-}
-
 // odczytywanie boola
 // po co? - patrz na WriteBool
 inline bool ReadBool(BitStream& stream, bool& boo)
@@ -126,6 +136,48 @@ inline bool ReadBool(BitStream& stream, bool& boo)
 	if(!stream.Read(b))
 		return false;
 	boo = (b == 1);
+	return true;
+}
+
+template<typename COUNT_TYPE, typename T>
+inline void ReadVector(BitStream& stream, vector<T>& v)
+{
+	COUNT_TYPE count;
+	if(!stream.Read(count)
+		|| !EnsureSize(stream, sizeof(T)*count))
+		return false;
+	if(count)
+	{
+		v.resize(count);
+		stream.Read(v.data(), sizeof(T)*count);
+	}
+	return true;
+}
+
+template<typename CAST_TYPE, typename COUNT_TYPE = uint, typename T>
+inline bool ReadVectorCast(BitStream& stream, vector<T>& v)
+{
+	static_assert(sizeof(CAST_TYPE) < sizeof(T), "CAST_TYPE must be smaller then T");
+	COUNT_TYPE count;
+	if(!stream.Read(count)
+		|| !EnsureSize(stream, count*sizeof(CAST_TYPE)))
+		return false;
+	if(count == 0)
+	{
+		v.clear();
+		return true;
+	}
+	v.resize(count);
+	stream.Read((char*)v.data(), sizeof(CAST_TYPE)*count);
+	T* to = v.data() + count - 1;
+	CAST_TYPE* from = ((CAST_TYPE*)v.data()) + count - 1;
+	while(count > 0)
+	{
+		*to = (T)*from;
+		--to;
+		--from;
+		--count;
+	}
 	return true;
 }
 
@@ -185,4 +237,27 @@ template<typename T>
 inline bool SkipStruct(BitStream& stream)
 {
 	return Skip(stream, sizeof(T));
+}
+
+//=================================================================================================
+// OTHER
+//=================================================================================================
+inline bool EnsureSize(BitStream& stream, uint count)
+{
+	return stream.GetNumberOfUnreadBits() / 8 >= count;
+}
+
+inline uint PatchByte(BitStream& stream)
+{
+	uint pos = stream.GetNumberOfBytesUsed();
+	stream.WriteCasted<byte>(0);
+	return pos;
+}
+
+inline void PatchByteApply(BitStream& stream, uint pos, byte value)
+{
+	uint old_pos = stream.GetNumberOfBytesUsed();
+	stream.SetWriteOffset(pos * 8);
+	stream.Write(value);
+	stream.SetWriteOffset(old_pos * 8);
 }

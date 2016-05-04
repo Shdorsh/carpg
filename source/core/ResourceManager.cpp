@@ -3,9 +3,8 @@
 #include "ResourceManager.h"
 #include "Animesh.h"
 
-ResourceManager::ResourceManager() : last_resource(NULL)
+ResourceManager::ResourceManager() : last_resource(nullptr)
 {
-
 }
 
 ResourceManager::~ResourceManager()
@@ -51,7 +50,7 @@ bool ResourceManager::AddDir(cstring dir, bool subdir)
 				last_resource->pak.pak_id = INVALID_PAK;
 
 				if(AddNewResource(last_resource))
-					last_resource = NULL;
+					last_resource = nullptr;
 			}
 		}
 	} while(FindNextFile(find, &find_data) != 0);
@@ -73,7 +72,7 @@ bool ResourceManager::AddPak(cstring path)
 	// file specs in tools/pak/pak.txt
 
 	// open file
-	HANDLE file = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE file = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if(file == INVALID_HANDLE_VALUE)
 	{
 		DWORD result = GetLastError();
@@ -83,7 +82,7 @@ bool ResourceManager::AddPak(cstring path)
 
 	// read header
 	Pak::Header head;
-	if(!ReadFile(file, &head, sizeof(head), &tmp, NULL))
+	if(!ReadFile(file, &head, sizeof(head), &tmp, nullptr))
 	{
 		DWORD result = GetLastError();
 		ERROR(Format("ResourceManager: Failed to read pak '%s' (%u).", path, result));
@@ -102,7 +101,7 @@ bool ResourceManager::AddPak(cstring path)
 
 	// read table
 	byte* table = new byte[head.table_size];
-	if(!ReadFile(file, table, head.table_size, &tmp, NULL))
+	if(!ReadFile(file, table, head.table_size, &tmp, nullptr))
 	{
 		DWORD result = GetLastError();
 		ERROR(Format("ResourceManager: Failed to read pak '%s' table (%u).", path, result));
@@ -111,7 +110,7 @@ bool ResourceManager::AddPak(cstring path)
 	}
 
 	// setup pak
-	short pak_id = paks.size();
+	short pak_id = (short)paks.size();
 	Pak* pak = new Pak;
 	paks.push_back(pak);
 	pak->path = path;
@@ -130,7 +129,7 @@ bool ResourceManager::AddPak(cstring path)
 		last_resource->pak.entry = i;
 
 		if(AddNewResource(last_resource))
-			last_resource = NULL;
+			last_resource = nullptr;
 	}
 
 	return true;
@@ -142,7 +141,7 @@ Resource2* ResourceManager::GetResource(cstring filename)
 
 	ResourceMapI it = resources.find(filename);
 	if(it == resources.end())
-		return NULL;
+		return nullptr;
 	else
 		return (*it).second;
 }
@@ -155,14 +154,14 @@ Mesh* ResourceManager::LoadMesh(cstring path)
 	Resource2* res = GetResource(path);
 	if(!res)
 		throw Format("ResourceManager: Missing mesh resource '%s'.", path);
-	
+
 	return LoadMesh(res);
 }
 
 Mesh* ResourceManager::LoadMesh(Resource2* res)
 {
 	assert(res && res->CheckType(Resource2::Mesh));
-	
+
 	++res->refs;
 
 	// if already loaded return it
@@ -173,7 +172,7 @@ Mesh* ResourceManager::LoadMesh(Resource2* res)
 	Mesh* m;
 	if(res->pak.pak_id == INVALID_PAK)
 	{
-		HANDLE file = CreateFile(res->path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		HANDLE file = CreateFile(res->path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 		if(file == INVALID_HANDLE_VALUE)
 		{
 			DWORD result = GetLastError();
@@ -192,7 +191,7 @@ Mesh* ResourceManager::LoadMesh(Resource2* res)
 			delete m;
 			throw Format("ResourceManager: Failed to load mesh '%s'. %s", res->path.c_str(), err);
 		}
-		
+
 		CloseHandle(file);
 	}
 	else
@@ -208,7 +207,7 @@ Mesh* ResourceManager::LoadMesh(Resource2* res)
 			}
 			catch(cstring err)
 			{
-				//!~!~!~~! 
+				//!~!~!~~!
 				throw Format("ResourceManager: Failed to load mesh '%s'. %s", res->path.c_str(), err);
 			}
 			//hr = D3DXCreateTextureFromFileInMemory(device, pd.buf->data(), pd.size, &t);
@@ -248,7 +247,7 @@ bool ResourceManager::LoadResource(Resource2* res)
 	switch(type)
 	{
 	case Resource2::Mesh:
-		return LoadMesh(res) != NULL;
+		return LoadMesh(res) != nullptr;
 	}
 
 	return false;
@@ -306,13 +305,13 @@ TEX ResourceManager::LoadTexture(Resource2* res)
 bool ResourceManager::AddNewResource(Resource2* res)
 {
 	assert(res);
-	
+
 	// add resource if not exists
 	std::pair<ResourceMapI, bool> const& r = resources.insert(ResourceMap::value_type(res->filename, res));
 	if(r.second)
 	{
 		// added
-		res->ptr = NULL;
+		res->ptr = nullptr;
 		res->type = Resource2::None;
 		res->state = Resource2::NotLoaded;
 		res->refs = 0;
@@ -336,7 +335,7 @@ bool ResourceManager::GetPakData(Resource2* res, PakData& pak_data)
 	// open pak if closed
 	if(pak.file == INVALID_HANDLE_VALUE)
 	{
-		pak.file = CreateFile(pak.path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		pak.file = CreateFile(pak.path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 		if(pak.file == INVALID_HANDLE_VALUE)
 		{
 			DWORD result = GetLastError();
@@ -350,7 +349,7 @@ bool ResourceManager::GetPakData(Resource2* res, PakData& pak_data)
 		// read data
 		Buf buf = bufs.Get();
 		buf->resize(entry.size);
-		if(!ReadFile(pak.file, buf->data(), entry.size, &tmp, NULL))
+		if(!ReadFile(pak.file, buf->data(), entry.size, &tmp, nullptr))
 		{
 			DWORD result = GetLastError();
 			ERROR(Format("ResourceManager: Failed to read pak '%s' data (%u) for entry %d.", pak.path.c_str(), result, res->pak.entry));
@@ -365,7 +364,7 @@ bool ResourceManager::GetPakData(Resource2* res, PakData& pak_data)
 		// read compressed data
 		Buf cbuf = bufs.Get();
 		cbuf->resize(entry.compressed_size);
-		if(!ReadFile(pak.file, cbuf->data(), entry.compressed_size, &tmp, NULL))
+		if(!ReadFile(pak.file, cbuf->data(), entry.compressed_size, &tmp, nullptr))
 		{
 			DWORD result = GetLastError();
 			ERROR(Format("ResourceManager: Failed to read pak '%s' data (%u) for entry %d.", pak.path.c_str(), result, res->pak.entry));
@@ -436,7 +435,7 @@ Resource2::Type ResourceManager::ExtToResourceType(cstring ext)
 Resource2::Type ResourceManager::FilenameToResourceType(cstring filename)
 {
 	cstring pos = strrchr(filename, '.');
-	if(pos == NULL || !(*pos+1))
+	if(pos == nullptr || !(*pos + 1))
 		return Resource2::None;
 	else
 		return ExtToResourceType(pos + 1);

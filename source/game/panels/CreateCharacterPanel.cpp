@@ -29,7 +29,7 @@ enum ButtonId
 };
 
 //=================================================================================================
-CreateCharacterPanel::CreateCharacterPanel(DialogInfo& info) : Dialog(info), unit(NULL)
+CreateCharacterPanel::CreateCharacterPanel(DialogInfo& info) : Dialog(info), unit(nullptr)
 {
 	txHardcoreMode = Str("hardcoreMode");
 	txHair = Str("hair");
@@ -57,14 +57,15 @@ CreateCharacterPanel::CreateCharacterPanel(DialogInfo& info) : Dialog(info), uni
 	unit = new Unit;
 	unit->type = Unit::HUMAN;
 	unit->human_data = new Human;
-	unit->player = NULL;
-	unit->ai = NULL;
-	unit->hero = NULL;
-	unit->used_item = NULL;
+	unit->player = nullptr;
+	unit->ai = nullptr;
+	unit->hero = nullptr;
+	unit->used_item = nullptr;
 	unit->weapon_state = WS_HIDDEN;
 	unit->pos = unit->visual_pos = VEC3(0,0,0);
 	unit->rot = 0.f;
 	unit->fake_unit = true;
+	unit->action = A_NONE;
 
 	btCancel.id = IdCancel;
 	btCancel.custom = &custom_x;
@@ -204,6 +205,11 @@ CreateCharacterPanel::CreateCharacterPanel(DialogInfo& info) : Dialog(info), uni
 //=================================================================================================
 CreateCharacterPanel::~CreateCharacterPanel()
 {
+	if(unit->bow_instance)
+	{
+		game->bow_instances.push_back(unit->bow_instance);
+		unit->bow_instance = nullptr;
+	}
 	delete unit;
 }
 
@@ -257,23 +263,23 @@ void CreateCharacterPanel::Draw(ControlDrawData*)
 			for(FlowItem& fi : flow_items)
 			{
 				r.top = fpos.y + fi.y - (int)flow_scroll.offset;
-				cstring text = GetText(fi.group, fi.id);
+				cstring item_text = GetText(fi.group, fi.id);
 				if(fi.section)
 				{
 					r.bottom = r.top + SECTION_H;
-					if(!GUI.DrawText(GUI.fBig, text, DT_SINGLELINE, BLACK, r, &rect))
+					if(!GUI.DrawText(GUI.fBig, item_text, DT_SINGLELINE, BLACK, r, &rect))
 						break;
 				}
 				else
 				{
 					if(fi.part > 0)
 					{
-						D3DXMatrixTransformation2D(&mat, NULL, 0.f, &VEC2(float(flow_size.x - 4) / 256, 17.f / 32), NULL, 0.f, &VEC2(float(r.left), float(r.top)));
+						D3DXMatrixTransformation2D(&mat, nullptr, 0.f, &VEC2(float(flow_size.x - 4) / 256, 17.f / 32), nullptr, 0.f, &VEC2(float(r.left), float(r.top)));
 						part.right = int(fi.part * 256);
 						GUI.DrawSprite2(game->tKlasaCecha, &mat, &part, &rect, WHITE);
 					}
 					r.bottom = r.top + VALUE_H;
-					if(!GUI.DrawText(GUI.default_font, text, DT_SINGLELINE, BLACK, r, &rect))
+					if(!GUI.DrawText(GUI.default_font, item_text, DT_SINGLELINE, BLACK, r, &rect))
 						break;
 				}
 			}
@@ -527,7 +533,7 @@ void CreateCharacterPanel::Event(GuiEvent e)
 		case IdCreate:
 			if(enter_name)
 			{
-				GetTextDialogParams params(Format("%s:", txName), name);
+				GetTextDialogParams params(Format("%s:", txName), player_name);
 				params.event = DialogEvent(this, &CreateCharacterPanel::OnEnterName);
 				params.limit = 16;
 				params.parent = this;
@@ -561,7 +567,6 @@ void CreateCharacterPanel::Event(GuiEvent e)
 			slider[3].text = Format("%s %d/%d", txHairColor, slider[3].val, slider[3].maxv);
 			break;
 		case IdSize:
-			//height = slider[4].val;
 			unit->human_data->height = lerp(0.9f,1.1f,float(slider[4].val)/100);
 			slider[4].text = Format("%s %d/%d", txSize, slider[4].val, slider[4].maxv);
 			unit->human_data->ApplyScale(unit->ani->ani);
@@ -601,7 +606,7 @@ void CreateCharacterPanel::RenderUnit()
 	game->SetNoZWrite(false);
 
 	// ustaw render target
-	SURFACE surf = NULL;
+	SURFACE surf = nullptr;
 	if(game->sChar)
 		V( game->device->SetRenderTarget(0, game->sChar) );
 	else
@@ -611,7 +616,7 @@ void CreateCharacterPanel::RenderUnit()
 	}
 
 	// pocz¹tek renderowania
-	V( game->device->Clear(0, NULL, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0, 1.f, 0) );
+	V( game->device->Clear(0, nullptr, D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET, 0, 1.f, 0) );
 	V( game->device->BeginScene() );
 
 	static vector<Lights> lights;
@@ -619,13 +624,15 @@ void CreateCharacterPanel::RenderUnit()
 	game->SetOutsideParams();
 
 	MATRIX matView, matProj;
-	D3DXMatrixLookAtLH(&matView, &VEC3(0.f,2.f,dist), &VEC3(0.f,1.f,0.f), &VEC3(0,1,0));
+	VEC3 from = VEC3(0.f, 2.f, dist);
+	D3DXMatrixLookAtLH(&matView, &from, &VEC3(0.f,1.f,0.f), &VEC3(0,1,0));
 	D3DXMatrixPerspectiveFovLH(&matProj, PI/4, 0.5f, 1.f, 5.f);
 	game->cam.matViewProj = matView * matProj;
-	D3DXMatrixInverse(&game->cam.matViewInv, NULL, &matView);
+	game->cam.center = from;
+	D3DXMatrixInverse(&game->cam.matViewInv, nullptr, &matView);
 
 	game->cam.frustum.Set(game->cam.matViewProj);
-	game->ListDrawObjectsUnit(NULL, game->cam.frustum, true, *unit);
+	game->ListDrawObjectsUnit(nullptr, game->cam.frustum, true, *unit);
 	game->DrawSceneNodes(game->draw_batch.nodes, lights, true);
 	game->draw_batch.Clear();
 
@@ -636,7 +643,7 @@ void CreateCharacterPanel::RenderUnit()
 	if(game->sChar)
 	{
 		V( game->tChar->GetSurfaceLevel(0, &surf) );
-		V( game->device->StretchRect(game->sChar, NULL, surf, NULL, D3DTEXF_NONE) );
+		V( game->device->StretchRect(game->sChar, nullptr, surf, nullptr, D3DTEXF_NONE) );
 	}
 	surf->Release();
 
@@ -770,17 +777,11 @@ void CreateCharacterPanel::UpdateUnit(float dt)
 			unit->ani->groups[0].speed = unit->GetBowAttackSpeed();
 			unit->animation_state = 0;
 			t = 100.f;
-			if(game->bow_instances.empty())
-				unit->bow_instance = new AnimeshInstance(unit->GetBow().ani);
-			else
-			{
-				unit->bow_instance = game->bow_instances.back();
-				game->bow_instances.pop_back();
-				unit->bow_instance->ani = unit->GetBow().ani;
-			}
+			unit->bow_instance = game->GetBowInstance(unit->GetBow().ani);
 			unit->bow_instance->Play(&unit->bow_instance->ani->anims[0], PLAY_ONCE|PLAY_PRIO1|PLAY_NO_BLEND, 0);
 			unit->bow_instance->groups[0].speed = unit->ani->groups[0].speed;
 			unit->ani->frame_end_info = false;
+			unit->action = A_SHOOT;
 			break;
 		case DA_WYJMIJ_BRON:
 			unit->ani->Play(unit->GetTakeWeaponAnimation(true), PLAY_PRIO2|PLAY_ONCE, 0);
@@ -845,8 +846,9 @@ void CreateCharacterPanel::UpdateUnit(float dt)
 			{
 				assert(unit->bow_instance);
 				game->bow_instances.push_back(unit->bow_instance);
-				unit->bow_instance = NULL;
+				unit->bow_instance = nullptr;
 				unit->ani->groups[0].speed = 1.f;
+				unit->action = A_NONE;
 				if(rand2()%2 == 0)
 				{
 					anim = DA_STRZAL;
@@ -985,7 +987,6 @@ void CreateCharacterPanel::SetControls()
 	slider[3].val = hair_index;
 	slider[3].text = Format("%s %d/%d", txHairColor, slider[3].val, slider[3].maxv);
 	slider[4].val = int((unit->human_data->height-0.9f)*500);
-	//height = slider[4].val;
 	slider[4].text = Format("%s %d/%d", txSize, slider[4].val, slider[4].maxv);
 }
 
@@ -1048,7 +1049,7 @@ void CreateCharacterPanel::GetTooltip(TooltipController* _tool, int group, int i
 			tool.text = ai.desc;
 			tool.small_text.clear();
 			tool.anything = true;
-			tool.img = NULL;
+			tool.img = nullptr;
 		}
 		break;
 	case Group::Skill:
@@ -1061,13 +1062,13 @@ void CreateCharacterPanel::GetTooltip(TooltipController* _tool, int group, int i
 			else
 				tool.small_text = Format("%s: %s", txRelatedAttributes, g_attributes[(int)si.attrib].name.c_str());
 			tool.anything = true;
-			tool.img = NULL;
+			tool.img = nullptr;
 		}
 		break;
 	case Group::Perk:
 		{
 			tool.anything = true;
-			tool.img = NULL;
+			tool.img = nullptr;
 			tool.small_text.clear();
 			PerkInfo& pi = g_perks[id];
 			tool.big_text = pi.name;
@@ -1078,7 +1079,7 @@ void CreateCharacterPanel::GetTooltip(TooltipController* _tool, int group, int i
 		{
 			TakenPerk& taken = cc.taken_perks[id];
 			tool.anything = true;
-			tool.img = NULL;			
+			tool.img = nullptr;			
 			PerkInfo& pi = g_perks[(int)taken.perk];
 			tool.big_text = pi.name;
 			tool.text = pi.desc;
@@ -1161,7 +1162,7 @@ void CreateCharacterPanel::OnPickSkill(int group, int id)
 	}
 
 	// update buttons image / text
-	FlowItem2* find_item = NULL;
+	FlowItem2* find_item = nullptr;
 	for(FlowItem2* item : flowSkills.items)
 	{
 		if(item->type == FlowItem2::Button)
@@ -1594,7 +1595,7 @@ void CreateCharacterPanel::UpdateInventory()
 		if(items[i])
 			unit->slots[i] = FindItem(items[i]);
 		else
-			unit->slots[i] = NULL;
+			unit->slots[i] = nullptr;
 	}
 
 	bool reset = false;
@@ -1624,6 +1625,12 @@ void CreateCharacterPanel::ResetDoll(bool instant)
 	if(instant)
 	{
 		UpdateUnit(0.f);
-		unit->ani->SetToEnd();
+		unit->SetAnimationAtEnd();
 	}
+	if(unit->bow_instance)
+	{
+		game->bow_instances.push_back(unit->bow_instance);
+		unit->bow_instance = nullptr;
+	}
+	unit->action = A_NONE;
 }

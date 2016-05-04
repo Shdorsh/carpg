@@ -50,7 +50,7 @@ void Minimap::Draw(ControlDrawData* /*cdd*/)
 			important_items->push_back(*it);
 		else if(!lvl || lvl->IsTileVisible((*it)->pos))
 		{
-			D3DXMatrixTransformation2D(&m1, &VEC2(16,16), 0.f, &VEC2(0.25f,0.25f), NULL, NULL, &(PosToPoint(VEC2((*it)->pos.x, (*it)->pos.z))-VEC2(16,16)));
+			D3DXMatrixTransformation2D(&m1, &VEC2(16,16), 0.f, &VEC2(0.25f,0.25f), nullptr, 0.f, &(PosToPoint(VEC2((*it)->pos.x, (*it)->pos.z))-VEC2(16,16)));
 			GUI.DrawSpriteTransform(game.tMinibag, m1, COLOR_RGBA(255,255,255,140));
 		}
 	}
@@ -58,7 +58,7 @@ void Minimap::Draw(ControlDrawData* /*cdd*/)
 	{
 		if(!lvl || lvl->IsTileVisible((*it)->pos))
 		{
-			D3DXMatrixTransformation2D(&m1, &VEC2(16,16), 0.f, &VEC2(0.25f,0.25f), NULL, NULL, &(PosToPoint(VEC2((*it)->pos.x, (*it)->pos.z))-VEC2(16,16)));
+			D3DXMatrixTransformation2D(&m1, &VEC2(16,16), 0.f, &VEC2(0.25f,0.25f), nullptr, 0.f, &(PosToPoint(VEC2((*it)->pos.x, (*it)->pos.z))-VEC2(16,16)));
 			GUI.DrawSpriteTransform(game.tMinibag2, m1, COLOR_RGBA(255,255,255,140));
 		}
 	}
@@ -84,11 +84,11 @@ void Minimap::Draw(ControlDrawData* /*cdd*/)
 	if(game.city_ctx)
 	{
 		// teksty w mieœcie
-		for(vector<Text>::iterator it = texts.begin(), end = texts.end(); it != end; ++it)
+		for(Text& text : texts)
 		{
-			INT2 pt(Convert(it->pos));
-			RECT rect = {pt.x-it->size.x/2, pt.y-it->size.y/2, pt.x+it->size.x/2, pt.y+it->size.y/2};
-			GUI.DrawText(GUI.default_font, it->text, DT_SINGLELINE, BLACK, rect);
+			INT2 pt(Convert(text.pos));
+			RECT rect = {pt.x-text.size.x/2, pt.y-text.size.y/2, pt.x+text.size.x/2, pt.y+text.size.y/2};
+			GUI.DrawText(GUI.default_font, text.text, DT_SINGLELINE, BLACK, rect);
 		}
 
 		// linie do tekstów
@@ -148,7 +148,7 @@ void Minimap::Event(GuiEvent e)
 {
 	if(e == GuiEvent_Resize)
 	{
-		city = NULL;
+		city = nullptr;
 		Build();
 	}
 }

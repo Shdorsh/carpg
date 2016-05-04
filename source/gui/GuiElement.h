@@ -4,11 +4,11 @@
 class GuiElement
 {
 public:
-	inline GuiElement(int value = 0, TEX tex = NULL) : value(value), tex(tex)
+	inline GuiElement(int value = 0, TEX tex = nullptr) : value(value), tex(tex)
 	{
 
 	}
-
+	virtual ~GuiElement() {}
 	virtual cstring ToString() = 0;
 
 	int value;
@@ -19,7 +19,7 @@ public:
 class DefaultGuiElement : public GuiElement
 {
 public:
-	inline DefaultGuiElement(cstring _text, int value = 0, TEX tex = NULL) : GuiElement(value, tex)
+	inline DefaultGuiElement(cstring _text, int value = 0, TEX tex = nullptr) : GuiElement(value, tex)
 	{
 		text = _text;
 	}
