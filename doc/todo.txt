@@ -1,4 +1,21 @@
-﻿+ toolset/menu don't lock cursor in windowed mode
+﻿- missing localized text for building, mark as not required
+
++ save/load
+	? container
+	? order
+	? dependency between types (order of load)
+
++ building script
+	+ reorder
+	+ update entity
+	+ multi tabs save
+	+ reload
+	+ order ?
+
++ keep references
++ chaning id of referenced item should mark as changed childs
+
++ toolset/menu don't lock cursor in windowed mode
 
 GUI TODO NEW AND UNIQUE :):
 + GUI.DrawText uses winapi RECT

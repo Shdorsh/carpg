@@ -1,16 +1,18 @@
 #pragma once
 
-#include "GameTypeId.h"
+#include "TypeId.h"
 #include "Overlay.h"
 #include "Event.h"
+#include "Type.h"
 
 #undef CreateWindow
 
+class Button;
 class Engine;
-class GameType;
-class GameTypeManager;
+class TypeManager;
 class TextBox;
 class ListBox;
+struct TypeEntity;
 
 namespace gui
 {
@@ -20,13 +22,15 @@ namespace gui
 
 struct ToolsetItem
 {
-	GameType& game_type;
+	Type& type;
 	gui::Window* window;
 	TextBox* box;
 	ListBox* list_box;
-	bool unsaved;
+	std::map<string, TypeEntity*> items;
+	vector<TypeEntity*> removed_items;
+	Button* bt_save, *bt_restore;
 
-	ToolsetItem(GameType& game_type) : game_type(game_type) {}
+	ToolsetItem(Type& type) : type(type) {}
 	/*~ToolsetItem()
 	{
 		delete window;
@@ -36,9 +40,10 @@ struct ToolsetItem
 class Toolset : public gui::Overlay
 {
 public:
-	Toolset(GameTypeManager& gt_mgr);
+	Toolset(TypeManager& type_manager);
 	~Toolset();
 
+	void Event(GuiEvent e) override;
 	void Update(float dt) override;
 
 	void Init(Engine* engine);
@@ -48,13 +53,13 @@ public:
 
 private:
 	void HandleMenuEvent(int id);
-	void ShowGameType(GameTypeId id);
-	ToolsetItem* GetToolsetItem(GameTypeId id);
-	ToolsetItem* CreateToolsetItem(GameTypeId id);
+	void ShowType(TypeId id);
+	ToolsetItem* GetToolsetItem(TypeId id);
+	ToolsetItem* CreateToolsetItem(TypeId id);
 	void HandleTreeViewKeyEvent(gui::KeyEventData& e);
 	void HandleTreeViewMouseEvent(gui::MouseEventData& e);
 	void HandleTreeViewMenuEvent(int id);
-	void HandleListBoxEvent(int action, int id);
+	bool HandleListBoxEvent(int action, int id);
 
 
 	void Save();
@@ -62,14 +67,22 @@ private:
 	void ExitToMenu();
 	void Quit();
 
-	GameTypeManager& gt_mgr;
+	bool AnyEntityChanges();
+	bool SaveEntity();
+	void RestoreEntity();
+	bool ValidateEntity();
+	cstring GenerateEntityName(cstring name, bool dup);
+	bool AnyUnsavedChanges();
+
+	TypeManager& type_manager;
 	Engine* engine;
 	gui::TabControl* tab_ctrl;
-	std::map<GameTypeId, ToolsetItem*> toolset_items;
+	std::map<TypeId, ToolsetItem*> toolset_items;
 	gui::MenuStrip* tree_menu;
 	ToolsetItem* current_toolset_item; // UPDATE
-	bool unsaved_changes;
+	TypeEntity* current_entity;
 	gui::MenuStrip* menu_strip;
+	int context_index;
 
 	enum class Closing
 	{
@@ -78,4 +91,10 @@ private:
 		Shutdown
 	};
 	Closing closing;
+
+	enum EventId
+	{
+		Event_Save = GuiEvent_Custom,
+		Event_Restore
+	};
 };

@@ -9,12 +9,13 @@
 #include "ToolStrip.h"
 #include "TabControl.h"
 #include "TreeView.h"
-#include "GameTypeManager.h"
+#include "TypeManager.h"
 #include "ListBox.h"
 #include "Label.h"
 #include "Button.h"
 #include "TextBox.h"
-#include "GameTypeProxy.h"
+#include "TypeProxy.h"
+#include "Dialog2.h"
 
 using namespace gui;
 
@@ -48,7 +49,31 @@ enum ListAction
 	A_REMOVE
 };
 
-Toolset::Toolset(GameTypeManager& gt_mgr) : engine(nullptr), gt_mgr(gt_mgr), unsaved_changes(false)
+class TreeItem : public TreeNode
+{
+public:
+	TreeItem(Type& type, TypeItem item) : type(type), item(item)
+	{
+		SetText(type.GetItemId(item));
+	}
+
+	Type& type;
+	TypeItem item;
+};
+
+struct ListItemElement : public GuiElement
+{
+	TypeEntity* entity;
+
+	ListItemElement(TypeEntity* entity) : entity(entity) {}
+
+	cstring ToString() override
+	{
+		return entity->id.c_str();
+	}
+};
+
+Toolset::Toolset(TypeManager& type_manager) : engine(nullptr), type_manager(type_manager)
 {
 
 }
@@ -74,14 +99,14 @@ void Toolset::Init(Engine* _engine)
 		{"Save", MA_SAVE},
 		//{"Save As", MA_SAVE_AS},
 		//{"Settings", MA_SETTINGS},
-		{"Reload", MA_RELOAD},
+		//{"Reload", MA_RELOAD},
 		{"Exit to menu", MA_EXIT_TO_MENU},
 		{"Quit", MA_QUIT}
 	});
 	menu->AddMenu("Buildings", {
 		{"Building groups", MA_BUILDING_GROUPS},
-		{"Buildings", MA_BUILDINGS},
-		{"Building scripts", MA_BUILDING_SCRIPTS}
+		//{"Buildings", MA_BUILDINGS},
+		//{"Building scripts", MA_BUILDING_SCRIPTS}
 	});
 	menu->AddMenu("Info", {
 		{"About", MA_ABOUT}
@@ -141,9 +166,34 @@ bool Toolset::OnUpdate(float dt)
 	return true;
 }
 
+void Toolset::Event(GuiEvent event)
+{
+	switch(event)
+	{
+	case Event_Save:
+		SaveEntity();
+		break;
+	case Event_Restore:
+		RestoreEntity();
+		break;
+	default:
+		Overlay::Event(event);
+		break;
+	}
+}
+
 void Toolset::Update(float dt)
 {
 	Overlay::Update(dt);
+
+	auto tab = tab_ctrl->GetCurrentTab();
+	if(tab)
+	{
+		bool have_changes = AnyEntityChanges();
+		tab->SetHaveChanges(have_changes);
+		current_toolset_item->bt_save->SetDisabled(!have_changes);
+		current_toolset_item->bt_restore->SetDisabled(!have_changes);
+	}
 
 	if(Key.PressedRelease(VK_ESCAPE))
 		closing = Closing::Yes;
@@ -166,13 +216,13 @@ void Toolset::HandleMenuEvent(int id)
 		Quit();
 		break;
 	case MA_BUILDING_GROUPS:
-		ShowGameType(GT_BuildingGroup);
+		ShowType(TypeId::BuildingGroup);
 		break;
 	case MA_BUILDINGS:
-		ShowGameType(GT_Building);
+		ShowType(TypeId::Building);
 		break;
 	case MA_BUILDING_SCRIPTS:
-		ShowGameType(GT_BuildingScript);
+		ShowType(TypeId::BuildingScript);
 		break;
 	case MA_ABOUT:
 		SimpleDialog("TOOLSET\n=========\nNothing interesting here yet...");
@@ -182,12 +232,18 @@ void Toolset::HandleMenuEvent(int id)
 
 void Toolset::Save()
 {
-	if(!unsaved_changes)
+	if(!SaveEntity())
 		return;
 
-	// saving...
+	auto& items = current_toolset_item->list_box->GetItemsCast<ListItemElement>();
+	vector<TypeEntity*> new_items;
+	for(auto item : items)
+		new_items.push_back(item->entity);
 
-	unsaved_changes = false;
+	current_toolset_item->type.GetContainer()->Merge(new_items, current_toolset_item->removed_items);
+
+	if(!type_manager.Save())
+		SimpleDialog("Failed to save all changes. Check LOG for details.");
 }
 
 void Toolset::Reload()
@@ -197,69 +253,72 @@ void Toolset::Reload()
 
 void Toolset::ExitToMenu()
 {
+	if(AnyUnsavedChanges())
+	{
+		DialogInfo dialog;
+		dialog.type = DIALOG_YESNO;
+		dialog.text = "Discard unsaved changes and exit to menu?";
+		dialog.event = [this](int id) { if(id == BUTTON_YES) closing = Closing::Yes; };
+		GUI.ShowDialog(dialog);
+		return;
+	}
+
 	closing = Closing::Yes;
 }
 
 void Toolset::Quit()
 {
+	if(AnyUnsavedChanges())
+	{
+		DialogInfo dialog;
+		dialog.type = DIALOG_YESNO;
+		dialog.text = "Discard unsaved changes and quit?";
+		dialog.event = [this](int id) { if(id == BUTTON_YES) closing = Closing::Shutdown; };
+		GUI.ShowDialog(dialog);
+		return;
+	}
+
 	closing = Closing::Shutdown;
 }
 
-void Toolset::ShowGameType(GameTypeId id)
+void Toolset::ShowType(TypeId type_id)
 {
-	GameType& type = gt_mgr.GetGameType(id);
-	TabControl::Tab* tab = tab_ctrl->Find(type.GetId().c_str());
+	Type& type = type_manager.GetType(type_id);
+	TabControl::Tab* tab = tab_ctrl->Find(type.GetToken().c_str());
 	if(tab)
 	{
 		tab->Select();
 		return;
 	}
 
-	tab_ctrl->AddTab(type.GetId().c_str(), type.GetFriendlyName().c_str(), GetToolsetItem(id)->window);
+	tab_ctrl->AddTab(type.GetToken().c_str(), type.GetName().c_str(), GetToolsetItem(type_id)->window);
 }
 
-ToolsetItem* Toolset::GetToolsetItem(GameTypeId id)
+ToolsetItem* Toolset::GetToolsetItem(TypeId type_id)
 {
-	auto it = toolset_items.find(id);
+	auto it = toolset_items.find(type_id);
 	if(it != toolset_items.end())
 		return it->second;
-	ToolsetItem* toolset_item = CreateToolsetItem(id);
-	toolset_items[id] = toolset_item;
+	ToolsetItem* toolset_item = CreateToolsetItem(type_id);
+	toolset_items[type_id] = toolset_item;
 	return toolset_item;
 }
 
-class TreeItem : public TreeNode
+ToolsetItem* Toolset::CreateToolsetItem(TypeId type_id)
 {
-public:
-	TreeItem(GameType& type, GameTypeItem item) : type(type), item(item)
-	{
-		SetText(type.GetItemId(item));
-	}
-
-	GameType& type;
-	GameTypeItem item;
-};
-
-struct GameItemElement : public GuiElement
-{
-	GameTypeItem item;
-	string& id;
-
-	GameItemElement(GameTypeItem item, string& id) : item(item), id(id) {}
-
-	cstring ToString() override
-	{
-		return id.c_str();
-	}
-};
-
-ToolsetItem* Toolset::CreateToolsetItem(GameTypeId id)
-{
-	ToolsetItem* toolset_item = new ToolsetItem(gt_mgr.GetGameType(id));
+	ToolsetItem* toolset_item = new ToolsetItem(type_manager.GetType(type_id));
 	toolset_item->window = new Window;
 
-	GameType& type = toolset_item->game_type;
-	GameTypeHandler* handler = type.GetHandler();
+
+	Type& type = toolset_item->type;
+	Type::Container* container = type.GetContainer();
+
+	for(auto e : container->ForEach())
+	{
+		auto e_dup = type.Duplicate(e);
+		auto new_e = new TypeEntity(e_dup, e, TypeEntity::UNCHANGED, type.GetItemId(e_dup));
+		toolset_item->items[std::ref(new_e->id)] = new_e;
+	}
 
 	Window* w = toolset_item->window;
 
@@ -271,7 +330,7 @@ ToolsetItem* Toolset::CreateToolsetItem(GameTypeId id)
 		tree->AddChild(new TreeItem(type, item));
 	w->Add(tree);*/
 
-	Label* label = new Label(Format("%s (%u):", type.GetFriendlyName().c_str(), handler->Count()));
+	Label* label = new Label(Format("%s (%u):", type.GetName().c_str(), container->Count()));
 	label->SetPosition(INT2(5, 5));
 	w->Add(label);
 
@@ -281,21 +340,25 @@ ToolsetItem* Toolset::CreateToolsetItem(GameTypeId id)
 	list_box->SetPosition(INT2(5, 30));
 	list_box->SetSize(INT2(200, 500));
 	list_box->Init();
-	for(auto e : handler->ForEach())
-		list_box->Add(new GameItemElement(e, type.GetItemId(e)));
+	for(auto& e : toolset_item->items)
+		list_box->Add(new ListItemElement(e.second));
 	w->Add(list_box);
 
 	Button* bt = new Button;
 	bt->text = "Save";
+	bt->id = Event_Save;
 	bt->SetPosition(INT2(5, 535));
 	bt->SetSize(INT2(100, 30));
 	w->Add(bt);
+	toolset_item->bt_save = bt;
 
 	bt = new Button;
-	bt->text = "Reload";
+	bt->text = "Restore";
+	bt->id = Event_Restore;
 	bt->SetPosition(INT2(110, 535));
 	bt->SetSize(INT2(100, 30));
 	w->Add(bt);
+	toolset_item->bt_restore = bt;
 
 	Panel* panel = new Panel;
 	panel->custom_color = 0;
@@ -314,6 +377,7 @@ ToolsetItem* Toolset::CreateToolsetItem(GameTypeId id)
 
 	w->Add(panel);
 	w->SetDocked(true);
+	w->SetEventProxy(this);
 	w->Initialize();
 
 	toolset_item->list_box = list_box;
@@ -369,27 +433,214 @@ void Toolset::HandleTreeViewMenuEvent(int id)
 	}
 }
 
-void Toolset::HandleListBoxEvent(int action, int id)
+bool Toolset::HandleListBoxEvent(int action, int id)
 {
 	switch(action)
 	{
+	case ListBox::A_BEFORE_CHANGE_INDEX:
+		if(!SaveEntity())
+			return false;
+		break;
 	case ListBox::A_INDEX_CHANGED:
 		{
-			GameItemElement* e = current_toolset_item->list_box->GetItemCast<GameItemElement>();
-			current_toolset_item->box->SetText(e->id.c_str());
+			ListItemElement* e = current_toolset_item->list_box->GetItemCast<ListItemElement>();
+			current_toolset_item->box->SetText(e->entity->id.c_str());
+			current_entity = e->entity;
 		}
 		break;
 	case ListBox::A_BEFORE_MENU_SHOW:
 		{
+			if(!SaveEntity())
+				return false;
+
 			bool enabled = (id != -1);
 			menu_strip->FindItem(A_DUPLICATE)->SetEnabled(enabled);
 			menu_strip->FindItem(A_REMOVE)->SetEnabled(enabled);
+			context_index = id;
 		}
 		break;
 	case ListBox::A_MENU:
+		switch(id)
 		{
-
+		case A_ADD:
+			{
+				auto new_item = current_toolset_item->type.Create();
+				auto& item_id = current_toolset_item->type.GetItemId(new_item);
+				item_id = GenerateEntityName(Format("new %s", current_toolset_item->type.GetToken().c_str()), false);
+				auto new_e = new TypeEntity(new_item, nullptr, TypeEntity::NEW, item_id);
+				auto item = new ListItemElement(new_e);
+				if(context_index == -1)
+				{
+					current_toolset_item->list_box->Add(item);
+					current_toolset_item->list_box->Select(current_toolset_item->list_box->GetItems().size() - 1, true);
+				}
+				else
+				{
+					current_toolset_item->list_box->Insert(item, context_index);
+					current_toolset_item->list_box->Select(context_index, true);
+				}
+				current_toolset_item->items[item_id] = new_e;
+			}
+			break;
+		case A_DUPLICATE:
+			{
+				auto new_item = current_toolset_item->type.Duplicate(current_entity->item);
+				auto& item_id = current_toolset_item->type.GetItemId(new_item);
+				item_id = GenerateEntityName(current_entity->id.c_str(), true);
+				auto new_e = new TypeEntity(new_item, nullptr, TypeEntity::NEW, item_id);				
+				auto item = new ListItemElement(new_e);
+				current_toolset_item->list_box->Insert(item, context_index + 1);
+				current_toolset_item->list_box->Select(context_index + 1, true);
+				current_toolset_item->items[item_id] = new_e;
+			}
+			break;
+		case A_REMOVE:
+			{
+				if(current_entity->state == TypeEntity::NEW || current_entity->state == TypeEntity::NEW_ATTACHED)
+					delete current_entity;
+				else
+					current_toolset_item->removed_items.push_back(current_entity);
+				current_toolset_item->items.erase(current_entity->id);
+				current_toolset_item->list_box->Remove(context_index);
+			}
+			break;
 		}
 		break;
 	}
+
+	return true;
+}
+
+bool Toolset::AnyEntityChanges()
+{
+	if(!current_entity)
+		return false;
+	return current_entity->state == TypeEntity::NEW
+		|| current_entity->id != current_toolset_item->box->GetText();
+}
+
+bool Toolset::SaveEntity()
+{
+	if(!AnyEntityChanges())
+		return true;
+
+	if(!ValidateEntity())
+		return false;
+	
+	TypeProxy proxy(current_toolset_item->type, current_entity->item);
+
+	const string& new_id = current_toolset_item->box->GetText();
+	if(new_id != current_entity->id)
+	{
+		current_toolset_item->items.erase(current_entity->id);
+		current_entity->id = new_id;
+		current_toolset_item->items[new_id] = current_entity;
+	}
+
+	switch(current_entity->state)
+	{
+	case TypeEntity::UNCHANGED:
+	case TypeEntity::CHANGED:
+		{
+			bool equal = current_toolset_item->type.Compare(current_entity->item, current_entity->old);
+			if(equal)
+				current_entity->state = TypeEntity::UNCHANGED;
+			else
+				current_entity->state = TypeEntity::CHANGED;
+		}
+		break;
+	case TypeEntity::NEW:
+		current_entity->state = TypeEntity::NEW_ATTACHED;
+		break;
+	case TypeEntity::NEW_ATTACHED:
+		break;
+	}
+
+	return true;
+}
+
+void Toolset::RestoreEntity()
+{
+	if(!AnyEntityChanges())
+		return;
+
+	if(current_entity->state == TypeEntity::NEW)
+	{
+		current_toolset_item->items.erase(current_entity->id);
+		current_toolset_item->type.Destroy(current_entity->item);
+		delete current_entity;
+		current_entity = nullptr;
+		current_toolset_item->list_box->Remove(current_toolset_item->list_box->GetIndex());
+		return;
+	}
+
+	current_toolset_item->box->SetText(current_entity->id.c_str());
+}
+
+bool Toolset::ValidateEntity()
+{
+	cstring err_msg = nullptr;
+	const string& new_id = current_toolset_item->box->GetText();
+	if(new_id.length() < 1)
+		err_msg = "Id must not be empty.";
+	else if(new_id.length() > 100)
+		err_msg = "Id max length is 100.";
+	else
+	{
+		auto it = current_toolset_item->items.find(new_id);
+		if(it != current_toolset_item->items.end() && it->second != current_entity)
+			err_msg = "Id must be unique.";
+	}
+
+	if(err_msg)
+	{
+		GUI.SimpleDialog(Format("Validation failed\n----------------------\n%s", err_msg), this);
+		return false;
+	}
+	else
+		return true;
+}
+
+cstring Toolset::GenerateEntityName(cstring name, bool dup)
+{
+	string old_name = name;
+	int index = 1;
+
+	if(!dup)
+	{
+		auto it = current_toolset_item->items.find(old_name);
+		if(it == current_toolset_item->items.end())
+			return name;
+	}
+	else
+	{
+		cstring pos = strrchr(name, '(');
+		if(pos)
+		{
+			int new_index;
+			if(sscanf(pos, "(%d)", &new_index) == 1)
+			{
+				index = new_index + 1;
+				if(name != pos)
+					old_name = string(name, pos - name - 1);
+				else
+					old_name = string(name, pos - name);
+			}
+		}
+	}
+
+	string new_name;
+	while(true)
+	{
+		new_name = Format("%s (%d)", old_name.c_str(), index);
+		auto it = current_toolset_item->items.find(new_name);
+		if(it == current_toolset_item->items.end())
+			return Format("%s", new_name.c_str());
+		++index;
+	}
+}
+
+bool Toolset::AnyUnsavedChanges()
+{
+	return AnyEntityChanges();
 }
