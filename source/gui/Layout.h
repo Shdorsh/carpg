@@ -75,13 +75,14 @@ namespace gui
 		{
 			AreaLayout background;
 			AreaLayout selected;
-			AreaLayout selected_focus;
 			AreaLayout button;
 			AreaLayout button_hover;
 			AreaLayout button_down;
 			AreaLayout button_down_hover;
 			Font* font;
 			DWORD font_color;
+			int level_offset;
+			TEX text_box_background;
 		} tree_view;
 
 		struct SplitPanel
@@ -93,6 +94,15 @@ namespace gui
 		} split_panel;
 
 		LabelLayout* label;
+
+		struct CheckBoxGroup
+		{
+			AreaLayout background;
+			AreaLayout box;
+			AreaLayout checked;
+			Font* font;
+			DWORD font_color;
+		} check_box_group;
 
 		void LoadDefault();
 	};

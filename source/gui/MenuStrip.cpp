@@ -1,9 +1,10 @@
 #include "Pch.h"
 #include "Base.h"
-#include "MenuStrip.h"
-#include "Overlay.h"
+#include "GuiElement.h"
 #include "KeyStates.h"
 #include "MenuBar.h"
+#include "MenuStrip.h"
+#include "Overlay.h"
 
 using namespace gui;
 
@@ -29,6 +30,31 @@ MenuStrip::MenuStrip(vector<SimpleMenuCtor>& _items, int min_width) : items(item
 	}
 	
 	size = INT2(max_width + (layout->menustrip.padding.x + layout->menustrip.item_padding.x ) * 2,
+		(font->height + (layout->menustrip.item_padding.y) * 2) * items.size() + layout->menustrip.padding.y * 2);
+}
+
+MenuStrip::MenuStrip(vector<GuiElement*>& _items, int min_width) : items(items), selected(nullptr)
+{
+	int width, max_width = 0;
+	Font* font = layout->menustrip.font;
+
+	items.resize(_items.size());
+	for(uint i = 0, size = _items.size(); i < size; ++i)
+	{
+		GuiElement* e = _items[i];
+		Item& item2 = items[i];
+		item2.text = e->ToString();
+		item2.action = e->value;
+		item2.hover = false;
+		item2.index = i;
+		item2.enabled = true;
+
+		width = font->CalculateSize(item2.text).x;
+		if(width > max_width)
+			max_width = width;
+	}
+
+	size = INT2(max_width + (layout->menustrip.padding.x + layout->menustrip.item_padding.x) * 2,
 		(font->height + (layout->menustrip.item_padding.y) * 2) * items.size() + layout->menustrip.padding.y * 2);
 }
 
@@ -111,13 +137,13 @@ void MenuStrip::UpdateMouse()
 	{
 		if(area.IsInside(GUI.cursor_pos))
 		{
-			if(item.enabled && (GUI.MouseMoved() || Key.Down(VK_LBUTTON)))
+			if(item.enabled && (GUI.MouseMoved() || Key.Pressed(VK_LBUTTON)))
 			{
 				if(selected)
 					selected->hover = false;
 				selected = &item;
 				selected->hover = true;
-				if(Key.Down(VK_LBUTTON))
+				if(Key.PressedRelease(VK_LBUTTON))
 				{
 					if(handler)
 						handler(item.action);
@@ -229,4 +255,9 @@ void MenuStrip::ChangeIndex(int dif)
 	}
 
 	selected->hover = true;
+}
+
+bool MenuStrip::IsOpen()
+{
+	return GUI.GetOverlay()->IsOpen(this);
 }

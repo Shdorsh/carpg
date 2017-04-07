@@ -102,7 +102,7 @@ struct BuildingSchemeHandler : public Type::CustomFieldHandler
 {
 	//=================================================================================================
 	// Load scheme from text file
-	void LoadText(Tokenizer& t, TypeItem item) override
+	void LoadText(Tokenizer& t, TypeItem* item) override
 	{
 		Building& b = *(Building*)item;
 
@@ -156,7 +156,7 @@ struct BuildingSchemeHandler : public Type::CustomFieldHandler
 
 	//=================================================================================================
 	// Update crc using item
-	void UpdateCrc(CRC32& crc, TypeItem item) override
+	void UpdateCrc(CRC32& crc, TypeItem* item) override
 	{
 		Building& b = *(Building*)item;
 		crc.UpdateVector(b.scheme);
@@ -192,7 +192,7 @@ struct BuildingShiftHandler : public Type::CustomFieldHandler
 
 	//=================================================================================================
 	// Load shift from text file
-	void LoadText(Tokenizer& t, TypeItem item) override
+	void LoadText(Tokenizer& t, TypeItem* item) override
 	{
 		Building& b = *(Building*)item;
 
@@ -227,7 +227,7 @@ struct BuildingShiftHandler : public Type::CustomFieldHandler
 
 	//=================================================================================================
 	// Update crc using item
-	void UpdateCrc(CRC32& crc, TypeItem item) override
+	void UpdateCrc(CRC32& crc, TypeItem* item) override
 	{
 		Building& b = *(Building*)item;
 		crc.Update(b.shift);
@@ -245,13 +245,14 @@ public:
 		AddId(offsetof(Building, id));
 		AddMesh("mesh", offsetof(Building, mesh_id), offsetof(Building, mesh));
 		AddMesh("inside_mesh", offsetof(Building, inside_mesh_id), offsetof(Building, inside_mesh))
-			.NotRequired();
-		AddFlags("flags", offsetof(Building, flags), AddKeywords({
-			{ "favor_center", Building::FAVOR_CENTER },
-			{ "favor_road", Building::FAVOR_ROAD },
-			{ "have_name", Building::HAVE_NAME },
-			{ "list", Building::LIST }
-		}, "building flags")).NotRequired();
+			.NotRequired()
+			.FriendlyName("Inside mesh");
+		AddFlags("flags", offsetof(Building, flags), {
+			{ "favor_center", Building::FAVOR_CENTER, "Favor center" },
+			{ "favor_road", Building::FAVOR_ROAD, "Favor road" },
+			{ "have_name", Building::HAVE_NAME, "Have name" },
+			{ "list", Building::LIST, "List" }
+		}).NotRequired();
 		AddCustomField("scheme", new BuildingSchemeHandler);
 		AddReference("group", TypeId::BuildingGroup, offsetof(Building, group))
 			.NotRequired()
@@ -260,23 +261,20 @@ public:
 			.NotRequired();
 		AddCustomField("shift", new BuildingShiftHandler(this))
 			.NotRequired();
-		AddString("alias", offsetof(Building, alias))
-			.NotRequired()
-			.Alias();
 
 		AddLocalizedString("name", offsetof(Building, name));
 
 		container = new TypeVectorContainer(this, content::buildings);
 	}
 
-	void ReferenceCallback(TypeItem item, TypeItem ref_item, int type) override
+	void ReferenceCallback(TypeItem* item, TypeItem* ref_item, int type) override
 	{
 		Building* building = (Building*)item;
 		BuildingGroup* group = (BuildingGroup*)ref_item;
 		group->buildings.push_back(building);
 	}
 
-	/*void Insert(GameTypeItem item) override
+	/*void Insert(GameTypeItem* item) override
 	{
 		// set 1 as name to disable missing text warning
 		Building* building = (Building*)item;
