@@ -55,7 +55,7 @@
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\source;..\source\core;..\source\game;..\source\game\entity;..\source\game\generator;..\source\game\helpers;..\source\game\location;..\source\game\net;..\source\game\panels;..\source\game\quests;..\source\game\stats;..\source\game\system;..\source\gui;..\source\gui\dialogs;..\source\resource;..\source\inclue;..\external\Bullet\src;..\external\DirectX\Include;..\external\FMod\inc;..\external\RakNet\Source;..\external\Visual Leak Detector\include;..\external\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source;..\source\core;..\source\game;..\source\game\entity;..\source\game\generator;..\source\game\helpers;..\source\game\location;..\source\game\net;..\source\game\panels;..\source\game\quests;..\source\game\stats;..\source\game\system;..\source\gui;..\source\gui\dialogs;..\source\resource;..\source\inclue;..\external\angelscript_sdk\angelscript\include;..\external\Bullet\src;..\external\DirectX\Include;..\external\FMod\inc;..\external\RakNet\Source;..\external\Visual Leak Detector\include;..\external\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
@@ -91,13 +91,14 @@
       <SDLCheck>true</SDLCheck>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\source;..\source\core;..\source\game;..\source\game\entity;..\source\game\generator;..\source\game\helpers;..\source\game\location;..\source\game\net;..\source\game\panels;..\source\game\quests;..\source\game\stats;..\source\game\system;..\source\gui;..\source\gui\dialogs;..\source\resource;..\source\inclue;..\external\Bullet\src;..\external\DirectX\Include;..\external\FMod\inc;..\external\RakNet\Source;..\external\Visual Leak Detector\include;..\external\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\source;..\source\core;..\source\game;..\source\game\entity;..\source\game\generator;..\source\game\helpers;..\source\game\location;..\source\game\net;..\source\game\panels;..\source\game\quests;..\source\game\stats;..\source\game\system;..\source\gui;..\source\gui\dialogs;..\source\resource;..\source\inclue;..\external\angelscript_sdk\angelscript\include;..\external\Bullet\src;..\external\DirectX\Include;..\external\FMod\inc;..\external\RakNet\Source;..\external\Visual Leak Detector\include;..\external\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
       <AdditionalOptions>/w34706 /w34702 /w34189 /w34265 /w34266 /w34928 %(AdditionalOptions)</AdditionalOptions>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -151,7 +152,11 @@
     <ClInclude Include="..\source\game\entity\BloodType.h" />
     <ClInclude Include="..\source\game\entity\UnitEventHandler.h" />
     <ClInclude Include="..\source\game\GameStats.h" />
+    <ClInclude Include="..\source\game\quests\QuestScheme.h" />
     <ClInclude Include="..\source\game\quests\QuestConsts.h" />
+    <ClInclude Include="..\source\game\quests\QuestEntry.h" />
+    <ClInclude Include="..\source\game\quests\QuestInstance.h" />
+    <ClInclude Include="..\source\game\script\ScriptManager.h" />
     <ClInclude Include="..\source\game\system\Building.h" />
     <ClInclude Include="..\source\game\system\BuildingGroup.h" />
     <ClInclude Include="..\source\game\system\BuildingScript.h" />
@@ -345,6 +350,9 @@
     <ClCompile Include="..\source\game\entity\Camera.cpp" />
     <ClCompile Include="..\source\game\GameFile.cpp" />
     <ClCompile Include="..\source\game\GameStats.cpp" />
+    <ClCompile Include="..\source\game\quests\QuestScheme.cpp" />
+    <ClCompile Include="..\source\game\quests\QuestInstance.cpp" />
+    <ClCompile Include="..\source\game\script\ScriptManager.cpp" />
     <ClCompile Include="..\source\game\system\Building.cpp" />
     <ClCompile Include="..\source\game\system\BuildingGroup.cpp" />
     <ClCompile Include="..\source\game\system\BuildingScript.cpp" />

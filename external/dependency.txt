@@ -1,5 +1,6 @@
 EXTERNAL VERSION LIST
 --------------------------------------------------------------------------------
+Angelscript - 2.31.2
 Bullet - 2.81-rev2613
 cppformat - 2.1.0
 DirectX - Microsoft DirectX SDK (June 2010)

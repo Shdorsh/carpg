@@ -36,7 +36,9 @@ enum DialogType
 	DT_DO_ONCE,
 	DT_NOT_ACTIVE,
 	DT_IF_QUEST_SPECIAL,
-	DT_QUEST_SPECIAL
+	DT_QUEST_SPECIAL,
+	DT_IF_SCRIPT,
+	DT_SCRIPT
 };
 
 //-----------------------------------------------------------------------------

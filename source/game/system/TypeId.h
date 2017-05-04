@@ -8,5 +8,6 @@ enum class TypeId
 	BuildingGroup,
 	Building,
 	BuildingScript,
+	QuestScheme,
 	Max
 };

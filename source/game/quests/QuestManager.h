@@ -9,6 +9,7 @@ struct ItemSlot;
 struct Quest;
 struct Quest_Dungeon;
 struct Unit;
+class QuestInstance;
 
 //-----------------------------------------------------------------------------
 struct QuestItemRequest
@@ -43,6 +44,10 @@ public:
 	const Item* FindQuestItem(cstring name, int refid);
 	void EndUniqueQuest();
 	bool RemoveQuestRumor(PLOTKA_QUESTOWA rumor_id);
+	void InitializeScript();
+	int AddDialogScript(Tokenizer& t);
+	int AddDialogIfScript(Tokenizer& t);
+	int FindQuestProgress(Tokenizer& t);
 
 	vector<Quest*> unaccepted_quests;
 	vector<Quest*> quests;
@@ -57,4 +62,16 @@ public:
 
 private:
 	void LoadQuests(HANDLE file, vector<Quest*>& quests);
+
+	void RegisterQuestApi(asIScriptEngine* engine);
+	void StartQuest(const string& title);
+	void AddQuestEntry(const string& text);
+	void FinishQuest();
+	void FailQuest();
+	QuestInstance* GetCurrentQuest();
+
+	QuestInstance* current_quest;
+	string script_code;
+	int script_index, if_script_index;
+	bool journal_changes;
 };

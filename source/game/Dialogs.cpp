@@ -3,6 +3,7 @@
 #include "Dialog.h"
 #include "Game.h"
 #include "Crc.h"
+#include "QuestManager.h"
 
 extern string g_system_dir;
 extern string g_lang_prefix;
@@ -59,7 +60,9 @@ enum Keyword
 	K_QUEST_EVENT,
 	K_DO_ONCE,
 	K_NOT_ACTIVE,
-	K_QUEST_SPECIAL
+	K_QUEST_SPECIAL,
+	K_SCRIPT,
+	K_SET_PROGRESS
 };
 
 enum IfState
@@ -374,6 +377,12 @@ bool LoadDialog(Tokenizer& t, CRC32& crc)
 								crc.Update(dialog->strs.back());
 							}
 							break;
+						case K_SCRIPT:
+							{
+								int index = QuestManager::Get().AddDialogIfScript(t);
+								dialog->code.push_back({ DT_IF_SCRIPT, (cstring)index });
+							}
+							break;
 						default:
 							t.Unexpected();
 							break;
@@ -442,6 +451,18 @@ bool LoadDialog(Tokenizer& t, CRC32& crc)
 						dialog->code.push_back({ DT_QUEST_SPECIAL, (cstring)index });
 						crc.Update(DT_QUEST_SPECIAL);
 						crc.Update(dialog->strs.back());
+					}
+					break;
+				case K_SCRIPT:
+					{
+						int index = QuestManager::Get().AddDialogScript(t);
+						dialog->code.push_back({ DT_SCRIPT, (cstring)index });
+					}
+					break;
+				case K_SET_PROGRESS:
+					{
+						int index = QuestManager::Get().FindQuestProgress(t);
+						dialog->code.push_back({ DT_SET_QUEST_PROGRESS, (cstring)index });
 					}
 					break;
 				default:
@@ -564,7 +585,9 @@ uint LoadDialogs(uint& out_crc, uint& errors)
 		{ "quest_event", K_QUEST_EVENT },
 		{ "do_once", K_DO_ONCE },
 		{ "not_active", K_NOT_ACTIVE },
-		{ "quest_special", K_QUEST_SPECIAL }
+		{ "quest_special", K_QUEST_SPECIAL },
+		{ "script", K_SCRIPT },
+		{ "set_progress", K_SET_PROGRESS }
 	});
 
 	CRC32 crc;

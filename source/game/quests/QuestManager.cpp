@@ -2,7 +2,10 @@
 #include "Base.h"
 #include "BitStreamFunc.h"
 #include "QuestManager.h"
+#include "QuestEntry.h"
+#include "QuestInstance.h"
 #include "SaveState.h"
+#include "script/ScriptManager.h"
 
 #include "Quest_Bandits.h"
 #include "Quest_BanditsCollectToll.h"
@@ -471,4 +474,112 @@ bool QuestManager::RemoveQuestRumor(PLOTKA_QUESTOWA rumor_id)
 	}
 	else
 		return false;
+}
+
+cstring QuestClass = R"code(
+	class Quest
+	{
+		int progress;
+
+		void OnProgress() {}
+	}
+)code";
+
+void QuestManager::InitializeScript()
+{
+	ScriptManager.AddEnum<QuestType>("QuestType",
+	{
+		{ "Mayor", QuestType::Mayor },
+		{ "Captain", QuestType::Captain },
+		{ "Random", QuestType::Random },
+		{ "Unique", QuestType::Unique }
+	});
+}
+
+void QuestManager::RegisterQuestApi(asIScriptEngine* engine)
+{
+#define REGISTER_API(decl, func) { int r = engine->RegisterGlobalFunction(decl, asMETHOD(QuestManager, func), asCALL_THISCALL, this); assert(r >= 0); }
+
+	REGISTER_API("void StartQuest(const string& title)", StartQuest);
+	REGISTER_API("void AddQuestEntry(const string& text)", AddQuestEntry);
+	REGISTER_API("void FinishQuest(const string& title)", FinishQuest);
+	REGISTER_API("void FailQuest(const string& title)", FailQuest);
+
+	engine->RegisterGlobalFunction("void StartQuest(const string& title)", asMETHOD(QuestManager, StartQuest), asCALL_CDECL);
+
+#undef REGISTER_API
+}
+
+void QuestManager::StartQuest(const string& title)
+{
+	QuestInstance* quest = GetCurrentQuest();
+	if(quest->quest_entry)
+		throw ScriptException("QuestEntry already started.");
+	quest->quest_entry = new QuestEntry;
+	quest->quest_entry->title = title;
+	quest->quest_entry->state = QuestEntry::IN_PROGRESS;
+	//journal_changes = true;
+}
+
+void QuestManager::AddQuestEntry(const string& text)
+{
+	QuestInstance* quest = GetCurrentQuest();
+	if(!quest->quest_entry)
+		throw ScriptException("QuestEntry missing.");
+	quest->quest_entry->msgs.push_back(text);
+	//journal_changes = true;
+}
+
+void QuestManager::FinishQuest()
+{
+	QuestInstance* quest = GetCurrentQuest();
+	if(!quest->quest_entry)
+		throw ScriptException("QuestEntry missing.");
+	if(quest->quest_entry->state != QuestEntry::FINISHED)
+	{
+		quest->quest_entry->state = QuestEntry::FINISHED;
+		//journal_changes = true;
+	}
+}
+
+void QuestManager::FailQuest()
+{
+	QuestInstance* quest = GetCurrentQuest();
+	if(!quest->quest_entry)
+		throw ScriptException("QuestEntry missing.");
+	if(quest->quest_entry->state != QuestEntry::FAILED)
+	{
+		quest->quest_entry->state = QuestEntry::FAILED;
+		//journal_changes = true;
+	}
+}
+
+QuestInstance* QuestManager::GetCurrentQuest()
+{
+	if(current_quest)
+		throw ScriptException("Called outside Quest.");
+	return current_quest;
+}
+
+int QuestManager::AddDialogScript(Tokenizer& t)
+{
+	char s = t.MustGetSymbol("({");
+	t.Next();
+	auto pos = t.GetPos();
+	t.MoveToClosingSymbol()
+	cstring code;
+	script_code += Format("void _script_func%d(){%s}", script_index, code);
+	return script_index++;
+}
+
+int QuestManager::AddDialogIfScript(Tokenizer& t)
+{
+	cstring code;
+	script_code += Format("bool _if_script_func%d(){return (%s);}", if_script_index, code);
+	return if_script_index;
+}
+
+int QuestManager::FindQuestProgress(Tokenizer& t)
+{
+
 }
