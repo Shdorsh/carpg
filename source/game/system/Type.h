@@ -109,6 +109,8 @@ public:
 			FLAGS, // offset, keyword_group
 			REFERENCE, // offset, type_id
 			CUSTOM, // offset, handler
+			ENUM,
+			ITEM_LIST
 		};
 
 	private:
@@ -213,6 +215,19 @@ public:
 		int value;
 	};
 
+	struct EnumDTO
+	{
+		cstring name;
+		int value;
+	};
+
+	template<typename T>
+	struct EnumClassDTO
+	{
+		cstring name;
+		T value;
+	};
+
 	Type(TypeId type_id, cstring token, cstring name, cstring file_group);
 	virtual ~Type();
 
@@ -223,6 +238,13 @@ public:
 	Field& AddFlags(cstring name, uint offset, std::initializer_list<FlagDTO> const& flags);
 	Field& AddReference(cstring name, TypeId type_id, uint offset);
 	Field& AddCustomField(cstring name, CustomFieldHandler* handler, uint offset = 0);
+	Field& AddEnum(cstring name, uint offset, std::initializer_list<EnumDTO> const& enums);
+	template<typename T>
+	Field& AddEnum(cstring name, uint offset, std::initializer_list<EnumClassDTO<T>> const& enums)
+	{
+		return AddEnum(name, offset, (std::initializer_list<EnumDTO> const&)enums);
+	}
+	Field& AddItemList(cstring name, uint offset);
 	void AddLocalizedString(cstring name, uint offset, bool required = true);
 
 

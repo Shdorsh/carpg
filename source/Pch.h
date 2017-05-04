@@ -36,6 +36,7 @@
 #	include <MessageIdentifiers.h>
 #	define __BITSTREAM_NATIVE_END
 #	include <BitStream.h>
+#	include <angelscript.h>
 #else
 #	include <cassert>
 #endif
