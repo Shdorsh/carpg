@@ -20,6 +20,7 @@ namespace gui
 	class TreeNode
 	{
 		friend TreeView;
+
 	public:
 		enum PredResult
 		{
@@ -31,6 +32,34 @@ namespace gui
 
 		typedef delegate<PredResult(TreeNode*)> Pred;
 
+	private:
+		struct Enumerator
+		{
+			struct Iterator
+			{
+				Iterator(TreeNode* node, TreeNode::Pred pred);
+				bool operator != (const Iterator& it) const { return node != it.node; }
+				void operator ++ () { Next(); }
+				TreeNode* operator * () { return node; }
+
+			private:
+				void Next();
+
+				TreeNode* node;
+				TreeNode::Pred pred;
+				std::queue<TreeNode*> to_check;
+			};
+
+			Enumerator(TreeNode* node, TreeNode::Pred pred) : node(node), pred(pred) {}
+			Iterator begin() { return Iterator(node, pred); }
+			Iterator end() { return Iterator(nullptr, nullptr); }
+
+		private:
+			TreeNode* node;
+			TreeNode::Pred pred;
+		};
+
+	public:
 		TreeNode(bool is_dir = false);
 		virtual ~TreeNode();
 
@@ -39,8 +68,11 @@ namespace gui
 		void DeattachChild(TreeNode* node);
 		void EditName();
 		TreeNode* FindDir(const string& name);
+		Enumerator ForEach() { return Enumerator(this, nullptr); }
+		Enumerator ForEach(TreeNode::Pred pred) { return Enumerator(this, pred); }
+		Enumerator ForEachNotDir();
+		Enumerator ForEachVisible();
 		void GenerateDirName(TreeNode* node, cstring name);
-		void RecalculatePath(const string& new_path);
 		void Remove();
 		void Select();
 
@@ -64,6 +96,7 @@ namespace gui
 
 	private:
 		void CalculateWidth();
+		void CalculatePath(bool send_event);
 
 		string text, path;
 		TreeView* tree;
@@ -75,36 +108,9 @@ namespace gui
 		bool selected, is_dir, collapsed;
 	};
 
-	class TreeView : public Control, public TreeNode
+	class TreeView : public Control, public TreeNode, public OnCharHandler
 	{
 		friend TreeNode;
-
-		struct Enumerator
-		{
-			struct Iterator
-			{
-				Iterator(TreeNode* node, TreeNode::Pred pred);
-				bool operator != (const Iterator& it) const { return node != it.node; }
-				void operator ++ () { Next(); }
-				TreeNode* operator * () { return node; }
-
-			private:
-				void Next();
-
-				TreeNode* node;
-				TreeNode::Pred pred;
-				vector<TreeNode*> to_check;
-			};
-
-			Enumerator(TreeNode* node, TreeNode::Pred pred) : node(node), pred(pred) {}
-			Iterator begin() { return Iterator(node, pred); }
-			Iterator end() { return Iterator(nullptr, nullptr); }
-
-		private:
-			TreeNode* node;
-			TreeNode::Pred pred;
-		};
-
 	public:
 		enum Action
 		{
@@ -114,7 +120,8 @@ namespace gui
 			A_MENU,
 			A_BEFORE_RENAME,
 			A_RENAMED,
-			A_SHORTCUT
+			A_SHORTCUT,
+			A_PATH_CHANGED
 		};
 
 		enum Shortcut
@@ -133,6 +140,7 @@ namespace gui
 
 		void Draw(ControlDrawData* cdd = nullptr) override;
 		void Event(GuiEvent e) override;
+		void OnChar(char c) override;
 		void Update(float dt) override;
 
 		void Add(TreeNode* node, const string& path, bool expand = true);
@@ -142,11 +150,8 @@ namespace gui
 		void EditName(TreeNode* node);
 		void ExpandAll() { SetAllCollapsed(false); }
 		void Remove(TreeNode* node);
-		Enumerator ForEach() { return Enumerator(this, nullptr); }
-		Enumerator ForEach(delegate<bool(TreeNode*)> pred) { return Enumerator(this, pred); }
-		Enumerator ForEachNotDir();
-		void RecalculatePath();
 		void RemoveSelected();
+		void ScrollTo(TreeNode* node);
 		bool SelectNode(TreeNode* node) { return SelectNode(node, false, false, false); }
 		void SetAllCollapsed(bool collapsed);
 
@@ -181,7 +186,6 @@ namespace gui
 		bool MoveNode(TreeNode* node, TreeNode* new_parent);
 		void RemoveSelection(TreeNode* node);
 		bool Update(TreeNode* node);
-		void UpdateSize(TreeNode* node);
 		void OnSelect(int id);
 		bool SelectNode(TreeNode* node, bool add, bool right_click, bool ctrl);
 		void SelectRange(TreeNode* node1, TreeNode* node2);

@@ -64,6 +64,7 @@
 #include <set>
 #include <unordered_map>
 #include <functional>
+#include <queue>
 
 //-----------------------------------------------------------------------------
 using std::string;
@@ -83,6 +84,7 @@ using namespace RakNet;
 #undef DrawText
 #undef IN
 #undef OUT
+#undef ERROR
 
 //-----------------------------------------------------------------------------
 // use rand2

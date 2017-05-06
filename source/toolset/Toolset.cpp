@@ -18,10 +18,9 @@
 #include "Dialog2.h"
 #include "CheckBoxGroup.h"
 #include "MenuList.h"
+#include "PickFileDialog.h"
 
 using namespace gui;
-
-const uint ID_MAX_LENGTH = 100;
 
 enum MenuAction
 {
@@ -49,19 +48,6 @@ enum ListAction
 	A_REMOVE
 };
 
-struct ListItem : public GuiElement
-{
-	TypeItem* item;
-	string& id;
-
-	ListItem(TypeItem* item, string& id, int value) : GuiElement(value), item(item), id(id) {}
-
-	cstring ToString() override
-	{
-		return id.c_str();
-	}
-};
-
 ToolsetItem::~ToolsetItem()
 {
 	delete window;
@@ -71,7 +57,7 @@ ToolsetItem::~ToolsetItem()
 		e->Remove(type);
 }
 
-Toolset::Toolset(TypeManager& type_manager) : engine(nullptr), type_manager(type_manager), empty_item_id("(none)"), adding_item(false)
+Toolset::Toolset(TypeManager& type_manager) : engine(nullptr), type_manager(type_manager), empty_item_id("(none)"), adding_item(false), current(nullptr)
 {
 
 }
@@ -87,7 +73,7 @@ void Toolset::Init(Engine* _engine)
 {
 	engine = _engine;
 	
-	Window* window = new Window(true);
+	Window* window = new Window(true, true);
 
 	MenuBar* menu = new MenuBar;
 	menu->SetHandler(delegate<void(int)>(this, &Toolset::HandleMenuEvent));
@@ -112,6 +98,7 @@ void Toolset::Init(Engine* _engine)
 
 	tab_ctrl = new TabControl(false);
 	tab_ctrl->SetDocked(true);
+	tab_ctrl->SetHandler(TabControl::Handler(this, &Toolset::HandleTabControlEvent));
 
 	window->SetMenu(menu);
 	window->Add(tab_ctrl);
@@ -163,10 +150,10 @@ void Toolset::Event(GuiEvent event)
 	switch(event)
 	{
 	case Event_Save:
-		SaveEntity();
+		current->SaveEntity();
 		break;
 	case Event_Restore:
-		RestoreEntity();
+		current->RestoreEntity();
 		break;
 	default:
 		Overlay::Event(event);
@@ -181,16 +168,19 @@ void Toolset::Update(float dt)
 	auto tab = tab_ctrl->GetCurrentTab();
 	if(tab)
 	{
-		bool have_changes = AnyEntityChanges();
+		bool have_changes = current->AnyEntityChanges();
 		tab->SetHaveChanges(have_changes);
-		current_toolset_item->bt_save->SetDisabled(!have_changes);
-		current_toolset_item->bt_restore->SetDisabled(!have_changes);
+		current->bt_save->SetDisabled(!have_changes);
+		current->bt_restore->SetDisabled(!have_changes);
 	}
 
 	if(Key.PressedRelease(VK_ESCAPE))
 	{
 		DialogInfo dialog;
-		dialog.text = "Do you really want to exit?";
+		if(AnyUnsavedChanges())
+			dialog.text = "Do you really want to discard any unsaved changes and exit to menu?";
+		else
+			dialog.text = "Do you really want to exit to menu?";
 		dialog.parent = this;
 		dialog.type = DIALOG_YESNO;
 		dialog.event = [this](int id) { if(id == BUTTON_YES) closing = Closing::Yes; };
@@ -231,19 +221,37 @@ void Toolset::HandleMenuEvent(int id)
 
 void Toolset::Save()
 {
-	if(!SaveEntity())
-		return;
+	// validate pending changes
+	for(auto& m : toolset_items)
+	{
+		ToolsetItem* item = m.second;
+		if(item->is_open)
+		{
+			if(!item->SaveEntity())
+			{
+				ShowType(item->type.GetTypeId());
+				return;
+			}
+			else
+				tab_ctrl->Find(item->type.GetToken().c_str())->SetHaveChanges(false);
+		}
+	}
 
-	MergeChanges(current_toolset_item);
+	// merge changes
+	for(auto& m : toolset_items)
+		MergeChanges(m.second);
 
+	// save
 	if(!type_manager.Save())
 		SimpleDialog("Failed to save all changes. Check LOG for details.");
 }
 
 void Toolset::MergeChanges(ToolsetItem* toolset_item)
 {
+	if(toolset_item->changes == 0)
+		return;
+
 	to_merge.clear();
-	toolset_item->tree_view->RecalculatePath();
 	for(auto node : toolset_item->tree_view->ForEachNotDir())
 	{
 		TypeEntity* e = node->GetData<TypeEntity>();
@@ -252,6 +260,8 @@ void Toolset::MergeChanges(ToolsetItem* toolset_item)
 	}
 
 	toolset_item->type.GetContainer()->Merge(to_merge, toolset_item->removed_items);
+	toolset_item->type.changes = true;
+	toolset_item->changes = 0;
 }
 
 void Toolset::Reload()
@@ -299,7 +309,9 @@ void Toolset::ShowType(TypeId type_id)
 		return;
 	}
 
-	tab_ctrl->AddTab(type.GetToken().c_str(), type.GetName().c_str(), GetToolsetItem(type_id)->window);
+	ToolsetItem* item = GetToolsetItem(type_id);
+	item->is_open = true;
+	tab_ctrl->AddTab(type.GetToken().c_str(), type.GetName().c_str(), item->window);
 }
 
 ToolsetItem* Toolset::GetToolsetItem(TypeId type_id)
@@ -314,9 +326,8 @@ ToolsetItem* Toolset::GetToolsetItem(TypeId type_id)
 
 ToolsetItem* Toolset::CreateToolsetItem(TypeId type_id)
 {
-	ToolsetItem* toolset_item = new ToolsetItem(type_manager.GetType(type_id));
-	toolset_item->window = new Window;
-
+	ToolsetItem* toolset_item = new ToolsetItem(*this, type_manager.GetType(type_id));
+	toolset_item->window = new Window(false, true);
 
 	Type& type = toolset_item->type;
 	Type::Container* container = type.GetContainer();
@@ -340,7 +351,7 @@ ToolsetItem* Toolset::CreateToolsetItem(TypeId type_id)
 	tree_view->SetPosition(INT2(5, 30));
 	tree_view->SetSize(INT2(250, 500));
 	tree_view->SetMenu(tree_menu);
-	tree_view->SetHandler(DialogEvent2(this, &Toolset::HandleListBoxEvent));
+	tree_view->SetHandler(DialogEvent2(this, &Toolset::HandleTreeViewEvent));
 	tree_view->SetText(Format("All %ss", type.GetName().c_str()));
 	for(auto& e : toolset_item->items)
 	{
@@ -373,7 +384,7 @@ ToolsetItem* Toolset::CreateToolsetItem(TypeId type_id)
 	panel->SetPosition(INT2(260, 5));
 	panel->SetSize(tab_ctrl->GetAreaSize() - INT2(tree_view->GetSize().x, 0));
 
-	int offset = 0;
+	int offset = 0, index = 0;
 
 	for(auto field : type.fields)
 	{
@@ -385,12 +396,33 @@ ToolsetItem* Toolset::CreateToolsetItem(TypeId type_id)
 		switch(field->type)
 		{
 		case Type::Field::STRING:
+			{
+				TextBox* text_box = new TextBox(false, true);
+				text_box->SetPosition(INT2(0, offset));
+				text_box->SetSize(INT2(300, 30));
+				panel->Add(text_box);
+
+				ToolsetItem::Field f;
+				f.field = field;
+				f.text_box = text_box;
+				toolset_item->fields.push_back(f);
+				offset += 35;
+			}
+			break;
 		case Type::Field::MESH:
 			{
 				TextBox* text_box = new TextBox(false, true);
 				text_box->SetPosition(INT2(0, offset));
 				text_box->SetSize(INT2(300, 30));
 				panel->Add(text_box);
+
+				Button* bt = new Button;
+				bt->text = ">>>";
+				bt->id = index;
+				bt->SetPosition(INT2(310, offset));
+				bt->SetSize(INT2(50, 30));
+				bt->SetHandler(DialogEvent(this, &Toolset::OpenPickMeshDialog));
+				panel->Add(bt);
 
 				ToolsetItem::Field f;
 				f.field = field;
@@ -439,6 +471,8 @@ ToolsetItem* Toolset::CreateToolsetItem(TypeId type_id)
 			}
 			break;
 		}
+
+		++index;
 	}
 	
 	w->Add(panel);
@@ -447,21 +481,64 @@ ToolsetItem* Toolset::CreateToolsetItem(TypeId type_id)
 	w->Initialize();
 
 	toolset_item->tree_view = tree_view;
-	// TMP
-	tree_view->ExpandAll();
 	toolset_item->panel = panel;
-	current_toolset_item = toolset_item;
 	panel->visible = false;
 
 	return toolset_item;
 }
 
-bool Toolset::HandleListBoxEvent(int action, int id)
+bool Toolset::HandleTabControlEvent(int action, int id)
+{
+	TabControl::Tab* tab = (TabControl::Tab*)id;
+	switch(action)
+	{
+	case TabControl::A_BEFORE_CHANGE:
+		break;
+	case TabControl::A_CHANGED:
+		{
+			const string& id = tab->GetId();
+			ToolsetItem* item = nullptr;
+			for(auto& m : toolset_items)
+			{
+				if(m.second->type.GetToken() == id)
+				{
+					item = m.second;
+					break;
+				}
+			}
+			assert(item);
+			current = item;
+			auto node = item->tree_view->GetCurrentNode();
+			current->current = node ? node->GetData<TypeEntity>() : nullptr;
+		}
+		break;
+	case TabControl::A_BEFORE_CLOSE:
+		{
+			TabControl::Tab* prev = tab_ctrl->GetCurrentTab();
+			if(prev != tab)
+				tab_ctrl->Select(tab, false);
+			if(current->SaveEntity())
+			{
+				current->is_open = false;
+				if(prev != tab)
+					tab_ctrl->Select(prev, false);
+				return true;
+			}
+			else
+				return false;
+		}
+		break;
+	}
+
+	return true;
+}
+
+bool Toolset::HandleTreeViewEvent(int action, int id)
 {
 	switch(action)
 	{
 	case TreeView::A_BEFORE_CURRENT_CHANGE:
-		if(!SaveEntity())
+		if(!current->SaveEntity())
 			return false;
 		break;
 	case TreeView::A_CURRENT_CHANGED:
@@ -469,20 +546,20 @@ bool Toolset::HandleListBoxEvent(int action, int id)
 			auto node = (TreeNode*)id;
 			if(node == nullptr || node->IsDir())
 			{
-				current_toolset_item->panel->visible = false;
-				current_entity = nullptr;
+				current->panel->visible = false;
+				current->current = nullptr;
 			}
 			else
 			{
-				current_toolset_item->panel->visible = true;
+				current->panel->visible = true;
 				auto e = node->GetData<TypeEntity>();
-				ApplyView(e);
+				current->ApplyView(e);
 				if(adding_item)
 				{
 					adding_item = false;
-					current_toolset_item->fields[0].text_box->SelectAll();
+					current->fields[0].text_box->SelectAll();
 				}
-				current_entity = e;
+				current->current = e;
 			}
 			clicked_node = node;
 		}
@@ -495,17 +572,17 @@ bool Toolset::HandleListBoxEvent(int action, int id)
 				return false;
 
 			// if failed to save, don't show menu
-			if(!SaveEntity())
+			if(!current->SaveEntity())
 				return false;
 
 			// set what to allow in menu
 			const bool is_dir = node->IsDir();
 			const bool is_root = node->IsRoot();
-			const bool is_single = !current_toolset_item->tree_view->IsMultipleNodesSelected();
+			const bool is_single = !current->tree_view->IsMultipleNodesSelected();
 			tree_menu->FindItem(A_ADD)->SetEnabled(is_dir && is_single);
 			tree_menu->FindItem(A_ADD_DIR)->SetEnabled(is_dir && is_single);
 			tree_menu->FindItem(A_DUPLICATE)->SetEnabled(!is_dir && is_single);
-			tree_menu->FindItem(A_REMOVE)->SetEnabled(!is_root && !current_toolset_item->tree_view->IsSelected());
+			tree_menu->FindItem(A_REMOVE)->SetEnabled(!is_root && !current->tree_view->IsSelected());
 			tree_menu->FindItem(A_RENAME)->SetEnabled(!is_root && is_single);
 			clicked_node = node;
 		}
@@ -516,11 +593,11 @@ bool Toolset::HandleListBoxEvent(int action, int id)
 		case A_ADD:
 			{
 				// create new item
-				auto new_item = current_toolset_item->type.Create();
-				auto& item_id = current_toolset_item->type.GetItemId(new_item);
-				item_id = GenerateEntityName(Format("new %s", current_toolset_item->type.GetToken().c_str()), false);
+				auto new_item = current->type.Create();
+				auto& item_id = current->type.GetItemId(new_item);
+				item_id = current->GenerateEntityName(Format("new %s", current->type.GetToken().c_str()), false);
 				auto new_e = new TypeEntity(new_item, nullptr, TypeEntity::NEW, item_id);
-				current_toolset_item->items[item_id] = new_e;
+				current->items[item_id] = new_e;
 				adding_item = true;
 
 				// create new tree node
@@ -529,7 +606,7 @@ bool Toolset::HandleListBoxEvent(int action, int id)
 				node->SetText(new_e->id);
 				clicked_node->AddChild(node);
 				node->Select();
-				UpdateCounter(+1);
+				current->UpdateCounter(+1);
 			}
 			break;
 		case A_ADD_DIR:
@@ -543,11 +620,11 @@ bool Toolset::HandleListBoxEvent(int action, int id)
 		case A_DUPLICATE:
 			{
 				// create new item
-				auto new_item = current_toolset_item->type.Duplicate(current_entity->item);
-				auto& item_id = current_toolset_item->type.GetItemId(new_item);
-				item_id = GenerateEntityName(current_entity->id.c_str(), true);
+				auto new_item = current->type.Duplicate(current->current->item);
+				auto& item_id = current->type.GetItemId(new_item);
+				item_id = current->GenerateEntityName(current->current->id.c_str(), true);
 				auto new_e = new TypeEntity(new_item, nullptr, TypeEntity::NEW, item_id);
-				current_toolset_item->items[item_id] = new_e;
+				current->items[item_id] = new_e;
 
 				// insert
 				auto node = new TreeNode;
@@ -555,7 +632,7 @@ bool Toolset::HandleListBoxEvent(int action, int id)
 				node->SetData(new_e);
 				clicked_node->GetParent()->AddChild(node);
 				node->Select();
-				UpdateCounter(+1);
+				current->UpdateCounter(+1);
 			}
 			break;
 		case A_REMOVE:
@@ -571,10 +648,10 @@ bool Toolset::HandleListBoxEvent(int action, int id)
 			auto node = (TreeNode*)id;
 			if(!node->IsDir())
 			{
-				cstring err_msg = ValidateEntityId(current_toolset_item->tree_view->GetNewName());
+				cstring err_msg = current->ValidateEntityId(current->tree_view->GetNewName(), node->GetData<TypeEntity>());
 				if(err_msg)
 				{
-					SimpleDialog("Id must be unique.");
+					SimpleDialog(err_msg);
 					return false;
 				}
 			}
@@ -585,28 +662,28 @@ bool Toolset::HandleListBoxEvent(int action, int id)
 			auto node = (TreeNode*)id;
 			if(!node->IsDir())
 			{
-				current_toolset_item->items.erase(current_entity->id);
-				current_entity->id = node->GetText();
-				current_toolset_item->items[node->GetText()] = current_entity;
-				current_toolset_item->fields[0].text_box->SetText(node->GetText().c_str());
+				current->items.erase(current->current->id);
+				current->current->id = node->GetText();
+				current->items[node->GetText()] = current->current;
+				current->fields[0].text_box->SetText(node->GetText().c_str());
 			}
 		}
 		break;
 	case TreeView::A_SHORTCUT:
 		{
-			if(id != TreeView::S_REMOVE && current_toolset_item->tree_view->IsMultipleNodesSelected())
+			if(id != TreeView::S_REMOVE && current->tree_view->IsMultipleNodesSelected())
 				break;
 			
-			auto current = current_toolset_item->tree_view->GetCurrentNode();
+			auto entity = current->tree_view->GetCurrentNode();
 			ListAction action = A_NONE;
 			switch(id)
 			{
 			case TreeView::S_ADD:
-				if(current->IsDir())
+				if(entity->IsDir())
 					action = A_ADD;
 				break;
 			case TreeView::S_ADD_DIR:
-				if(current->IsDir())
+				if(entity->IsDir())
 					action = A_ADD_DIR;
 				break;
 			case TreeView::S_DUPLICATE:
@@ -622,136 +699,33 @@ bool Toolset::HandleListBoxEvent(int action, int id)
 				assert(0);
 				break;
 			}
-			HandleListBoxEvent(TreeView::A_MENU, action);
+			HandleTreeViewEvent(TreeView::A_MENU, action);
+		}
+		break;
+	case TreeView::A_PATH_CHANGED:
+		{
+			auto node = (TreeNode*)id;
+			if(!node->IsDir())
+			{
+				auto e = node->GetData<TypeEntity>();
+				e->item->toolset_path = node->GetPath();
+				current->UpdateEntityState(e);
+			}
 		}
 		break;
 	}
 
 	return true;
-}
-
-bool Toolset::AnyEntityChanges()
-{
-	if(!current_entity)
-		return false;
-
-	if(current_entity->state == TypeEntity::NEW)
-		return true;
-
-	for(auto& field : current_toolset_item->fields)
-	{
-		switch(field.field->type)
-		{
-		case Type::Field::STRING:
-		case Type::Field::MESH:
-			if(field.text_box->GetText() != offset_cast<string>(current_entity->item, field.field->offset))
-				return true;
-			break;
-		case Type::Field::FLAGS:
-			if(field.check_box_group->GetValue() != offset_cast<int>(current_entity->item, field.field->offset))
-				return true;
-			break;
-		case Type::Field::REFERENCE:
-			{
-				ListItem* item = field.list_box->GetItemCast<ListItem>();
-				if(item->item != offset_cast<TypeItem*>(current_entity->item, field.field->offset))
-					return true;
-			}
-			break;
-		}
-	}
-
-	return false;
-}
-
-bool Toolset::SaveEntity()
-{
-	if(!AnyEntityChanges())
-		return true;
-
-	if(!ValidateEntity())
-		return false;
-	
-	TypeProxy proxy(current_toolset_item->type, current_entity->item);
-
-	const string& new_id = current_toolset_item->fields[0].text_box->GetText();
-	if(new_id != current_entity->id)
-	{
-		current_toolset_item->items.erase(current_entity->id);
-		current_entity->id = new_id;
-		current_toolset_item->items[new_id] = current_entity;
-		clicked_node->SetText(new_id);
-	}
-
-	for(uint i = 1, count = current_toolset_item->fields.size(); i < count; ++i)
-	{
-		auto& field = current_toolset_item->fields[i];
-		switch(field.field->type)
-		{
-		case Type::Field::STRING:
-		case Type::Field::MESH:
-			offset_cast<string>(current_entity->item, field.field->offset) = field.text_box->GetText();
-			break;
-		case Type::Field::FLAGS:
-			offset_cast<int>(current_entity->item, field.field->offset) = field.check_box_group->GetValue();
-			break;
-		case Type::Field::REFERENCE:
-			{
-				ListItem* item = field.list_box->GetItemCast<ListItem>();
-				offset_cast<TypeItem*>(current_entity->item, field.field->offset) = item->item;
-			}
-			break;
-		}
-	}
-
-	switch(current_entity->state)
-	{
-	case TypeEntity::UNCHANGED:
-	case TypeEntity::CHANGED:
-		{
-			bool equal = current_toolset_item->type.Compare(current_entity->item, current_entity->old);
-			if(equal)
-				current_entity->state = TypeEntity::UNCHANGED;
-			else
-				current_entity->state = TypeEntity::CHANGED;
-		}
-		break;
-	case TypeEntity::NEW:
-		current_entity->state = TypeEntity::NEW_ATTACHED;
-		break;
-	case TypeEntity::NEW_ATTACHED:
-		break;
-	}
-
-	return true;
-}
-
-void Toolset::RestoreEntity()
-{
-	if(!AnyEntityChanges())
-		return;
-
-	if(current_entity->state == TypeEntity::NEW)
-	{
-		current_toolset_item->items.erase(current_entity->id);
-		current_entity->Remove(current_toolset_item->type);
-		current_entity = nullptr;
-		current_toolset_item->tree_view->GetCurrentNode()->Remove();
-		UpdateCounter(-1);
-		return;
-	}
-
-	ApplyView(current_entity);
 }
 
 void Toolset::RemoveEntity()
 {
 	// can't delete if root selected
-	if(current_toolset_item->tree_view->IsSelected())
+	if(current->tree_view->IsSelected())
 		return;
 
 	cstring msg;
-	if(current_toolset_item->tree_view->IsMultipleNodesSelected())
+	if(current->tree_view->IsMultipleNodesSelected())
 		msg = "Do you really want to remove multiple items/dirs?";
 	else if(clicked_node->IsDir())
 	{
@@ -770,140 +744,31 @@ void Toolset::RemoveEntity()
 	dialog.event = [this](int id) {
 		if(id == BUTTON_YES)
 		{
-			for(auto node : current_toolset_item->tree_view->GetSelectedNodes())
-				RemoveEntity(node);
-			current_toolset_item->tree_view->RemoveSelected();
+			for(auto node : current->tree_view->GetSelectedNodes())
+				current->RemoveEntity(node);
+			current->tree_view->RemoveSelected();
 		}
 	};
 	GUI.ShowDialog(dialog);
 }
 
-void Toolset::RemoveEntity(gui::TreeNode* node)
-{
-	if(node->IsDir())
-	{
-		for(auto child : node->GetChilds())
-			RemoveEntity(child);
-	}
-	else
-	{
-		auto entity = node->GetData<TypeEntity>();
-		if(entity)
-		{
-			current_toolset_item->items.erase(entity->id);
-			if(entity->state == TypeEntity::NEW || entity->state == TypeEntity::NEW_ATTACHED)
-				entity->Remove(current_toolset_item->type);
-			else
-				current_toolset_item->removed_items.push_back(entity);
-			UpdateCounter(-1);
-			node->SetData(nullptr);
-		}
-	}
-}
-
-bool Toolset::ValidateEntity()
-{
-	cstring err_msg = ValidateEntityId(current_toolset_item->fields[0].text_box->GetText());
-	if(err_msg)
-	{
-		GUI.SimpleDialog(Format("Validation failed\n----------------------\n%s", err_msg), this);
-		return false;
-	}
-	else
-		return true;
-}
-
-cstring Toolset::ValidateEntityId(const string& id)
-{
-	if(id.length() < 1)
-		return "Id must not be empty.";
-	else if(id.length() > ID_MAX_LENGTH)
-		return Format("Id max length is %u.", ID_MAX_LENGTH);
-	else
-	{
-		auto it = current_toolset_item->items.find(id);
-		if(it != current_toolset_item->items.end() && it->second != current_entity)
-			return "Id must be unique.";
-	}
-	return nullptr;
-}
-
-cstring Toolset::GenerateEntityName(cstring name, bool dup)
-{
-	string old_name = name;
-	int index = 1;
-
-	if(!dup)
-	{
-		auto it = current_toolset_item->items.find(old_name);
-		if(it == current_toolset_item->items.end())
-			return name;
-	}
-	else
-	{
-		cstring pos = strrchr(name, '(');
-		if(pos)
-		{
-			int new_index;
-			if(sscanf(pos, "(%d)", &new_index) == 1)
-			{
-				index = new_index + 1;
-				if(name != pos)
-					old_name = string(name, pos - name - 1);
-				else
-					old_name = string(name, pos - name);
-			}
-		}
-	}
-
-	string new_name;
-	while(true)
-	{
-		new_name = Format("%s (%d)", old_name.c_str(), index);
-		auto it = current_toolset_item->items.find(new_name);
-		if(it == current_toolset_item->items.end())
-			return Format("%s", new_name.c_str());
-		++index;
-	}
-}
-
 bool Toolset::AnyUnsavedChanges()
 {
-	return AnyEntityChanges();
-}
-
-void Toolset::ApplyView(TypeEntity* entity)
-{
-	for(auto& field : current_toolset_item->fields)
+	for(auto& m : toolset_items)
 	{
-		switch(field.field->type)
-		{
-		case Type::Field::STRING:
-		case Type::Field::MESH:
-			field.text_box->SetText(offset_cast<string>(entity->item, field.field->offset).c_str());
-			break;
-		case Type::Field::FLAGS:
-			field.check_box_group->SetValue(offset_cast<int>(entity->item, field.field->offset));
-			break;
-		case Type::Field::REFERENCE:
-			{
-				TypeItem* ref_item = offset_cast<TypeItem*>(entity->item, field.field->offset);
-				if(ref_item == nullptr)
-					field.list_box->Select(0);
-				else
-					field.list_box->Select([ref_item](GuiElement* ge)
-				{
-					ListItem* item = (ListItem*)ge;
-					return item->item == ref_item;
-				});
-			}
-			break;
-		}
+		if(m.second->is_open && m.second->AnyEntityChanges())
+			return true;
 	}
+	return false;
 }
 
-void Toolset::UpdateCounter(int change)
+void Toolset::OpenPickMeshDialog(int field_index)
 {
-	current_toolset_item->counter += change;
-	current_toolset_item->label_counter->SetText(Format("%s (%u)", current_toolset_item->type.GetName().c_str(), current_toolset_item->counter));
+	PickFileDialogOptions options;
+	options.title = "Pick mesh file";
+	//options.preview = ? ;
+	options.filters = "Mesh (qmsh);qmsh;All files;*";
+	options.root_dir = "data";
+	options.handler = [](PickFileDialog* dialog) {};
+	options.Show();
 }
