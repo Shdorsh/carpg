@@ -463,6 +463,7 @@ bool LoadDialog(Tokenizer& t, CRC32& crc)
 					{
 						int index = QuestManager::Get().FindQuestProgress(t);
 						dialog->code.push_back({ DT_SET_QUEST_PROGRESS, (cstring)index });
+						t.Next();
 					}
 					break;
 				default:

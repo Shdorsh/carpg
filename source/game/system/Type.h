@@ -120,6 +120,12 @@ public:
 			int value;
 		};
 
+		struct Enum
+		{
+			string id;
+			int value;
+		};
+
 		string name, friendly_name, extra_name;
 		Type type;
 		union
@@ -139,10 +145,11 @@ public:
 				TypeId type_id;
 				uint id_offset;
 			};
+			vector<Enum>* enums;
 			CustomFieldHandler* handler;
 		};
 		int callback;
-		bool required, is_id;
+		bool required, is_id, allow_multiple;
 
 		cstring GetFlag(int value)
 		{
@@ -155,7 +162,7 @@ public:
 		}
 
 	public:
-		Field() : required(true), callback(-1)
+		Field() : required(true), allow_multiple(false), callback(-1)
 		{
 
 		}
@@ -165,6 +172,12 @@ public:
 		Field& NotRequired()
 		{
 			required = false;
+			return *this;
+		}
+
+		Field& AllowMultiple()
+		{
+			allow_multiple = true;
 			return *this;
 		}
 

@@ -35,6 +35,7 @@
 /tools/text_comparer/Release
 
 /external/lib
+/external/angelscript_sdk/angelscript/projects/msvc2015/Output
 /external/Bullet/build/vs2015/Output
 /external/RakNet/Output
 /external/zlib/contrib/vstudio/vc11/Output

@@ -10,6 +10,7 @@ Type* CreateBuildingHandler();
 Type* CreateBuildingGroupHandler();
 Type* CreateBuildingScriptHandler();
 Type* CreateUnitHandler();
+Type* CreateQuestSchemeHandler();
 
 void Game::InitializeTypeManager()
 {
@@ -19,6 +20,7 @@ void Game::InitializeTypeManager()
 	type_manager->Add(CreateBuildingGroupHandler());
 	type_manager->Add(CreateBuildingScriptHandler());
 	type_manager->Add(CreateUnitHandler());
+	type_manager->Add(CreateQuestSchemeHandler());
 
 	type_manager->OrderDependencies();
 	

@@ -2,6 +2,31 @@
 
 #include "CriticalSection.h"
 
+namespace container
+{
+	template<typename T>
+	bool Contains(const vector<T>& v, const T& item)
+	{
+		for(auto& e : v)
+		{
+			if(e == item)
+				return true;
+		}
+		return false;
+	}
+
+	template<typename T, typename Pred>
+	T* Find(vector<T>& v, Pred p)
+	{
+		for(auto& e : v)
+		{
+			if(p(e))
+				return &e;
+		}
+		return nullptr;
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Funkcje obs³uguj¹ce vector
 //-----------------------------------------------------------------------------

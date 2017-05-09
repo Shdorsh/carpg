@@ -1,0 +1,62 @@
+quest test_quest
+{
+	type mayor
+	
+	progress {
+		NotAccepted,
+		Started,
+		Finished
+	}
+	
+	dialog start {
+		talk "Mam dla ciebie zadanie. Szukam kogoś kto przyniesie mi 5 ziel leczniczy."
+		talk "Oczywiście za nie zapłacę. Jesteś zainteresowany?"
+		choice "Tak"
+		{
+			talk "No to czekam na te zioła."
+			set_progress Started
+			end
+		}
+		choice "Nie"
+		{
+			talk "Wróć jeśli zmienisz zdanie."
+			end
+		}
+		show_choices
+	}
+	
+	dialog progress {
+		if script(player.HaveItem("herb", 5))
+		{
+			choice "Daj zioła"
+			{
+				talk "Dobra robota."
+				set_progress Finished
+			}
+		}
+	}
+	
+	code {
+		void OnProgress() override
+		{
+			switch(progress)
+			{
+			case Progress.Started:
+				{
+					StartQuest("Dostarcz zioła");
+					AddQuestEntry("Burmistrz miasta X chce żebym dostarczył mu 5 ziół.");
+					talker.AddDialog("progress");
+				}
+				break;
+			case Progress.Finished:
+				{
+					player.GiveItem(talker, "herb", 5);
+					AddQuestEntry("Przekazałem zioła. Zadanie wykonane!");
+					FinishQuest();
+					AddQuestReward(150);
+				}
+				break;
+			}
+		}
+	}
+}

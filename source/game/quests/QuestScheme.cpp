@@ -3,6 +3,16 @@
 #include "QuestScheme.h"
 #include "TypeVectorContainer.h"
 
+class QuestSchemeDialogHandler : public Type::CustomFieldHandler
+{
+public:
+};
+
+class QuestSchemeCodeHandler : public Type::CustomFieldHandler
+{
+public:
+};
+
 class QuestSchemeHandler : public TypeImpl<QuestScheme>
 {
 public:
@@ -17,16 +27,14 @@ public:
 		}).NotRequired();
 		AddItemList("progress", offsetof(QuestScheme, progress))
 			.NotRequired();
+		AddCustomField("dialog", new QuestSchemeDialogHandler)
+			.NotRequired()
+			.AllowMultiple();
+		AddCustomField("quest", new QuestSchemeCodeHandler)
+			.NotRequired()
+			.AllowMultiple();
 	}
 };
-
-/*enum class QuestType
-{
-	Mayor,
-	Captain,
-	Random,
-	Unique
-};*/
 
 Type* CreateQuestSchemeHandler()
 {

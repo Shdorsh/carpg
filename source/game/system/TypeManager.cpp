@@ -345,6 +345,46 @@ bool TypeManager::LoadType(Type& type)
 			case Type::Field::CUSTOM:
 				field.handler->LoadText(t, proxy.item, field.offset);
 				break;
+			case Type::Field::ENUM:
+				if(t.IsInt())
+				{
+					int val = t.GetInt();
+					if(val < 0 || val >= field.enums->size())
+						t.Throw("Invalid enum value '%d' for field '%s'.", val, field.name.c_str());
+					proxy.Get<int>(field.offset) = val;
+				}
+				else if(t.IsItem())
+				{
+					bool ok = false;
+					auto& str = t.GetItem();
+					auto found = container::Find(*field.enums, [str](Type::Field::Enum& e) {return e.id == str; });
+					if(found)
+						proxy.Get<int>(field.offset) = found->value;
+					else
+						t.Throw("Invalid enum value '%s' for field '%s'.", str.c_str(), field.name.c_str());
+				}
+				else
+					t.Expecting("enum value");
+				break;
+			case Type::Field::ITEM_LIST:
+				{
+					auto& list = proxy.Get<vector<string>>(field.offset);
+					t.AssertSymbol('{');
+					t.Next();
+					while(!t.IsSymbol('}'))
+					{
+						const string& item = t.MustGetItem();
+						if(container::Contains(list, item))
+							t.Throw("List for field '%s' already contains item '%s'.", field.name.c_str(), item.c_str());
+						else
+							list.push_back(item);
+						t.Next();
+						if(t.IsSymbol(','))
+							t.Next();
+					}
+					t.Next();
+				}
+				break;
 			}
 
 			set_fields |= (1 << keyword);
@@ -779,6 +819,30 @@ void TypeManager::SaveType(Type& type, TextWriter& f)
 				f << Format("\t%s ", field->name.c_str());
 				field->handler->SaveText(f, e, field->offset);
 				f << '\n';
+				break;
+			case Type::Field::ENUM:
+				{
+					int val = offset_cast<int>(e, field->offset);
+					f << Format("\t%s %s\n", field->name.c_str(), field->enums->at(val).id.c_str());
+				}
+				break;
+			case Type::Field::ITEM_LIST:
+				{
+					auto& list = offset_cast<vector<string>>(e, field->offset);
+					if(list.empty())
+						continue;
+					f << Format("\t%s {", field->name.c_str());
+					bool first = true;
+					for(auto& l : list)
+					{
+						if(first)
+							first = false;
+						else
+							f << ",\n";
+						f << Format("\t\t%s", l.c_str());
+					}
+					f << "\t\n";
+				}
 				break;
 			}
 		}

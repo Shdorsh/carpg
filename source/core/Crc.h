@@ -54,6 +54,14 @@ public:
 			Update((const byte*)v.data(), v.size()*sizeof(T));
 	}
 
+	template<>
+	void UpdateVector(const vector<string>& v)
+	{
+		Update(v.size());
+		for(auto& str : v)
+			Update(str);
+	}
+
 	void Update0()
 	{
 		Update<byte>(0);

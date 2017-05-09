@@ -634,7 +634,7 @@ namespace tokenizer
 			}
 			return EMPTY_GROUP;
 		}
-		const string& GetBlock(char open = '{', char close = '}');
+		const string& GetBlock(char open = '{', char close = 0);
 
 		//===========================================================================================================================
 		const string& MustGetItem() const

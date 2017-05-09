@@ -176,6 +176,42 @@ Type::Field& Type::AddCustomField(cstring name, CustomFieldHandler* handler, uin
 	return *f;
 }
 
+Type::Field& Type::AddEnum(cstring name, uint offset, std::initializer_list<EnumDTO> const& enums)
+{
+	assert(name);
+	assert(enums.size() > 0);
+
+	Field* f = new Field;
+	f->name = name;
+	f->type = Field::ENUM;
+	f->friendly_name = "Enum";
+	f->is_id = false;
+	f->offset = offset;
+
+	auto e = new vector<Field::Enum>;
+	for(auto& enu : enums)
+		e->push_back({ enu.name, enu.value });
+	f->enums = e;
+
+	fields.push_back(f);
+	return *f;
+}
+
+Type::Field& Type::AddItemList(cstring name, uint offset)
+{
+	assert(name);
+
+	Field* f = new Field;
+	f->name = name;
+	f->type = Field::ITEM_LIST;
+	f->friendly_name = "List";
+	f->is_id = false;
+	f->offset = offset;
+
+	fields.push_back(f);
+	return *f;
+}
+
 //=================================================================================================
 // Add localized string
 //=================================================================================================
@@ -209,6 +245,7 @@ void Type::CalculateCrc()
 				_crc.Update(offset_cast<string>(item, field->offset));
 				break;
 			case Field::FLAGS:
+			case Field::ENUM:
 				_crc.Update(offset_cast<uint>(item, field->offset));
 				break;
 			case Field::REFERENCE:
@@ -222,6 +259,14 @@ void Type::CalculateCrc()
 				break;
 			case Field::CUSTOM:
 				field->handler->UpdateCrc(_crc, item, field->offset);
+				break;
+				_crc.Update(offset_cast<int>(item, field->offset));
+				break;
+			case Field::ITEM_LIST:
+				{
+					auto& list = offset_cast<vector<string>>(item, field->offset);
+					_crc.UpdateVector(list);
+				}
 				break;
 			}
 		}
@@ -247,7 +292,8 @@ bool Type::Compare(TypeItem* item1, TypeItem* item2)
 				return false;
 			break;
 		case Field::FLAGS:
-			if(offset_cast<int>(item1, field->offset) != offset_cast<int>(item2, field->offset))
+		case Field::ENUM:
+			if(offset_cast<uint>(item1, field->offset) != offset_cast<uint>(item2, field->offset))
 				return false;
 			break;
 		case Field::REFERENCE:
@@ -256,6 +302,10 @@ bool Type::Compare(TypeItem* item1, TypeItem* item2)
 			break;
 		case Field::CUSTOM:
 			if(!field->handler->Compare(item1, item2, field->offset))
+				return false;
+			break;
+		case Field::ITEM_LIST:
+			if(offset_cast<vector<string>>(item1, field->offset) != offset_cast<vector<string>>(item2, field->offset))
 				return false;
 			break;
 		default:
@@ -286,13 +336,17 @@ void Type::Copy(TypeItem* from, TypeItem* to)
 			offset_cast<string>(to, field->offset) = offset_cast<string>(from, field->offset);
 			break;
 		case Field::FLAGS:
-			offset_cast<int>(to, field->offset) = offset_cast<int>(from, field->offset);
+		case Field::ENUM:
+			offset_cast<uint>(to, field->offset) = offset_cast<uint>(from, field->offset);
 			break;
 		case Field::REFERENCE:
 			offset_cast<TypeItem*>(to, field->offset) = offset_cast<TypeItem*>(from, field->offset);
 			break;
 		case Field::CUSTOM:
 			field->handler->Copy(from, to, field->offset);
+			break;
+		case Field::ITEM_LIST:
+			offset_cast<vector<string>>(to, field->offset) = offset_cast<vector<string>>(from, field->offset);
 			break;
 		default:
 			assert(0);

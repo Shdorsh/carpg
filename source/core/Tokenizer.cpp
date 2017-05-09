@@ -1047,6 +1047,12 @@ void Tokenizer::Parse(VEC2& v)
 //=================================================================================================
 const string& Tokenizer::GetBlock(char open, char close)
 {
+	if(close == 0)
+	{
+		close = GetClosingSymbol(open);
+		assert(close);
+	}
+
 	AssertSymbol(open);
 	int opened = 1;
 	uint block_start = normal_seek.pos - 1;

@@ -4,6 +4,7 @@
 #include "QuestManager.h"
 #include "QuestEntry.h"
 #include "QuestInstance.h"
+#include "QuestScheme.h"
 #include "SaveState.h"
 #include "script/ScriptManager.h"
 
@@ -502,10 +503,8 @@ void QuestManager::RegisterQuestApi(asIScriptEngine* engine)
 
 	REGISTER_API("void StartQuest(const string& title)", StartQuest);
 	REGISTER_API("void AddQuestEntry(const string& text)", AddQuestEntry);
-	REGISTER_API("void FinishQuest(const string& title)", FinishQuest);
-	REGISTER_API("void FailQuest(const string& title)", FailQuest);
-
-	engine->RegisterGlobalFunction("void StartQuest(const string& title)", asMETHOD(QuestManager, StartQuest), asCALL_CDECL);
+	REGISTER_API("void FinishQuest()", FinishQuest);
+	REGISTER_API("void FailQuest()", FailQuest);
 
 #undef REGISTER_API
 }
@@ -564,22 +563,45 @@ QuestInstance* QuestManager::GetCurrentQuest()
 int QuestManager::AddDialogScript(Tokenizer& t)
 {
 	char s = t.MustGetSymbol("({");
+	const string& code = t.GetBlock(s);
+	script_code += Format("void _script_func%d(){%s}\n\n", script_index, code.c_str());
 	t.Next();
-	auto pos = t.GetPos();
-	t.MoveToClosingSymbol()
-	cstring code;
-	script_code += Format("void _script_func%d(){%s}", script_index, code);
 	return script_index++;
 }
 
 int QuestManager::AddDialogIfScript(Tokenizer& t)
 {
-	cstring code;
-	script_code += Format("bool _if_script_func%d(){return (%s);}", if_script_index, code);
+	char s = t.MustGetSymbol("({");
+	const string& code = t.GetBlock(s);
+	script_code += Format("bool _if_script_func%d(){return (%s);}\n\n", if_script_index, code.c_str());
+	t.Next();
 	return if_script_index;
 }
 
 int QuestManager::FindQuestProgress(Tokenizer& t)
 {
-
+	if(!parsed_quest)
+		t.Throw("Dialog type 'set_progress' can only be used inside quest dialog.");
+	auto& progress = parsed_quest->progress;
+	if(t.IsInt())
+	{
+		int val = t.GetInt();
+		if(val < 0 || val >= progress.size())
+			t.Throw("Invalid progress value '%d' for quest '%s'.", val, parsed_quest->id.c_str());
+		return val;
+	}
+	else if(t.IsItem())
+	{
+		const string& str = t.GetItem();
+		int index = 0;
+		for(auto& progress_val : progress)
+		{
+			if(progress_val == str)
+				return index;
+			++index;
+		}
+		t.Throw("Invalid progress value '%s' for quest '%s'.", str.c_str(), parsed_quest->id.c_str());
+	}
+	else
+		t.Expecting("quest progress value");
 }

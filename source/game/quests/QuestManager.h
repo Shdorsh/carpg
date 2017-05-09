@@ -10,6 +10,7 @@ struct Quest;
 struct Quest_Dungeon;
 struct Unit;
 class QuestInstance;
+class QuestScheme;
 
 //-----------------------------------------------------------------------------
 struct QuestItemRequest
@@ -70,6 +71,7 @@ private:
 	void FailQuest();
 	QuestInstance* GetCurrentQuest();
 
+	QuestScheme* parsed_quest;
 	QuestInstance* current_quest;
 	string script_code;
 	int script_index, if_script_index;
