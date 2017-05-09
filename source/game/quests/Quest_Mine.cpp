@@ -26,48 +26,43 @@ void Quest_Mine::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Mine::GetDialog(int type2)
+cstring Quest_Mine::GetDialog(int type2)
 {
-	if(type2 == QUEST_DIALOG_NEXT)
+	if(type2 != QUEST_DIALOG_NEXT)
+		return nullptr;
+
+	if(game->current_dialog->talker->data->id == "inwestor")
+		return "q_mine_investor";
+	else if(game->current_dialog->talker->data->id == "poslaniec_kopalnia")
 	{
-		if(game->current_dialog->talker->data->id == "inwestor")
-			return FindDialog("q_mine_investor");
-		else if(game->current_dialog->talker->data->id == "poslaniec_kopalnia")
+		if(prog == Quest_Mine::Progress::SelectedShares)
+			return "q_mine_messenger";
+		else if(prog == Quest_Mine::Progress::GotFirstGold || prog == Quest_Mine::Progress::SelectedGold)
 		{
-			if(prog == Quest_Mine::Progress::SelectedShares)
-				return FindDialog("q_mine_messenger");
-			else if(prog == Quest_Mine::Progress::GotFirstGold || prog == Quest_Mine::Progress::SelectedGold)
-			{
-				if(days >= days_required)
-					return FindDialog("q_mine_messenger2");
-				else
-					return FindDialog("messenger_talked");
-			}
-			else if(prog == Quest_Mine::Progress::Invested)
-			{
-				if(days >= days_required)
-					return FindDialog("q_mine_messenger3");
-				else
-					return FindDialog("messenger_talked");
-			}
-			else if(prog == Quest_Mine::Progress::UpgradedMine)
-			{
-				if(days >= days_required)
-					return FindDialog("q_mine_messenger4");
-				else
-					return FindDialog("messenger_talked");
-			}
+			if(days >= days_required)
+				return "q_mine_messenger2";
 			else
-				return FindDialog("messenger_talked");
+				return "messenger_talked";
+		}
+		else if(prog == Quest_Mine::Progress::Invested)
+		{
+			if(days >= days_required)
+				return "q_mine_messenger3";
+			else
+				return "messenger_talked";
+		}
+		else if(prog == Quest_Mine::Progress::UpgradedMine)
+		{
+			if(days >= days_required)
+				return "q_mine_messenger4";
+			else
+				return "messenger_talked";
 		}
 		else
-			return FindDialog("q_mine_boss");
+			return "messenger_talked";
 	}
 	else
-	{
-		assert(0);
-		return nullptr;
-	}
+		return "q_mine_boss";
 }
 
 //=================================================================================================

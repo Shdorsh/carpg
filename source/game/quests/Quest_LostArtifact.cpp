@@ -18,18 +18,17 @@ void Quest_LostArtifact::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_LostArtifact::GetDialog(int type2)
+cstring Quest_LostArtifact::GetDialog(int type2)
 {
 	switch(type2)
 	{
 	case QUEST_DIALOG_START:
-		return FindDialog("q_lost_artifact_start");
+		return "q_lost_artifact_start";
 	case QUEST_DIALOG_NEXT:
-		return FindDialog("q_lost_artifact_end");
+		return "q_lost_artifact_end";
 	case QUEST_DIALOG_FAIL:
-		return FindDialog("q_lost_artifact_timeout");
+		return "q_lost_artifact_timeout";
 	default:
-		assert(0);
 		return nullptr;
 	}
 }

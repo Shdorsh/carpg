@@ -212,8 +212,8 @@ void Game::LoadDatafiles()
 
 	// dialogs
 	resMgr.NextTask(txLoadDialogs);
-	loaded = LoadDialogs(crc_dialogs, load_errors);
-	INFO(Format("Game: Loaded dialogs: %u (crc %p).", loaded, crc_dialogs));
+	loaded = GameDialogManager::Get().LoadDialogs(load_errors);
+	INFO(Format("Game: Loaded dialogs: %u.", loaded));
 
 	// units
 	resMgr.NextTask(txLoadUnitDatafile);
@@ -246,7 +246,7 @@ void Game::LoadLanguageFiles()
 	LoadLanguageFile("menu.txt");
 	LoadLanguageFile("stats.txt");
 	::LoadLanguageFiles();
-	LoadDialogTexts();
+	GameDialogManager::Get().LoadDialogTexts();
 
 	resMgr.NextTask(txLoadingTextfiles);
 	type_manager->LoadStrings();

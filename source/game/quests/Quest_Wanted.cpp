@@ -24,18 +24,17 @@ void Quest_Wanted::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Wanted::GetDialog(int type2)
+cstring Quest_Wanted::GetDialog(int type2)
 {
 	switch(type2)
 	{
 	case QUEST_DIALOG_START:
-		return FindDialog("q_wanted_start");
+		return "q_wanted_start";
 	case QUEST_DIALOG_FAIL:
-		return FindDialog("q_wanted_timeout");
+		return "q_wanted_timeout";
 	case QUEST_DIALOG_NEXT:
-		return FindDialog("q_wanted_end");
+		return "q_wanted_end";
 	default:
-		assert(0);
 		return nullptr;
 	}
 }

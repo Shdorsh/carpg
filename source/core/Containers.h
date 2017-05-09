@@ -25,6 +25,17 @@ namespace container
 		}
 		return nullptr;
 	}
+
+	template<typename T, typename Pred>
+	T* Find(vector<T*>& v, Pred p)
+	{
+		for(auto& e : v)
+		{
+			if(p(e))
+				return e;
+		}
+		return nullptr;
+	}
 }
 
 //-----------------------------------------------------------------------------

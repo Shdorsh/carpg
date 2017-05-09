@@ -21,14 +21,14 @@ void Quest_Orcs::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Orcs::GetDialog(int type2)
+cstring Quest_Orcs::GetDialog(int type2)
 {
 	assert(type2 == QUEST_DIALOG_NEXT);
 
 	if(game->current_dialog->talker->data->id == "q_orkowie_straznik")
-		return FindDialog("q_orcs_guard");
+		return "q_orcs_guard";
 	else
-		return FindDialog("q_orcs_captain");
+		return "q_orcs_captain";
 }
 
 //=================================================================================================
@@ -265,20 +265,20 @@ void Quest_Orcs2::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Orcs2::GetDialog(int type2)
+cstring Quest_Orcs2::GetDialog(int type2)
 {
 	assert(type2 == QUEST_DIALOG_NEXT);
 	
 	const string& id = game->current_dialog->talker->data->id;
 
 	if(id == "q_orkowie_slaby")
-		return FindDialog("q_orcs2_weak_orc");
+		return "q_orcs2_weak_orc";
 	else if(id == "q_orkowie_kowal")
-		return FindDialog("q_orcs2_blacksmith");
+		return "q_orcs2_blacksmith";
 	else if(id == "q_orkowie_gorush" || id == "q_orkowie_gorush_woj" || id == "q_orkowie_gorush_lowca" || id == "q_orkowie_gorush_szaman")
-		return FindDialog("q_orcs2_gorush");
+		return "q_orcs2_gorush";
 	else
-		return FindDialog("q_orcs2_orc");
+		return "q_orcs2_orc";
 }
 
 //=================================================================================================

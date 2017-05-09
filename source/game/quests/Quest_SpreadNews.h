@@ -24,7 +24,7 @@ public:
 	};
 
 	void Start();
-	GameDialog* GetDialog(int type2);
+	cstring GetDialog(int type2);
 	void SetProgress(int prog2);
 	cstring FormatString(const string& str);
 	bool IsTimedout() const;

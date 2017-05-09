@@ -19,18 +19,17 @@ void Quest_BanditsCollectToll::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_BanditsCollectToll::GetDialog(int type2)
+cstring Quest_BanditsCollectToll::GetDialog(int type2)
 {
 	switch(type2)
 	{
 	case QUEST_DIALOG_START:
-		return FindDialog("q_bandits_collect_toll_start");
+		return "q_bandits_collect_toll_start";
 	case QUEST_DIALOG_FAIL:
-		return FindDialog("q_bandits_collect_toll_timeout");
+		return "q_bandits_collect_toll_timeout";
 	case QUEST_DIALOG_NEXT:
-		return FindDialog("q_bandits_collect_toll_end");
+		return "q_bandits_collect_toll_end";
 	default:
-		assert(0);
 		return nullptr;
 	}
 }
@@ -52,7 +51,7 @@ void Quest_BanditsCollectToll::SetProgress(int prog2)
 			Location& ol = *game->locations[other_loc];
 
 			Encounter* e = game->AddEncounter(enc);
-			e->dialog = FindDialog("q_bandits_collect_toll_talk");
+			e->dialog = GameDialogManager::Get().FindDialog("q_bandits_collect_toll_talk");
 			e->dont_attack = true;
 			e->grupa = SG_BANDYCI;
 			e->pos = (sl.pos + ol.pos)/2;
@@ -216,7 +215,7 @@ void Quest_BanditsCollectToll::Load(HANDLE file)
 		Location& ol = *game->locations[other_loc];
 
 		Encounter* e = game->RecreateEncounter(enc);
-		e->dialog = FindDialog("q_bandits_collect_toll_talk");
+		e->dialog = GameDialogManager::Get().FindDialog("q_bandits_collect_toll_talk");
 		e->dont_attack = true;
 		e->grupa = SG_BANDYCI;
 		e->pos = (sl.pos + ol.pos)/2;

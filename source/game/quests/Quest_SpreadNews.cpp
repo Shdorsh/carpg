@@ -58,21 +58,20 @@ void Quest_SpreadNews::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_SpreadNews::GetDialog(int type2)
+cstring Quest_SpreadNews::GetDialog(int type2)
 {
 	switch(type2)
 	{
 	case QUEST_DIALOG_START:
-		return FindDialog("q_spread_news_start");
+		return "q_spread_news_start";
 	case QUEST_DIALOG_FAIL:
-		return FindDialog("q_spread_news_timeout");
+		return "q_spread_news_timeout";
 	case QUEST_DIALOG_NEXT:
 		if(prog == Progress::Started)
-			return FindDialog("q_spread_news_tell");
+			return "q_spread_news_tell";
 		else
-			return FindDialog("q_spread_news_end");
+			return "q_spread_news_end";
 	default:
-		assert(0);
 		return nullptr;
 	}
 }

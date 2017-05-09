@@ -20,20 +20,17 @@ void Quest_Sawmill::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Sawmill::GetDialog(int type2)
+cstring Quest_Sawmill::GetDialog(int type2)
 {
 	if(type2 == QUEST_DIALOG_NEXT)
 	{
 		if(game->current_dialog->talker->data->id == "artur_drwal")
-			return FindDialog("q_sawmill_talk");
+			return "q_sawmill_talk";
 		else
-			return FindDialog("q_sawmill_messenger");
+			return "q_sawmill_messenger";
 	}
 	else
-	{
-		assert(0);
 		return nullptr;
-	}
 }
 
 //=================================================================================================

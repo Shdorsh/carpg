@@ -54,7 +54,7 @@ struct Quest
 	virtual ~Quest() {}
 
 	virtual void Start() = 0;
-	virtual GameDialog* GetDialog(int type2) = 0;
+	virtual cstring GetDialog(int type2) = 0;
 	virtual void SetProgress(int prog2) = 0;
 	virtual cstring FormatString(const string& str) = 0;
 	// called on quest timeout, return true if timeout handled (if false it will be called on next time update)
@@ -77,6 +77,7 @@ struct Quest
 	const Location& GetStartLocation() const;
 	cstring GetStartLocationName() const;
 	bool IsActive() const { return state == Hidden || state == Started; }
+	GameDialog* GetGameDialog(int type2);
 };
 
 //-----------------------------------------------------------------------------
@@ -84,7 +85,7 @@ struct Quest
 struct PlaceholderQuest : public Quest
 {
 	void Start() override {}
-	GameDialog* GetDialog(int type2) override { return nullptr; }
+	cstring GetDialog(int type2) override { return nullptr; }
 	void SetProgress(int prog2) override {}
 	cstring FormatString(const string& str) override { return nullptr; }
 };

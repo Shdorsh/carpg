@@ -29,18 +29,17 @@ void Quest_CampNearCity::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_CampNearCity::GetDialog(int type2)
+cstring Quest_CampNearCity::GetDialog(int type2)
 {
 	switch(type2)
 	{
 	case QUEST_DIALOG_START:
-		return FindDialog("q_camp_near_city_start");
+		return "q_camp_near_city_start";
 	case QUEST_DIALOG_FAIL:
-		return FindDialog("q_camp_near_city_timeout");
+		return "q_camp_near_city_timeout";
 	case QUEST_DIALOG_NEXT:
-		return FindDialog("q_camp_near_city_end");
+		return "q_camp_near_city_end";
 	default:
-		assert(0);
 		return nullptr;
 	}
 }

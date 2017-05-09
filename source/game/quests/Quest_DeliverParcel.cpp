@@ -19,16 +19,16 @@ void Quest_DeliverParcel::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_DeliverParcel::GetDialog(int dialog_type)
+cstring Quest_DeliverParcel::GetDialog(int dialog_type)
 {
 	switch(dialog_type)
 	{
 	case QUEST_DIALOG_START:
-		return FindDialog("q_deliver_parcel_start");
+		return "q_deliver_parcel_start";
 	case QUEST_DIALOG_FAIL:
-		return FindDialog("q_deliver_parcel_timeout");
+		return "q_deliver_parcel_timeout";
 	case QUEST_DIALOG_NEXT:
-		return FindDialog("q_deliver_parcel_give");
+		return "q_deliver_parcel_give";
 	default:
 		assert(0);
 		return nullptr;
@@ -76,7 +76,7 @@ void Quest_DeliverParcel::SetProgress(int prog2)
 				e->zasieg = 64;
 				e->szansa = 45;
 				e->dont_attack = true;
-				e->dialog = FindDialog("q_deliver_parcel_bandits");
+				e->dialog = GameDialogManager::Get().FindDialog("q_deliver_parcel_bandits");
 				e->grupa = SG_BANDYCI;
 				e->text = game->txQuest[11];
 				e->quest = this;
@@ -305,7 +305,7 @@ void Quest_DeliverParcel::Load(HANDLE file)
 		e->zasieg = 64;
 		e->szansa = 45;
 		e->dont_attack = true;
-		e->dialog = FindDialog("q_deliver_parcel_bandits");
+		e->dialog = GameDialogManager::Get().FindDialog("q_deliver_parcel_bandits");
 		e->grupa = SG_BANDYCI;
 		e->text = game->txQuest[11];
 		e->quest = this;

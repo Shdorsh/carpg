@@ -19,9 +19,9 @@ void Quest_Main::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Main::GetDialog(int type2)
+cstring Quest_Main::GetDialog(int type2)
 {
-	return FindDialog("q_dialog_main");
+	return "q_dialog_main";
 }
 
 //=================================================================================================

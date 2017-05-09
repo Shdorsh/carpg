@@ -3877,7 +3877,7 @@ void Game::SpawnEncounterUnits(GameDialog*& dialog, Unit*& talker, Quest*& quest
 		case SG_BANDYCI:
 			group_name = "bandits";
 			dont_attack = true;
-			dialog = FindDialog("bandits");
+			dialog = GameDialogManager::Get().FindDialog("bandits");
 			break;
 		case SG_GOBLINY:
 			group_name = "goblins";
@@ -3899,13 +3899,13 @@ void Game::SpawnEncounterUnits(GameDialog*& dialog, Unit*& talker, Quest*& quest
 			group_name = nullptr;
 			ile = 1;
 			poziom = random(10,16);
-			dialog = FindDialog("crazy_mage_encounter");
+			dialog = GameDialogManager::Get().FindDialog("crazy_mage_encounter");
 			break;
 		case 1: // szaleñcy
 			group_name = "crazies";
 			ile = random(2,4);
 			poziom = random(2,15);
-			dialog = FindDialog("crazies_encounter");
+			dialog = GameDialogManager::Get().FindDialog("crazies_encounter");
 			break;
 		case 2: // kupiec
 			{
@@ -3976,7 +3976,7 @@ void Game::SpawnEncounterUnits(GameDialog*& dialog, Unit*& talker, Quest*& quest
 			esencial = FindUnitData("q_magowie_golem");
 			poziom = 8;
 			dont_attack = true;
-			dialog = FindDialog("q_mages");
+			dialog = GameDialogManager::Get().FindDialog("q_mages");
 			ile = 1;
 			break;
 		case 7:
@@ -3984,7 +3984,7 @@ void Game::SpawnEncounterUnits(GameDialog*& dialog, Unit*& talker, Quest*& quest
 			esencial = FindUnitData("q_szaleni_szaleniec");
 			poziom = 13;
 			dont_attack = true;
-			dialog = FindDialog("q_crazies");
+			dialog = GameDialogManager::Get().FindDialog("q_crazies");
 			ile = 1;
 			quest_crazies->check_stone = true;
 			kamien = true;

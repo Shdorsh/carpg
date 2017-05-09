@@ -307,7 +307,7 @@ void Game::UpdateTeamItemShares()
 							if(distance2d(tsi.from->pos, tsi.to->pos) > 8.f)
 								state = 0;
 							else if(tsi.from->busy == Unit::Busy_No && tsi.from->player->action == PlayerController::Action_None)
-								dialog = FindDialog(IS_SET(tsi.to->data->flags, F_CRAZY) ? "crazy_buy_item" : "hero_buy_item");
+								dialog = GameDialogManager::Get().FindDialog(IS_SET(tsi.to->data->flags, F_CRAZY) ? "crazy_buy_item" : "hero_buy_item");
 							else
 								state = 2;
 						}
@@ -323,7 +323,7 @@ void Game::UpdateTeamItemShares()
 						if(distance2d(tsi.to->pos, Team.leader->pos) > 8.f)
 							state = 0;
 						else if(Team.leader->busy == Unit::Busy_No && Team.leader->player->action == PlayerController::Action_None)
-							dialog = FindDialog(IS_SET(tsi.to->data->flags, F_CRAZY) ? "crazy_get_item" : "hero_get_item");
+							dialog = GameDialogManager::Get().FindDialog(IS_SET(tsi.to->data->flags, F_CRAZY) ? "crazy_get_item" : "hero_get_item");
 						else
 							state = 2;
 					}
@@ -333,7 +333,7 @@ void Game::UpdateTeamItemShares()
 						if(distance2d(tsi.from->pos, tsi.to->pos) > 8.f)
 							state = 0;
 						else if(tsi.from->busy == Unit::Busy_No && tsi.from->player->action == PlayerController::Action_None)
-							dialog = FindDialog(IS_SET(tsi.to->data->flags, F_CRAZY) ? "crazy_get_item" : "hero_get_item");
+							dialog = GameDialogManager::Get().FindDialog(IS_SET(tsi.to->data->flags, F_CRAZY) ? "crazy_get_item" : "hero_get_item");
 						else
 							state = 2;
 					}

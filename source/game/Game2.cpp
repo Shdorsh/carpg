@@ -4123,7 +4123,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 							quest->refid = quest_manager.quest_counter++;
 							quest->Start();
 							quest_manager.unaccepted_quests.push_back(quest);
-							StartNextDialog(ctx, quest->GetDialog(QUEST_DIALOG_START), if_level, quest);
+							StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_START), if_level, quest);
 						}
 						else
 							have_quest = false;
@@ -4135,7 +4135,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 						if(quest)
 						{
 							// quest nie zosta³ zaakceptowany
-							StartNextDialog(ctx, quest->GetDialog(QUEST_DIALOG_START), if_level, quest);
+							StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_START), if_level, quest);
 						}
 						else
 						{
@@ -4204,7 +4204,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 							quest->refid = quest_manager.quest_counter++;
 							quest->Start();
 							quest_manager.unaccepted_quests.push_back(quest);
-							StartNextDialog(ctx, quest->GetDialog(QUEST_DIALOG_START), if_level, quest);
+							StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_START), if_level, quest);
 						}
 						else
 							have_quest = false;
@@ -4216,7 +4216,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 						if(quest)
 						{
 							// quest nie zosta³ zaakceptowany
-							StartNextDialog(ctx, quest->GetDialog(QUEST_DIALOG_START), if_level, quest);
+							StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_START), if_level, quest);
 						}
 						else
 						{
@@ -4260,12 +4260,12 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 						ctx.talker->quest_refid = quest->refid;
 						quest->Start();
 						quest_manager.unaccepted_quests.push_back(quest);
-						StartNextDialog(ctx, quest->GetDialog(QUEST_DIALOG_START), if_level, quest);
+						StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_START), if_level, quest);
 					}
 					else
 					{
 						Quest* quest = quest_manager.FindUnacceptedQuest(ctx.talker->quest_refid);
-						StartNextDialog(ctx, quest->GetDialog(QUEST_DIALOG_START), if_level, quest);
+						StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_START), if_level, quest);
 					}
 				}
 				else if(strcmp(msg, "arena_combat1") == 0 || strcmp(msg, "arena_combat2") == 0 || strcmp(msg, "arena_combat3") == 0)
@@ -5322,7 +5322,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 				if(quest && quest->IsActive() && quest->IsTimedout())
 				{
 					ctx.dialog_once = false;
-					StartNextDialog(ctx, quest->GetDialog(QUEST_DIALOG_FAIL), if_level, quest);
+					StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_FAIL), if_level, quest);
 				}
 			}
 			break;
@@ -5343,7 +5343,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 
 				Quest* quest;
 				if(FindQuestItem2(ctx.pc->unit, msg, &quest, nullptr))
-					StartNextDialog(ctx, quest->GetDialog(QUEST_DIALOG_NEXT), if_level, quest);
+					StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_NEXT), if_level, quest);
 			}
 			break;
 		case DT_IF_QUEST_PROGRESS:
@@ -5392,7 +5392,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 				{
 					if(quest->IsActive() && quest->IfNeedTalk(msg))
 					{
-						StartNextDialog(ctx, quest->GetDialog(QUEST_DIALOG_NEXT), if_level, quest);
+						StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_NEXT), if_level, quest);
 						break;
 					}
 				}
@@ -5884,7 +5884,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 				{
 					if(quest->IfNeedTalk(msg))
 					{
-						StartNextDialog(ctx, quest->GetDialog(QUEST_DIALOG_NEXT), if_level, quest);
+						StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_NEXT), if_level, quest);
 						break;
 					}
 				}
@@ -5895,7 +5895,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 					{
 						if(quest->IfNeedTalk(msg))
 						{
-							StartNextDialog(ctx, quest->GetDialog(QUEST_DIALOG_NEXT), if_level, quest);
+							StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_NEXT), if_level, quest);
 							break;
 						}
 					}
@@ -18546,7 +18546,8 @@ void Game::UpdateGame2(float dt)
 					if(arena_tryb == Arena_Pvp && arena_fighter->IsHero())
 					{
 						arena_fighter->hero->lost_pvp = (arena_wynik == 0);
-						StartDialog2(pvp_player, arena_fighter, FindDialog(IS_SET(arena_fighter->data->flags, F_CRAZY) ? "crazy_pvp" : "hero_pvp"));
+						StartDialog2(pvp_player, arena_fighter,
+							GameDialogManager::Get().FindDialog(IS_SET(arena_fighter->data->flags, F_CRAZY) ? "crazy_pvp" : "hero_pvp"));
 					}
 				}
 

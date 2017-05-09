@@ -130,7 +130,22 @@ struct DialogContext
 };
 
 //-----------------------------------------------------------------------------
-uint LoadDialogs(uint& crc, uint& errors);
-void LoadDialogTexts();
-GameDialog* FindDialog(cstring id);
-void CleanupDialogs();
+class GameDialogManager : public Singleton<GameDialogManager>
+{
+public:
+	void Cleanup();
+	uint LoadDialogs(uint& errors);
+	GameDialog* LoadDialog(Tokenizer& t);
+	void LoadDialogTexts();
+	GameDialog* FindDialog(cstring id);
+
+private:
+	void InitTokenizer();
+	GameDialog* LoadDialog();
+	bool LoadDialogText();
+
+	typedef std::map<cstring, GameDialog*, CstringComparer> DialogsMap;
+	DialogsMap dialogs;
+	Tokenizer t;
+	bool initialized;
+};

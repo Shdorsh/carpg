@@ -18,18 +18,17 @@ void Quest_RetrievePackage::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_RetrievePackage::GetDialog(int type2)
+cstring Quest_RetrievePackage::GetDialog(int type2)
 {
 	switch(type2)
 	{
 	case QUEST_DIALOG_START:
-		return FindDialog("q_retrieve_package_start");
+		return "q_retrieve_package_start";
 	case QUEST_DIALOG_FAIL:
-		return FindDialog("q_retrieve_package_timeout");
+		return "q_retrieve_package_timeout";
 	case QUEST_DIALOG_NEXT:
-		return FindDialog("q_retrieve_package_end");
+		return "q_retrieve_package_end";
 	default:
-		assert(0);
 		return nullptr;
 	}
 }

@@ -24,24 +24,24 @@ void Quest_Goblins::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Goblins::GetDialog(int type2)
+cstring Quest_Goblins::GetDialog(int type2)
 {
 	assert(type2 == QUEST_DIALOG_NEXT);
 
 	const string& id = game->current_dialog->talker->data->id;
 
 	if(id == "q_gobliny_szlachcic")
-		return FindDialog("q_goblins_nobleman");
+		return "q_goblins_nobleman";
 	else if(id == "q_gobliny_mag")
-		return FindDialog("q_goblins_mage");
+		return "q_goblins_mage";
 	else if(id == "innkeeper")
-		return FindDialog("q_goblins_innkeeper");
+		return "q_goblins_innkeeper";
 	else if(id == "q_gobliny_szlachcic2")
-		return FindDialog("q_goblins_boss");
+		return "q_goblins_boss";
 	else
 	{
 		assert(id == "q_gobliny_poslaniec");
-		return FindDialog("q_goblins_messenger");
+		return "q_goblins_messenger";
 	}
 }
 
@@ -175,7 +175,7 @@ void Quest_Goblins::SetProgress(int prog2)
 			// encounter
 			Encounter* e = game->AddEncounter(enc);
 			e->check_func = CzyMajaStaryLuk;
-			e->dialog = FindDialog("q_goblins_encounter");
+			e->dialog = GameDialogManager::Get().FindDialog("q_goblins_encounter");
 			e->dont_attack = true;
 			e->grupa = SG_GOBLINY;
 			e->location_event_handler = nullptr;
@@ -467,7 +467,7 @@ void Quest_Goblins::Load(HANDLE file)
 	{
 		Encounter* e = game->RecreateEncounter(enc);
 		e->check_func = CzyMajaStaryLuk;
-		e->dialog = FindDialog("q_goblins_encounter");
+		e->dialog = GameDialogManager::Get().FindDialog("q_goblins_encounter");
 		e->dont_attack = true;
 		e->grupa = SG_GOBLINY;
 		e->location_event_handler = nullptr;

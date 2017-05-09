@@ -22,9 +22,9 @@ void Quest_Crazies::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Crazies::GetDialog(int type2)
+cstring Quest_Crazies::GetDialog(int type2)
 {
-	return FindDialog("q_crazies_trainer");
+	return "q_crazies_trainer";
 }
 
 //=================================================================================================

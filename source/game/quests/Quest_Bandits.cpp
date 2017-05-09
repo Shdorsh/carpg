@@ -27,7 +27,7 @@ void Quest_Bandits::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Bandits::GetDialog(int type2)
+cstring Quest_Bandits::GetDialog(int type2)
 {
 	assert(type2 == QUEST_DIALOG_NEXT);
 
@@ -47,7 +47,7 @@ GameDialog* Quest_Bandits::GetDialog(int type2)
 	else
 		dialog_id = "q_bandits_encounter";
 
-	return FindDialog(dialog_id);
+	return dialog_id;
 }
 
 //=================================================================================================
@@ -110,7 +110,7 @@ void Quest_Bandits::SetProgress(int prog2)
 			Location& sl = GetStartLocation();
 			Location& other = *game->locations[other_loc];
 			Encounter* e = game->AddEncounter(enc);
-			e->dialog = FindDialog("q_bandits");
+			e->dialog = GameDialogManager::Get().FindDialog("q_bandits");
 			e->dont_attack = true;
 			e->grupa = SG_BANDYCI;
 			e->location_event_handler = nullptr;
@@ -138,7 +138,7 @@ void Quest_Bandits::SetProgress(int prog2)
 			Location& sl = GetStartLocation();
 			Location& other = *game->locations[other_loc];
 			Encounter* e = game->AddEncounter(enc);
-			e->dialog = FindDialog("q_bandits");
+			e->dialog = GameDialogManager::Get().FindDialog("q_bandits");
 			e->dont_attack = true;
 			e->grupa = SG_BANDYCI;
 			e->location_event_handler = nullptr;
@@ -428,7 +428,7 @@ void Quest_Bandits::Load(HANDLE file)
 	if(enc != -1)
 	{
 		Encounter* e = game->RecreateEncounter(enc);
-		e->dialog = FindDialog("q_bandits");
+		e->dialog = GameDialogManager::Get().FindDialog("q_bandits");
 		e->dont_attack = true;
 		e->grupa = SG_BANDYCI;
 		e->location_event_handler = nullptr;

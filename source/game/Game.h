@@ -661,7 +661,7 @@ public:
 	City* city_ctx; // jeøeli jest w mieúcie/wiosce to ten wskaünik jest ok, takto nullptr
 	vector<Unit*> to_remove;
 	CityGenerator* gen;
-	uint crc_items, crc_units, crc_dialogs, crc_spells;
+	uint crc_items, crc_units, crc_spells;
 
 	AnimeshInstance* GetBowInstance(Animesh* mesh);
 

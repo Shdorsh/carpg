@@ -270,7 +270,7 @@ bool Game::LoadRequiredStats(uint& errors)
 					break;
 				case R_DIALOG:
 					{
-						GameDialog* dialog = FindDialog(str.c_str());
+						GameDialog* dialog = GameDialogManager::Get().FindDialog(str.c_str());
 						if(!dialog)
 						{
 							ERROR(Format("Missing required dialog '%s'.", str.c_str()));

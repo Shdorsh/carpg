@@ -19,14 +19,14 @@ void Quest_Mages::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Mages::GetDialog(int type2)
+cstring Quest_Mages::GetDialog(int type2)
 {
 	assert(type2 == QUEST_DIALOG_NEXT);
 
 	if(game->current_dialog->talker->data->id == "q_magowie_uczony")
-		return FindDialog("q_mages_scholar");
+		return "q_mages_scholar";
 	else
-		return FindDialog("q_mages_golem");
+		return "q_mages_golem";
 }
 
 //=================================================================================================
@@ -201,16 +201,16 @@ void Quest_Mages2::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Mages2::GetDialog(int type2)
+cstring Quest_Mages2::GetDialog(int type2)
 {
 	assert(type2 == QUEST_DIALOG_NEXT);
 
 	if(game->current_dialog->talker->data->id == "q_magowie_stary")
-		return FindDialog("q_mages2_mage");
+		return "q_mages2_mage";
 	else if(game->current_dialog->talker->data->id == "q_magowie_boss")
-		return FindDialog("q_mages2_boss");
+		return "q_mages2_boss";
 	else
-		return FindDialog("q_mages2_captain");
+		return "q_mages2_captain";
 }
 
 //=================================================================================================

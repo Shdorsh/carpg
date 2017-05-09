@@ -88,6 +88,15 @@ cstring Quest::GetStartLocationName() const
 }
 
 //=================================================================================================
+GameDialog* Quest::GetGameDialog(int type2)
+{
+	auto dialog_id = GetDialog(type2);
+	assert(dialog_id);
+	auto dialog = GameDialogManager::Get().FindDialog(dialog_id);
+	return dialog;
+}
+
+//=================================================================================================
 void Quest_Dungeon::Save(HANDLE file)
 {
 	Quest::Save(file);

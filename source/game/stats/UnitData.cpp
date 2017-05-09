@@ -1357,7 +1357,7 @@ bool LoadUnit(Tokenizer& t, CRC32& crc)
 			case P_DIALOG:
 				{
 					const string& id = t.MustGetItemKeyword();
-					unit->dialog = FindDialog(id.c_str());
+					unit->dialog = GameDialogManager::Get().FindDialog(id.c_str());
 					if(!unit->dialog)
 						t.Throw("Missing dialog '%s'.", id.c_str());
 					crc.Update(id);

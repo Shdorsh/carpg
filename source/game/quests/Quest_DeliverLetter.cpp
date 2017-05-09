@@ -18,21 +18,20 @@ void Quest_DeliverLetter::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_DeliverLetter::GetDialog(int dialog_type)
+cstring Quest_DeliverLetter::GetDialog(int dialog_type)
 {
 	switch(dialog_type)
 	{
 	case QUEST_DIALOG_START:
-		return FindDialog("q_deliver_letter_start");
+		return "q_deliver_letter_start";
 	case QUEST_DIALOG_FAIL:
-		return FindDialog("q_deliver_letter_timeout");
+		return "q_deliver_letter_timeout";
 	case QUEST_DIALOG_NEXT:
 		if(prog == Progress::Started)
-			return FindDialog("q_deliver_letter_give");
+			return "q_deliver_letter_give";
 		else
-			return FindDialog("q_deliver_letter_end");
+			return "q_deliver_letter_end";
 	default:
-		assert(0);
 		return nullptr;
 	}
 }

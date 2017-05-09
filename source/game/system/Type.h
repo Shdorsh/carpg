@@ -89,11 +89,11 @@ public:
 		virtual ~CustomFieldHandler() {}
 		virtual void SaveText(TextWriter& t, TypeItem* item, uint offset) = 0;
 		virtual void LoadText(Tokenizer& t, TypeItem* item, uint offset) = 0;
-		virtual void UpdateCrc(CRC32& crc, TypeItem* item, uint offset) = 0;
+		virtual void UpdateCrc(CRC32& crc, TypeItem* item, uint offset) {}
 		virtual bool Compare(TypeItem* item1, TypeItem* item2, uint offset) = 0;
 		virtual void Copy(TypeItem* from, TypeItem* to, uint offset) = 0;
 	};
-
+	
 	class Field
 	{
 	public:

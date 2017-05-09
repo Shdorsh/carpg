@@ -5,6 +5,9 @@
 - trim crash on polish letters
 - fast delegate type safety, currently i accepts different type and sometimes even works
 ? dialogs crc purpose, it is server side
++ config log filename, allow create dir, prevent escape sandbox dir
+
++ get rid of DT_TALK2, CheckText in Dialogs.cpp
 
 + building script
 	+ reload

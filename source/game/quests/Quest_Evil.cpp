@@ -32,27 +32,24 @@ void Quest_Evil::Start()
 }
 
 //=================================================================================================
-GameDialog* Quest_Evil::GetDialog(int type2)
+cstring Quest_Evil::GetDialog(int type2)
 {
 	assert(type2 == QUEST_DIALOG_NEXT);
 
 	const string& id = game->current_dialog->talker->data->id;
 
 	if(id == "q_zlo_kaplan")
-		return FindDialog("q_evil_cleric");
+		return "q_evil_cleric";
 	else if(id == "q_zlo_mag")
-		return FindDialog("q_evil_mage");
+		return "q_evil_mage";
 	else if(id == "q_zlo_boss")
-		return FindDialog("q_evil_boss");
+		return "q_evil_boss";
 	else if(id == "guard_captain")
-		return FindDialog("q_evil_captain");
+		return "q_evil_captain";
 	else if(id == "mayor" || id == "soltys")
-		return FindDialog("q_evil_mayor");
+		return "q_evil_mayor";
 	else
-	{
-		assert(0);
 		return nullptr;
-	}
 }
 
 //=================================================================================================

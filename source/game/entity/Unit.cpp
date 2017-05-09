@@ -1499,7 +1499,7 @@ void Unit::Load(HANDLE file, bool local)
 		{
 			f.ReadStringBUF();
 			if(BUF[0])
-				auto_talk_dialog = FindDialog(BUF);
+				auto_talk_dialog = GameDialogManager::Get().FindDialog(BUF);
 			else
 				auto_talk_dialog = nullptr;
 			f >> auto_talk_timer;

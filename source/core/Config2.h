@@ -6,6 +6,8 @@ using Action = fastdelegate::FastDelegate1<const T&>;
 class Config2
 {
 public:
+	static const int VERSION = 2;
+
 	struct Var
 	{
 		Var& Readonly();
