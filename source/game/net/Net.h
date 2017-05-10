@@ -40,9 +40,11 @@ enum GamePacket : byte
 
 	/* gracz nie mo¿e do³¹czyæ do serwera, size:2-6
 	byte - id
-	byte - powód (0-brak miejsca,1-z³a wersja,2-zajêty nick,3-z³y nick przy wczytywaniu,4-z³e ID_HELLO,5-nieznany b³¹d)
-	[jeœli powód=1]
+	byte - reason (enum class JoinResult)
+	[if reason=InvalidVersion]
 	int - wersja
+	[if reason=InvalidCrc]
+	uint - crc
 	*/
 	ID_CANT_JOIN,
 
@@ -449,12 +451,8 @@ enum class JoinResult
 	FullServer = 0,
 	InvalidVersion,
 	TakenNick,
-	InvalidItemsCrc,
+	InvalidCrc,
 	BrokenPacket,
 	OtherError,
-	InvalidNick,
-	InvalidSpellsCrc,
-	InvalidUnitsCrc,
-	InvalidDialogsCrc,
-	InvalidTypeCrc
+	InvalidNick
 };

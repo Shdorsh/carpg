@@ -480,9 +480,9 @@ bool QuestManager::RemoveQuestRumor(PLOTKA_QUESTOWA rumor_id)
 cstring QuestClass = R"code(
 	class Quest
 	{
-		int progress;
+		private int _progress;
 
-		void OnProgress() {}
+		virtual void OnProgress() {}
 	}
 )code";
 
@@ -604,4 +604,18 @@ int QuestManager::FindQuestProgress(Tokenizer& t)
 	}
 	else
 		t.Expecting("quest progress value");
+}
+
+void ScriptBackingField()
+{
+	cstring s = R"code(
+		class %s : Quest
+		{
+			enum Progress {}
+
+albo int albo enum
+
+code
+		}
+)code";
 }

@@ -24,21 +24,20 @@ public:
 	void LoadText(Tokenizer& t, TypeItem* item, uint offset)
 	{
 		auto& quest = item->To<QuestScheme>();
-		auto& id = t.MustGetText();
-		auto existing_dialog = quest.FindDialog(id);
-		if(existing_dialog)
-			t.Throw("Dialog '%s' already exists.", id.c_str());
-		Ptr<GameDialog> dialog;
-		dialog->id = id;
-		t.Next();
 
-		t.AssertSymbol('{');
-		t.Next();
+		auto dialog = GameDialogManager::Get().LoadDialog(t);
+		auto existing_dialog = quest.FindDialog(dialog->id);
+		if(existing_dialog)
+		{
+			delete dialog;
+			t.Throw("Dialog '%s' already exists.", existing_dialog->id.c_str());
+		}
+		quest.dialogs.push_back(dialog);
 	}
 
 	bool Compare(TypeItem* item1, TypeItem* item2, uint offset)
 	{
-
+		return true;
 	}
 
 	void Copy(TypeItem* from, TypeItem* to, uint offset)
@@ -57,12 +56,16 @@ public:
 
 	void LoadText(Tokenizer& t, TypeItem* item, uint offset)
 	{
+		auto& quest = item->To<QuestScheme>();
 
+		const string& code = t.GetBlock('{');
+		quest.code += code;
+		quest.code += "\n\n";
 	}
 
 	bool Compare(TypeItem* item1, TypeItem* item2, uint offset)
 	{
-
+		return true;
 	}
 
 	void Copy(TypeItem* from, TypeItem* to, uint offset)

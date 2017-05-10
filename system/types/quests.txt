@@ -9,17 +9,17 @@ quest test_quest
 	}
 	
 	dialog start {
-		talk "Mam dla ciebie zadanie. Szukam kogoś kto przyniesie mi 5 ziel leczniczy."
-		talk "Oczywiście za nie zapłacę. Jesteś zainteresowany?"
-		choice "Tak"
+		talk 0
+		talk 1
+		choice 2
 		{
-			talk "No to czekam na te zioła."
+			talk 3
 			set_progress Started
 			end
 		}
-		choice "Nie"
+		choice 4
 		{
-			talk "Wróć jeśli zmienisz zdanie."
+			talk 5
 			end
 		}
 		show_choices
@@ -28,9 +28,9 @@ quest test_quest
 	dialog progress {
 		if script(player.HaveItem("herb", 5))
 		{
-			choice "Daj zioła"
+			choice 0
 			{
-				talk "Dobra robota."
+				talk 1
 				set_progress Finished
 			}
 		}

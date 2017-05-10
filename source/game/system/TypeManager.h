@@ -23,12 +23,7 @@ public:
 	void LoadStrings();
 	void LogLoadedTypes();
 
-	// crc functions
 	void CalculateCrc();
-	void WriteCrc(BitStream& stream);
-	bool ReadCrc(BitStream& stream);
-	bool GetCrc(TypeId type_id, uint& my_crc, cstring& name);
-	bool ValidateCrc(TypeId& type_id, uint& my_crc, uint& other_crc, cstring& name);
 
 	bool Save();
 	//void Merge(GameTypeId type_id, vector<Game)

@@ -12,6 +12,7 @@
 #include "PickServerPanel.h"
 #include "Spell.h"
 #include "Trap.h"
+#include "Crc.h"
 
 extern void HumanPredraw(void* ptr, MATRIX* mat, int n);
 extern const int ITEM_IMAGE_SIZE;
@@ -198,17 +199,17 @@ void Game::LoadDatafiles()
 {
 	INFO("Game: Loading datafiles.");
 	load_errors = 0;
-	uint loaded;
+	uint loaded, crc_items, crc_spells, crc_units;
 
 	// items
 	resMgr.NextTask(txLoadItemsDatafile);
 	loaded = LoadItems(crc_items, load_errors);
-	INFO(Format("Game: Loaded items: %u (crc %p).", loaded, crc_items));
+	INFO(Format("Game: Loaded items: %u.", loaded));
 
 	// spells
 	resMgr.NextTask(txLoadSpellDatafile);
 	loaded = LoadSpells(crc_spells, load_errors);
-	INFO(Format("Game: Loaded spells: %u (crc %p).", loaded, crc_spells));
+	INFO(Format("Game: Loaded spells: %u.", loaded));
 
 	// dialogs
 	resMgr.NextTask(txLoadDialogs);
@@ -218,7 +219,7 @@ void Game::LoadDatafiles()
 	// units
 	resMgr.NextTask(txLoadUnitDatafile);
 	loaded = LoadUnits(crc_units, load_errors);
-	INFO(Format("Game: Loaded units: %u (crc %p).", loaded, crc_units));
+	INFO(Format("Game: Loaded units: %u.", loaded));
 
 	// musics
 	resMgr.NextTask(txLoadMusicDatafile);
@@ -233,6 +234,14 @@ void Game::LoadDatafiles()
 	// required
 	resMgr.NextTask(txLoadRequires);
 	required_missing = !LoadRequiredStats(load_errors);
+
+	// calculate game crc
+	CRC32 crc;
+	crc.Update(crc_items);
+	crc.Update(crc_spells);
+	crc.Update(crc_units);
+	game_crc = crc.Get();
+	INFO(Format("Game: Crc %p.", game_crc));
 }
 
 //=================================================================================================

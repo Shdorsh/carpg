@@ -7,6 +7,7 @@
 
 extern string g_system_dir;
 extern string g_lang_prefix;
+GameDialogManager Singleton<GameDialogManager>::instance;
 
 //=================================================================================================
 void CheckText(cstring text, bool talk2)

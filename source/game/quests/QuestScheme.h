@@ -8,7 +8,7 @@ struct GameDialog;
 class QuestScheme : public TypeItem
 {
 public:
-	string id;
+	string id, code;
 	vector<string> progress;
 	QuestType type;
 	vector<GameDialog*> dialogs;

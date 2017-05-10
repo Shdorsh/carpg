@@ -1,0 +1,15 @@
+quest test_quest {
+	dialog start {
+		0 "Mam dla ciebie zadanie. Szukam kogoœ kto przyniesie mi 5 ziel leczniczy."
+		1 "Oczywiœcie za nie zap³acê. Jesteœ zainteresowany?"
+		2 "Tak"
+		3 "No to czekam na te zio³a."
+		4 "Nie"
+		5 "Wróæ jeœli zmienisz zdanie."
+	}
+	
+	dialog progress {
+		0 "Daj zio³a"
+		1 "Dobra robota."
+	}
+}

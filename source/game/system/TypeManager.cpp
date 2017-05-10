@@ -316,7 +316,7 @@ bool TypeManager::LoadType(Type& type)
 			Type::Field& field = *type.fields[keyword];
 			t.Next();
 
-			if(IS_SET(set_fields, 1 << keyword))
+			if(IS_SET(set_fields, 1 << keyword) && !field.allow_multiple)
 				t.Throw("Field '%s' already used.", field.name.c_str());
 
 			switch(field.type)
@@ -612,46 +612,6 @@ void TypeManager::CalculateCrc()
 		INFO(Format("TypeManager: Crc for %s (%p).", type->token.c_str(), type->crc));
 	}
 	need_calculate_crc = false;
-}
-
-void TypeManager::WriteCrc(BitStream& stream)
-{
-	for(Type* type : types)
-		stream.Write(type->crc);
-}
-
-bool TypeManager::ReadCrc(BitStream& stream)
-{
-	bool ok = true;
-	for(Type* type : types)
-		ok = stream.Read(type->other_crc) && ok;
-	return ok;
-}
-
-bool TypeManager::GetCrc(TypeId type_id, uint& my_crc, cstring& name)
-{
-	if((int)type_id < 0 || type_id >= TypeId::Max)
-		return false;
-	Type* type = types[(int)type_id];
-	my_crc = type->crc;
-	name = type->token.c_str();
-	return true;
-}
-
-bool TypeManager::ValidateCrc(TypeId& type_id, uint& my_crc, uint& other_crc, cstring& name)
-{
-	for(Type* type : types)
-	{
-		if(type->crc != type->other_crc)
-		{
-			type_id = type->type_id;
-			my_crc = type->crc;
-			other_crc = type->other_crc;
-			name = type->token.c_str();
-			return false;
-		}
-	}
-	return true;
 }
 
 bool TypeManager::LoadFilelist()
