@@ -260,8 +260,6 @@ void Type::CalculateCrc()
 			case Field::CUSTOM:
 				field->handler->UpdateCrc(_crc, item, field->offset);
 				break;
-				_crc.Update(offset_cast<int>(item, field->offset));
-				break;
 			case Field::ITEM_LIST:
 				{
 					auto& list = offset_cast<vector<string>>(item, field->offset);

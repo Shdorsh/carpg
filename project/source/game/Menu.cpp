@@ -2444,7 +2444,6 @@ void Game::UpdateLobbyNet(float dt)
 					cstring reason_text = nullptr;
 					bool include_extra = false;
 					uint player_crc;
-					cstring type_str;
 					JoinResult reason = JoinResult::Ok;
 
 					if(!stream.Read(player_version))

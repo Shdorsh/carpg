@@ -586,7 +586,7 @@ int QuestManager::FindQuestProgress(Tokenizer& t)
 	if(t.IsInt())
 	{
 		int val = t.GetInt();
-		if(val < 0 || val >= progress.size())
+		if(val < 0 || val >= (int)progress.size())
 			t.Throw("Invalid progress value '%d' for quest '%s'.", val, parsed_quest->id.c_str());
 		return val;
 	}
@@ -603,7 +603,7 @@ int QuestManager::FindQuestProgress(Tokenizer& t)
 		t.Throw("Invalid progress value '%s' for quest '%s'.", str.c_str(), parsed_quest->id.c_str());
 	}
 	else
-		t.Expecting("quest progress value");
+		t.Expected("quest progress value");
 }
 
 void ScriptBackingField()

@@ -376,13 +376,10 @@ namespace tokenizer
 			cstring err = FormatList(msg, (va_list)&arg);
 			formatter.ThrowAt(line, charpos, err);
 		}
-		cstring Expecting(cstring what)
+		__declspec(noreturn) void Expected(cstring what)
 		{
-			return Format("Expecting %s, found %s.", what, GetTokenValue(normal_seek));
-		}
-		__declspec(noreturn) void ThrowExpecting(cstring what)
-		{
-			formatter.Throw(Expecting(what));
+			cstring msg = Format("Expecting %s, found %s.", what, GetTokenValue(normal_seek));
+			formatter.Throw(msg);
 		}
 
 		//===========================================================================================================================

@@ -349,13 +349,12 @@ bool TypeManager::LoadType(Type& type)
 				if(t.IsInt())
 				{
 					int val = t.GetInt();
-					if(val < 0 || val >= field.enums->size())
+					if(val < 0 || val >= (int)field.enums->size())
 						t.Throw("Invalid enum value '%d' for field '%s'.", val, field.name.c_str());
 					proxy.Get<int>(field.offset) = val;
 				}
 				else if(t.IsItem())
 				{
-					bool ok = false;
 					auto& str = t.GetItem();
 					auto found = container::Find(*field.enums, [str](Type::Field::Enum& e) {return e.id == str; });
 					if(found)
@@ -364,7 +363,7 @@ bool TypeManager::LoadType(Type& type)
 						t.Throw("Invalid enum value '%s' for field '%s'.", str.c_str(), field.name.c_str());
 				}
 				else
-					t.Expecting("enum value");
+					t.Expected("enum value");
 				break;
 			case Type::Field::ITEM_LIST:
 				{
