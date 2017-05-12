@@ -1,4 +1,4 @@
-quest test_quest
+quest "test_quest"
 {
 	type mayor
 	

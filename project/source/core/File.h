@@ -18,6 +18,8 @@ namespace core
 		bool FindFiles(cstring pattern, const std::function<bool(const WIN32_FIND_DATA&)>& func, bool exclude_special = true);
 		// Call ShellExecute on file
 		void Execute(cstring file);
+		bool LoadFileToString(cstring path, string& str);
+		bool WriteStringToFile(cstring path, const string& str);
 	}
 }
 
@@ -27,8 +29,6 @@ void Crypt(char* inp, uint inplen, cstring key, uint keylen);
 // Funkcje zapisuj¹ce/wczytuj¹ce z pliku
 //-----------------------------------------------------------------------------
 extern DWORD tmp;
-
-bool LoadFileToString(cstring path, string& str);
 
 template<typename T>
 inline void WriteString(HANDLE file, const string& s)

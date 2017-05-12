@@ -282,6 +282,7 @@ bool TypeManager::LoadType(Type& type)
 		if(type.container->Find(id))
 			t.Throw("Id already used.");
 		proxy.GetId() = id;
+		type.BeforeLoad(proxy.item);
 		t.Next();
 
 		// {
@@ -364,6 +365,7 @@ bool TypeManager::LoadType(Type& type)
 				}
 				else
 					t.Expected("enum value");
+				t.Next();
 				break;
 			case Type::Field::ITEM_LIST:
 				{
@@ -408,6 +410,10 @@ bool TypeManager::LoadType(Type& type)
 			s += ".";
 			t.Throw(s.c_str());
 		}
+
+		cstring error_msg = type.Prepare(proxy.item);
+		if(error_msg)
+			t.Throw(error_msg);
 
 		type.container->Add(proxy.item);
 		type.loaded++;

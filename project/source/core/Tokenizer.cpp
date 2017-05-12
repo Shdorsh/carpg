@@ -29,7 +29,7 @@ void Tokenizer::FromString(const string& _str)
 bool Tokenizer::FromFile(cstring path)
 {
 	assert(path);
-	if(!LoadFileToString(path, g_tmp_string))
+	if(!core::io::LoadFileToString(path, g_tmp_string))
 		return false;
 	str = &g_tmp_string;
 	filename = path;
@@ -52,7 +52,7 @@ void Tokenizer::FromTokenizer(const Tokenizer& t)
 	normal_seek._char = t.normal_seek._char;
 	normal_seek._uint = t.normal_seek._uint;
 
-	if(normal_seek.token == T_KEYWORD)
+	if(normal_seek.token == T_KEYWORD || normal_seek.token == T_ITEM)
 	{
 		// need to check keyword because keywords are not copied from other tokenizer, it may be item here
 		CheckItemOrKeyword(normal_seek, normal_seek.item);
@@ -1045,7 +1045,7 @@ void Tokenizer::Parse(VEC2& v)
 #endif
 
 //=================================================================================================
-const string& Tokenizer::GetBlock(char open, char close)
+const string& Tokenizer::GetBlock(char open, char close, bool include_symbol)
 {
 	if(close == 0)
 	{
@@ -1055,7 +1055,9 @@ const string& Tokenizer::GetBlock(char open, char close)
 
 	AssertSymbol(open);
 	int opened = 1;
-	uint block_start = normal_seek.pos - 1;
+	uint block_start = normal_seek.pos;
+	if(include_symbol)
+		--block_start;
 	while(Next())
 	{
 		if(IsSymbol(open))
@@ -1065,7 +1067,10 @@ const string& Tokenizer::GetBlock(char open, char close)
 			--opened;
 			if(opened == 0)
 			{
-				normal_seek.item = str->substr(block_start, normal_seek.pos - block_start);
+				uint end_pos = normal_seek.pos - block_start;
+				if(!include_symbol)
+					--end_pos;
+				normal_seek.item = str->substr(block_start, end_pos);
 				return normal_seek.item;
 			}
 		}

@@ -13,7 +13,7 @@ struct ScriptException
 	ScriptException(cstring msg) {}
 };
 
-class ScriptManager
+class ScriptManager : public Singleton<ScriptManager>
 {
 public:
 	struct EnumToRegister
@@ -42,11 +42,15 @@ public:
 		AddEnum(name, (std::initializer_list<ScriptManager::EnumToRegister> const&)items);
 	}
 
+	asIScriptEngine* GetEngine() { return engine; }
+
 private:
 	asIScriptEngine* engine;
 	asIScriptModule* module;
 };
 
-typedef ScriptManager ScriptManagerInstance;
-
-extern ScriptManagerInstance ScriptManager;
+#ifdef _DEBUG
+#define CHECKED(x) { int _r = (x); assert(_r >= 0); }
+#else
+#define CHECKED(x) x
+#endif

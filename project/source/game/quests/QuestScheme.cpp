@@ -1,8 +1,11 @@
 #include "Pch.h"
 #include "Base.h"
 #include "Dialog.h"
+#include "QuestManager.h"
 #include "QuestScheme.h"
 #include "TypeVectorContainer.h"
+
+vector<QuestScheme*> quest_schemes;
 
 GameDialog* QuestScheme::FindDialog(const string& id)
 {
@@ -24,7 +27,6 @@ public:
 	void LoadText(Tokenizer& t, TypeItem* item, uint offset)
 	{
 		auto& quest = item->To<QuestScheme>();
-
 		auto dialog = GameDialogManager::Get().LoadDialog(t);
 		auto existing_dialog = quest.FindDialog(dialog->id);
 		if(existing_dialog)
@@ -81,19 +83,33 @@ public:
 	{
 		AddId(offsetof(QuestScheme, id));
 		AddEnum<QuestType>("type", offsetof(QuestScheme, type), {
-			{"Mayor", QuestType::Mayor},
-			{"Captain", QuestType::Captain},
-			{"Random", QuestType::Random},
-			{"Unique", QuestType::Unique}
+			{"mayor", QuestType::Mayor},
+			{"captain", QuestType::Captain},
+			{"random", QuestType::Random},
+			{"unique", QuestType::Unique}
 		}).NotRequired();
 		AddItemList("progress", offsetof(QuestScheme, progress))
 			.NotRequired();
 		AddCustomField("dialog", new QuestSchemeDialogHandler)
 			.NotRequired()
 			.AllowMultiple();
-		AddCustomField("quest", new QuestSchemeCodeHandler)
+		AddCustomField("code", new QuestSchemeCodeHandler)
 			.NotRequired()
 			.AllowMultiple();
+
+		container = new TypeVectorContainer(this, QuestManager::Get().quest_schemes);
+	}
+
+	void BeforeLoad(TypeItem* item) override
+	{
+		QuestManager::Get().parsed_quest = (QuestScheme*)item;
+	}
+
+	cstring Prepare(TypeItem* item) override
+	{
+		//auto& quest = item->To<QuestScheme>();
+		QuestManager::Get().BuildQuestScheme();
+		return nullptr;
 	}
 };
 

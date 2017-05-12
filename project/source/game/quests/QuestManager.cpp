@@ -478,9 +478,9 @@ bool QuestManager::RemoveQuestRumor(PLOTKA_QUESTOWA rumor_id)
 }
 
 cstring QuestClass = R"code(
-	class Quest
+	class _Quest
 	{
-		private int _progress;
+		protected _QuestInstance@ _instance;
 
 		virtual void OnProgress() {}
 	}
@@ -488,21 +488,26 @@ cstring QuestClass = R"code(
 
 void QuestManager::InitializeScript()
 {
-	ScriptManager.AddEnum<QuestType>("QuestType",
+	auto engine = ScriptManager::Get().GetEngine();
+	
+	CHECKED(engine->RegisterObjectType("_QuestInstance", 0, asOBJ_REF | asOBJ_NOCOUNT));
+	CHECKED(engine->RegisterObjectMethod("_QuestInstance", "int get_progress()", asMETHOD(QuestInstance, GetProgress), asCALL_THISCALL));
+	CHECKED(engine->RegisterObjectMethod("_QuestInstance", "void set_progress(int)", asMETHOD(QuestInstance, SetProgress), asCALL_THISCALL));
+
+	script_code = R"code(
+	class _Quest
 	{
-		{ "Mayor", QuestType::Mayor },
-		{ "Captain", QuestType::Captain },
-		{ "Random", QuestType::Random },
-		{ "Unique", QuestType::Unique }
-	});
-}
+		protected _QuestInstance@ _instance;
 
-void QuestManager::RegisterQuestApi(asIScriptEngine* engine)
-{
-#define REGISTER_API(decl, func) { int r = engine->RegisterGlobalFunction(decl, asMETHOD(QuestManager, func), asCALL_THISCALL, this); assert(r >= 0); }
+		virtual void OnProgress() {}
+	}
 
-	REGISTER_API("void StartQuest(const string& title)", StartQuest);
-	REGISTER_API("void AddQuestEntry(const string& text)", AddQuestEntry);
+)code";
+
+#define REGISTER_API(decl, func) CHECKED(engine->RegisterGlobalFunction(decl, asMETHOD(QuestManager, func), asCALL_THISCALL_ASGLOBAL, this))
+
+	REGISTER_API("void StartQuest(const string& in)", StartQuest);
+	REGISTER_API("void AddQuestEntry(const string& in)", AddQuestEntry);
 	REGISTER_API("void FinishQuest()", FinishQuest);
 	REGISTER_API("void FailQuest()", FailQuest);
 
@@ -564,18 +569,42 @@ int QuestManager::AddDialogScript(Tokenizer& t)
 {
 	char s = t.MustGetSymbol("({");
 	const string& code = t.GetBlock(s);
-	script_code += Format("void _script_func%d(){%s}\n\n", script_index, code.c_str());
+	string* script;
+	int* index;
+	if(parsed_quest)
+	{
+		script = &parsed_quest->code;
+		index = &quest_script_index;
+	}
+	else
+	{
+		script = &script_code;
+		index = &script_index;
+	}
+	*script += Format("void _script_func%d(){%s}\n\n", *index, code.c_str());
 	t.Next();
-	return script_index++;
+	return (*index)++;
 }
 
 int QuestManager::AddDialogIfScript(Tokenizer& t)
 {
 	char s = t.MustGetSymbol("({");
 	const string& code = t.GetBlock(s);
-	script_code += Format("bool _if_script_func%d(){return (%s);}\n\n", if_script_index, code.c_str());
+	string* script;
+	int* index;
+	if(parsed_quest)
+	{
+		script = &parsed_quest->code;
+		index = &quest_if_script_index;
+	}
+	else
+	{
+		script = &script_code;
+		index = &if_script_index;
+	}
+	*script += Format("bool _if_script_func%d(){return (%s);}\n\n", *index, code.c_str());
 	t.Next();
-	return if_script_index;
+	return (*index)++;
 }
 
 int QuestManager::FindQuestProgress(Tokenizer& t)
@@ -606,16 +635,30 @@ int QuestManager::FindQuestProgress(Tokenizer& t)
 		t.Expected("quest progress value");
 }
 
-void ScriptBackingField()
+void QuestManager::SetParsedQuest(QuestScheme* quest_scheme)
 {
-	cstring s = R"code(
-		class %s : Quest
-		{
-			enum Progress {}
+	parsed_quest = quest_scheme;
+	quest_if_script_index = 0;
+	quest_script_index = 0;
+}
 
-albo int albo enum
+void QuestManager::BuildQuestScheme()
+{
+	QuestScheme& quest_scheme = *parsed_quest;
+	script_code += Format("class %s : _Quest {\n", quest_scheme.id.c_str());
+	if(quest_scheme.progress.empty())
+		script_code += "int progress { get { return _instance.progress; } set { _instance.progress = value; } }\n";
+	else
+		script_code += "Progress progress { get { return (Progress)_instance.progress; } set { _instance.progress = (int)value; } }\n";
+	script_code += quest_scheme.code;
+	script_code += "\n}\n";
+	parsed_quest = nullptr;
+}
 
-code
-		}
-)code";
+void QuestManager::BuildScripts()
+{
+#ifdef _DEBUG
+	CreateDirectory("debug", nullptr);
+	core::io::WriteStringToFile("debug/scripts.txt", script_code);
+#endif
 }

@@ -91,8 +91,10 @@ void core::io::Execute(cstring file)
 }
 
 //=================================================================================================
-bool LoadFileToString(cstring path, string& str)
+bool core::io::LoadFileToString(cstring path, string& str)
 {
+	assert(path);
+
 	HANDLE file = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 	if(file == INVALID_HANDLE_VALUE)
 		return false;
@@ -101,7 +103,22 @@ bool LoadFileToString(cstring path, string& str)
 	str.resize(size);
 
 	ReadFile(file, (char*)str.c_str(), size, &tmp, nullptr);
+	CloseHandle(file);
 
+	return size == tmp;
+}
+
+//=================================================================================================
+bool core::io::WriteStringToFile(cstring path, const string& str)
+{
+	assert(path);
+
+	HANDLE file = CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	if(file == INVALID_HANDLE_VALUE)
+		return false;
+
+	uint size = str.length();
+	WriteFile(file, str.c_str(), size, &tmp, nullptr);
 	CloseHandle(file);
 
 	return size == tmp;

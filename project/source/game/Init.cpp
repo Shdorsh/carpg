@@ -13,6 +13,8 @@
 #include "Spell.h"
 #include "Trap.h"
 #include "Crc.h"
+#include "script/ScriptManager.h"
+#include "QuestManager.h"
 
 extern void HumanPredraw(void* ptr, MATRIX* mat, int n);
 extern const int ITEM_IMAGE_SIZE;
@@ -171,14 +173,17 @@ void Game::PreloadData()
 void Game::LoadSystem()
 {
 	INFO("Game: Loading system.");
-	resMgr.PrepareLoadScreen2(0.1f, 12, txCreateListOfFiles);
+	resMgr.PrepareLoadScreen2(0.1f, 13, txCreateListOfFiles);
 
+	ScriptManager::Get().Init();
 	AddFilesystem();
 	LoadDatafiles();
 	LoadLanguageFiles();
 	resMgr.NextTask(txLoadShaders);
 	LoadShaders();
 	ConfigureGame();
+	resMgr.NextTask();
+	QuestManager::Get().BuildScripts();
 	resMgr.EndLoadScreenStage();
 }
 

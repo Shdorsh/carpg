@@ -282,8 +282,6 @@ struct BuildingScriptHandler : public TypeImpl<BuildingScript>
 		variant = nullptr;
 		code = nullptr;
 
-		
-
 		try
 		{
 			ParseCode(script);

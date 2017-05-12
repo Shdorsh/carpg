@@ -2,14 +2,29 @@
 #include "Base.h"
 #include "QuestManager.h"
 #include "script/ScriptManager.h"
+#include <scriptarray/scriptarray.h>
+#include <scriptstdstring/scriptstdstring.h>
 
-#ifdef _DEBUG
-#define CHECK(x) {int _result = (x); assert(_result >= 0);}
-#else
-#define CHECK(x) x
-#endif
+void MessageCallback(const asSMessageInfo* msg, void* param)
+{
+	Logger::LOG_LEVEL level;
+	switch(msg->type)
+	{
+	case asMSGTYPE_ERROR:
+		level = Logger::L_ERROR;
+		break;
+	case asMSGTYPE_WARNING:
+		level = Logger::L_WARN;
+		break;
+	case asMSGTYPE_INFORMATION:
+	default:
+		level = Logger::L_INFO;
+		break;
+	}
+	logger->Log(Format("(%d:%d) %s", msg->row, msg->col, msg->message), level);
+}
 
-ScriptManagerInstance ScriptManager;
+ScriptManager Singleton<ScriptManager>::instance;
 
 ScriptManager::ScriptManager() : engine(nullptr)
 {
@@ -20,6 +35,12 @@ void ScriptManager::Init()
 {
 	engine = asCreateScriptEngine();
 	module = engine->GetModule("Core", asGM_CREATE_IF_NOT_EXISTS);
+
+	CHECKED(engine->SetMessageCallback(asFUNCTION(MessageCallback), nullptr, asCALL_CDECL));	
+
+	RegisterScriptArray(engine, true);
+	RegisterStdString(engine);
+	RegisterStdStringUtils(engine);
 
 	QuestManager::Get().InitializeScript();
 }
@@ -33,23 +54,7 @@ void ScriptManager::Release()
 void ScriptManager::AddEnum(cstring name, std::initializer_list<EnumToRegister> const& items)
 {
 	assert(name);
-	CHECK(engine->RegisterEnum(name));
+	CHECKED(engine->RegisterEnum(name));
 	for(const EnumToRegister& item : items)
-		CHECK(engine->RegisterEnumValue(name, item.name, item.id));
-
-	module->AddScriptSection("Quest", "class Quest{}");
-	module->Build();
-	auto questType = module->GetTypeInfoByName("Quest");
-
-	uint typeCount = module->GetObjectTypeCount();
-	for(uint i = 0; i < typeCount; ++i)
-	{
-		auto type = module->GetObjectTypeByIndex(i);
-		auto baseType = type->GetBaseType();
-		if(baseType == questType)
-		{
-			// is quest
-			//type->
-		}
-	}
+		CHECKED(engine->RegisterEnumValue(name, item.name, item.id));
 }

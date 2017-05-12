@@ -263,6 +263,8 @@ public:
 
 	// called after loading everything
 	virtual void AfterLoad() {}
+	// called at start of loading single item
+	virtual void BeforeLoad(TypeItem* item) {}
 	// called after every item loaded, when verifing in toolset
 	virtual cstring Prepare(TypeItem* item) { return nullptr; }
 	// return true if two items are equal

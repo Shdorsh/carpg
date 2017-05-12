@@ -222,7 +222,7 @@ Config::Result Config::Load(cstring filename)
 			else
 			{
 				if(t.IsSymbol('{'))
-					value = t.GetBlock();
+					value = t.GetBlockWithSymbol();
 				else
 					value = t.GetTokenString();
 			}
