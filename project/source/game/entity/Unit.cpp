@@ -8,6 +8,7 @@
 #include "QuestManager.h"
 #include "AIController.h"
 #include "Team.h"
+#include "script/ScriptManager.h"
 
 const float Unit::AUTO_TALK_WAIT = 0.333f;
 
@@ -1918,12 +1919,87 @@ void Unit::RemoveQuestItem(int quest_refid)
 //=================================================================================================
 bool Unit::HaveItem(const Item* item)
 {
-	for(vector<ItemSlot>::iterator it = items.begin(), end = items.end(); it != end; ++it)
+	assert(item);
+
+	for(uint i = 0; i < SLOT_MAX; ++i)
 	{
-		if(it->item == item)
+		if(slots[i] == item)
 			return true;
 	}
+
+	for(ItemSlot& slot : items)
+	{
+		if(slot.item == item)
+			return true;
+	}
+
 	return false;
+}
+
+//=================================================================================================
+bool Unit::HaveItem(const Item* item, uint count)
+{
+	assert(item && count > 0);
+
+	uint found = 0;
+
+	for(uint i = 0; i < SLOT_MAX; ++i)
+	{
+		if(slots[i] == item)
+		{
+			++found;
+			if(found >= count)
+				return true;
+		}
+	}
+
+	for(ItemSlot& slot : items)
+	{
+		if(slot.item == item)
+		{
+			found += slot.count;
+			if(found >= count)
+				return true;
+		}
+	}
+
+	return false;
+}
+
+//=================================================================================================
+bool Unit::S_HaveItem(const string& id, uint count)
+{
+	auto item = ::FindItem(id.c_str(), false);
+	if(!item)
+		throw ScriptException("Missing item '%s'.", id.c_str());
+
+	if(count == 0)
+		return true;
+	else if(count == 1)
+		return HaveItem(item);
+	else
+		return HaveItem(item, count);
+}
+
+//=================================================================================================
+uint Unit::S_GiveItem(Unit* unit, const string& id, uint count)
+{
+	auto item = ::FindItem(id.c_str(), false);
+	if(!item)
+		throw ScriptException("Missing item '%s'.", id.c_str());
+
+	if(count == 0)
+		return 0;
+	else if(count == 1)
+	{
+		// TODO
+		assert(0);
+	}
+	else
+	{
+		// TODO
+		assert(0);
+	}
 }
 
 //=================================================================================================

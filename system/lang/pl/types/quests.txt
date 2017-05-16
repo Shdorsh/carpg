@@ -1,4 +1,4 @@
-quest test_quest {
+quest "test_quest" {
 	dialog start {
 		0 "Mam dla ciebie zadanie. Szukam kogoœ kto przyniesie mi 5 ziel leczniczy."
 		1 "Oczywiœcie za nie zap³acê. Jesteœ zainteresowany?"
@@ -12,4 +12,14 @@ quest test_quest {
 		0 "Daj zio³a"
 		1 "Dobra robota."
 	}
+}
+
+quest "kill_animals" {
+	"title" = "Zabij zwierzêta"
+	"start1" = "Otrzymano od kapitana stra¿y {0} dnia {1}."
+	"start2" = "Zwierzêta z {0} na {1} st¹d niepokoj¹ podró¿nych. Mam oczyœciæ ta lokacjê w ci¹gu miesi¹ca."
+	"cleared" = "Oczyœci³em {0}."
+	"finished" = "Poinformowa³em o oczyszczeniu lokacji i otrzyma³em nagrodê. Zadanie wykonane!"
+	"on_timeout" = "Czas jaki mia³em na wykonanie tego zadania min¹³."
+	"timout" = "Nie zd¹¿y³em na czas oczyœciæ lokacji."
 }

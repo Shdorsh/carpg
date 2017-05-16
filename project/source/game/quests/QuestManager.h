@@ -74,6 +74,7 @@ private:
 	QuestInstance* GetCurrentQuest();
 	void SetParsedQuest(QuestScheme* quest_scheme);
 	void BuildQuestScheme();
+	void AddQuestReward(uint gold);
 
 	QuestScheme* parsed_quest;
 	QuestInstance* current_quest;

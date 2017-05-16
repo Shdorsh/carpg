@@ -36,19 +36,19 @@ quest "test_quest"
 		}
 	}
 	
-	code {
+	code {		
 		void OnProgress() override
 		{
 			switch(progress)
 			{
-			case Progress.Started:
+			case Started:
 				{
 					StartQuest("Dostarcz zioła");
 					AddQuestEntry("Burmistrz miasta X chce żebym dostarczył mu 5 ziół.");
 					talker.AddDialog("progress");
 				}
 				break;
-			case Progress.Finished:
+			case Finished:
 				{
 					player.GiveItem(talker, "herb", 5);
 					AddQuestEntry("Przekazałem zioła. Zadanie wykonane!");
@@ -56,6 +56,128 @@ quest "test_quest"
 					AddQuestReward(150);
 				}
 				break;
+			}
+		}
+	}
+}
+
+quest "kill_animals"
+{
+	type mayor
+	
+	// NotAccepted -> Started -> ClearedLocation -> Finished
+	//                   |
+	//                Timout -> TimeoutTalked
+	progress {
+		NotAccepted,
+		Started,
+		ClearedLocation,
+		Finished,
+		Timeout,
+		TimeoutTalked
+	}
+	
+	dialog start
+	{
+		talk 0
+		talk 1
+		choice 2
+		{
+			set_progress Started
+			talk2 3
+			talk2 4
+			end
+		}
+		escape choice 5
+		{
+			end
+		}
+		show_choices
+	}
+
+	dialog timeout
+	{
+		set_progress TimeoutTalked
+		talk2 0
+		end
+	}
+
+	dialog end
+	{
+		set_progress Finished
+		talk 0
+		talk 1
+		end
+	}
+	
+	code
+	{
+		Location@ target_loc;
+	
+		void OnStart() override
+		{
+			StartDialog("start");
+		}
+		
+		void OnProgress() override
+		{
+			switch(progress)
+			{
+			case Started:
+				{
+					LOCATION loc_type = (rand()%2 == 0 ? L_FOREST : L_CAVE);
+					Location@ target_loc = GetClosestLocation(loc_type);
+					target_loc.MakeKnown();
+					target_loc.ResetSpawn();
+					target_loc.AddEvent(instance, E_CLEARED_LOCATION);
+					StartQuest(Str("title"));
+					AddQuestEntry(Format(Str("start1"), current_location.name, current_date));
+					AddQuestEntry(Format(Str("start2"), current_location.name, target_loc.name, GetLocationDirName(current_location, target_loc)));
+					AddQuestTimeout(30, int(Timeout));
+				}
+				break;
+			case ClearedLocation:
+				{
+					AddQuestEntry(Format(Str("cleared"), target_loc.name));
+					start_unit.AddDialogOnce("end");
+				}
+				break;
+			case Finished:
+				{
+					AddQuestEntry(Str("finished"));
+					FinishQuest();
+					AddQuestReward(1200);
+				}
+				break;
+			case Timeout:
+				{
+					AddQuestEntry(Str("on_timeout"));
+					target_loc.RemoveEvent(instance);
+					start_unit.AddDialogOnce("timeout");
+				}
+				break;
+			case TimeoutTalked:
+				{
+					AddQuestEntry(Str("timeout"));
+					FailQuest();
+				}
+				break;
+			}
+		}
+				
+		void OnEvent(Event e) override
+		{
+			if(e.type == E_CLEARED_LOCATION)
+			{
+				if(progress == Started)
+					progress = ClearedLocation;
+				target_loc.RemoveEvent(instance);
+			}
+			else if(e.type == E_TIMEOUT)
+			{
+				if(progress == Started)
+					progress = Timeout;
+				target_loc.RemoveEvent(instance);
 			}
 		}
 	}

@@ -775,7 +775,7 @@ void Game::UpdateAi(float dt)
 							{
 								// check if unit have required item
 								const Item* req_item = g_base_usables[U_IRON_VAIN].item;
-								if(req_item && !u.HaveItem(req_item) && u.slots[SLOT_WEAPON] != req_item)
+								if(req_item && !u.HaveItem(req_item))
 									goto normal_idle_action;
 								// find closest ore vain
 								Useable* useable = nullptr;
@@ -958,7 +958,7 @@ normal_idle_action:
 												/*CanSee - niestety nie ma takiej funkcji wiêc trudno :p*/)
 											{
 												const Item* needed_item = g_base_usables[use.type].item;
-												if(!needed_item || u.HaveItem(needed_item) || u.slots[SLOT_WEAPON] == needed_item)
+												if(!needed_item || u.HaveItem(needed_item))
 													uses.push_back(*it2);
 											}
 										}
@@ -1277,7 +1277,7 @@ normal_idle_action:
 										{
 											BaseUsable& base = g_base_usables[use.type];
 											const Item* needed_item = base.item;
-											if(!needed_item || u.HaveItem(needed_item) || u.slots[SLOT_WEAPON] == needed_item)
+											if(!needed_item || u.HaveItem(needed_item))
 											{
 												u.action = A_ANIMATION2;
 												u.animation = ANI_PLAY;

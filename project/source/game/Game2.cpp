@@ -39,6 +39,7 @@
 #include "AIController.h"
 #include "Spell.h"
 #include "Team.h"
+#include "script\ScriptManager.h"
 
 const int SAVE_VERSION = V_CURRENT;
 int LOAD_VERSION;
@@ -19905,7 +19906,7 @@ void Game::PlayerUseUseable(Useable* useable, bool after_action)
 	bool ok = true;
 	if(bu.item)
 	{
-		if(!u.HaveItem(bu.item) && u.slots[SLOT_WEAPON] != bu.item)
+		if(!u.HaveItem(bu.item))
 		{
 			if(use.type == U_CAULDRON)
 				AddGameMsg2(txNeedLadle, 2.f, GMS_NEED_LADLE);
@@ -21739,4 +21740,90 @@ void Game::HandleQuestEvent(Quest_Event* event)
 
 	if(event->callback)
 		event->callback();
+}
+
+Unit* S_get_player()
+{
+	return Game::Get().pc->unit;
+}
+
+Unit* S_get_talker()
+{
+	auto current_dialog = Game::Get().current_dialog;
+	if(!current_dialog)
+		throw ScriptException("Not inside dialog.");
+	return current_dialog->talker;
+}
+
+void SUnit_AddDialog(Unit* unit, const string& id)
+{
+	// TODO
+	assert(0);
+}
+
+void S_StartDialog(const string& id)
+{
+	// TODO
+	assert(0);
+}
+
+Location* S_GetClosestLocation(LOCATION location_type)
+{
+	// TODO
+	assert(0);
+	return nullptr;
+}
+
+void SLocation_MakeKnown(Location* location)
+{
+	// TODO
+	assert(0);
+}
+
+void SLocation_ResetSpawn(Location* location)
+{
+	// TODO
+	assert(0);
+}
+
+Location* S_get_current_location()
+{
+	// TODO
+	assert(0);
+	return nullptr;
+}
+
+void Game::InitializeScript()
+{
+	auto& manager = ScriptManager::Get();
+	auto engine = manager.GetEngine();
+
+	manager.AddType("Unit")
+		.Method("bool HaveItem(const string& in, uint = 1)", asMETHOD(Unit, S_HaveItem))
+		.Method("uint GiveItem(Unit@, const string& in, uint = 1)", asMETHOD(Unit, S_GiveItem))
+		.Method("void AddDialog(const string& in)", asFUNCTION(SUnit_AddDialog));
+
+	CHECKED(engine->RegisterGlobalFunction("Unit@ get_player()", asFUNCTION(S_get_player), asCALL_CDECL));
+	CHECKED(engine->RegisterGlobalFunction("Unit@ get_talker()", asFUNCTION(S_get_player), asCALL_CDECL));
+
+	CHECKED(engine->RegisterGlobalFunction("void StartDialog(const string& in)", asFUNCTION(S_StartDialog), asCALL_CDECL));
+
+	manager.AddEnum("LOCATION", {
+		{"L_CITY", L_CITY},
+		{"L_CAVE", L_CAVE},
+		{"L_CAMP", L_CAMP},
+		{"L_DUNGEON", L_DUNGEON},
+		{"L_CRYPT", L_CRYPT},
+		{"L_FOREST", L_FOREST},
+		{"L_MOONWELL", L_MOONWELL},
+		{"L_ENCOUNTER", L_ENCOUNTER}
+	});
+
+	manager.AddType("Location")
+		.Method("void MakeKnown()", asFUNCTION(SLocation_MakeKnown))
+		.Method("void ResetSpawn()", asFUNCTION(SLocation_ResetSpawn));
+
+	manager.AddFunction("Location@ GetClosestLocation(LOCATION)", asFUNCTION(S_GetClosestLocation));
+
+	manager.AddFunction("Location@ get_current_location()", asFUNCTION(S_get_current_location));
 }

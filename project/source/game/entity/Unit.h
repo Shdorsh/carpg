@@ -444,6 +444,7 @@ struct Unit
 	}
 	void RemoveQuestItem(int quest_refid);
 	bool HaveItem(const Item* item);
+	bool HaveItem(const Item* item, uint count);
 	float GetAttackSpeed(const Weapon* weapon=nullptr) const;
 	float GetAttackSpeedModFromStrength(const Weapon& wep) const
 	{
@@ -819,6 +820,10 @@ struct Unit
 			return hero->credit;
 		}
 	}
+
+	// script interface
+	bool S_HaveItem(const string& id, uint count);
+	uint S_GiveItem(Unit* unit, const string& id, uint count);
 };
 
 //-----------------------------------------------------------------------------

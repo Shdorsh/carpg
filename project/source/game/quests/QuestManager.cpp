@@ -477,30 +477,73 @@ bool QuestManager::RemoveQuestRumor(PLOTKA_QUESTOWA rumor_id)
 		return false;
 }
 
-cstring QuestClass = R"code(
-	class _Quest
-	{
-		protected _QuestInstance@ _instance;
+enum QUEST_EVENT
+{
+	E_TIMEOUT,
+	E_CLEARED_LOCATION
+};
 
-		virtual void OnProgress() {}
-	}
-)code";
+struct QuestEvent
+{
+	QUEST_EVENT type;
+};
+
+void SLocation_AddEvent(Location* location, QuestInstance* quest_instance, QUEST_EVENT event_type)
+{
+	// TODO
+	assert(0);
+}
+
+void SLocation_RemoveEvent(Location* location, QuestInstance* quest_instance)
+{
+	// TODO
+	assert(0);
+}
+
+const string& S_Str(const string& s)
+{
+	// TODO
+	assert(0);
+	static string ss;
+	return ss;
+}
 
 void QuestManager::InitializeScript()
 {
-	auto engine = ScriptManager::Get().GetEngine();
-	
-	CHECKED(engine->RegisterObjectType("_QuestInstance", 0, asOBJ_REF | asOBJ_NOCOUNT));
-	CHECKED(engine->RegisterObjectMethod("_QuestInstance", "int get_progress()", asMETHOD(QuestInstance, GetProgress), asCALL_THISCALL));
-	CHECKED(engine->RegisterObjectMethod("_QuestInstance", "void set_progress(int)", asMETHOD(QuestInstance, SetProgress), asCALL_THISCALL));
+	auto& manager = ScriptManager::Get();
+	auto engine = manager.GetEngine();
+
+	manager.AddEnum("EVENT", {
+		{"E_TIMEOUT", E_TIMEOUT},
+		{"E_CLEARED_LOCATION", E_CLEARED_LOCATION}
+	});
+
+	manager.AddStruct<QuestEvent>("Event")
+		.Member("EVENT type", asOFFSET(QuestEvent, type));
+
+	manager.AddType("QuestInstance")
+		.Method("int get_progress()", asMETHOD(QuestInstance, GetProgress))
+		.Method("void set_progress(int)", asMETHOD(QuestInstance, SetProgress))
+		.Member("Unit@ start_unit", asOFFSET(QuestInstance, start_unit))
+		.Member("Location@ start_location", asOFFSET(QuestInstance, start_location));
+
+	manager.ForType("Location")
+		.Method("void AddEvent(QuestInstance@, EVENT)", asFUNCTION(SLocation_AddEvent))
+		.Method("void RemoveEvent(QuestInstance@)", asFUNCTION(SLocation_RemoveEvent));
+
+	manager.AddFunction("const string& Str(const string& in)", asFUNCTION(S_Str));
 
 	script_code = R"code(
-	class _Quest
-	{
-		protected _QuestInstance@ _instance;
+class Quest
+{
+	QuestInstance@ instance;
+	Location@ start_location { get { return instance.start_location; } }
+	Unit@ start_unit { get { return instance.start_unit; } }
 
-		virtual void OnProgress() {}
-	}
+	void OnStart() {}
+	void OnProgress() {}
+	void OnEvent(Event e) {}
+}
 
 )code";
 
@@ -510,6 +553,7 @@ void QuestManager::InitializeScript()
 	REGISTER_API("void AddQuestEntry(const string& in)", AddQuestEntry);
 	REGISTER_API("void FinishQuest()", FinishQuest);
 	REGISTER_API("void FailQuest()", FailQuest);
+	REGISTER_API("void AddQuestReward(uint)", AddQuestReward);
 
 #undef REGISTER_API
 }
@@ -645,20 +689,55 @@ void QuestManager::SetParsedQuest(QuestScheme* quest_scheme)
 void QuestManager::BuildQuestScheme()
 {
 	QuestScheme& quest_scheme = *parsed_quest;
-	script_code += Format("class %s : _Quest {\n", quest_scheme.id.c_str());
+	// namespace
+	script_code += Format("namespace _quest_%s {\n", quest_scheme.id.c_str());
+	// progress enum
+	if(!quest_scheme.progress.empty())
+	{
+		script_code += "enum Progress {\n";
+		bool first = true;
+		for(string& s : quest_scheme.progress)
+		{
+			if(first)
+				first = false;
+			else
+				script_code += ",\n";
+			script_code += s;
+		}
+		script_code += "\n}\n";
+	}
+	// quest class
+	script_code += Format("class %s : Quest{ \n", quest_scheme.id.c_str());
 	if(quest_scheme.progress.empty())
-		script_code += "int progress { get { return _instance.progress; } set { _instance.progress = value; } }\n";
+		script_code += "int progress { get { return instance.progress; } set { instance.progress = value; } }\n";
 	else
-		script_code += "Progress progress { get { return (Progress)_instance.progress; } set { _instance.progress = (int)value; } }\n";
+		script_code += "Progress progress { get { return Progress(instance.progress); } set { instance.progress = int(value); } }\n";
 	script_code += quest_scheme.code;
-	script_code += "\n}\n";
+	script_code += "\n}//quest\n}//namespace\n";
 	parsed_quest = nullptr;
 }
 
 void QuestManager::BuildScripts()
 {
+	INFO("Building scripts...");
+
 #ifdef _DEBUG
 	CreateDirectory("debug", nullptr);
 	core::io::WriteStringToFile("debug/scripts.txt", script_code);
 #endif
+
+	auto module = ScriptManager::Get().GetModule();
+
+	module->AddScriptSection("quest script", script_code.c_str());
+	int r = module->Build();
+	if(r < 0)
+		throw Format("Failed to build quest scripts, check log for details (%d).", r);
+
+	INFO("Finished building scripts.");
+}
+
+void QuestManager::AddQuestReward(uint gold)
+{
+	// TODO
+	assert(0);
 }

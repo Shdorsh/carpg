@@ -1,4 +1,6 @@
-﻿??? co z CRC
+﻿+ remove Engine SW_HIDE
+
+??? co z CRC
 
 - missing localized text for building, mark as not required
 - savegame text is not quoted (0.2.11 for example - load error)

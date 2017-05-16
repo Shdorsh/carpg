@@ -63,6 +63,7 @@ public:
 		const string& code = t.GetBlock('{');
 		quest.code += code;
 		quest.code += "\n\n";
+		t.Next();
 	}
 
 	bool Compare(TypeItem* item1, TypeItem* item2, uint offset)
@@ -107,7 +108,6 @@ public:
 
 	cstring Prepare(TypeItem* item) override
 	{
-		//auto& quest = item->To<QuestScheme>();
 		QuestManager::Get().BuildQuestScheme();
 		return nullptr;
 	}

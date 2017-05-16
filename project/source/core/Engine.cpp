@@ -1035,7 +1035,8 @@ void Engine::InitWindow(cstring title)
 	}
 
 	// show window
-	ShowWindow(hwnd, SW_SHOWNORMAL);
+	FIXME;
+	ShowWindow(hwnd, SW_HIDE);
 	unlock_point.x = (GetSystemMetrics(SM_CXSCREEN) - real_size.x) / 2;
 	unlock_point.y = (GetSystemMetrics(SM_CYSCREEN) - real_size.y) / 2;
 

@@ -411,6 +411,7 @@ struct Game final : public Engine, public UnitEventHandler
 	void SetGameText();
 	void SetStatsText();
 	void ConfigureGame();
+	void InitializeScript();
 	
 	// loading data
 	void LoadData();
