@@ -1,4 +1,12 @@
-﻿+ remove Engine SW_HIDE
+﻿++ fixed quest timeouts not sent in multiplayer
+
++ remove Engine SW_HIDE
+- Quest_DeliverNews timeout is removed at first person told too, not when talked to all
+? Quest_Orcs2 is in Progress::ClearedCamp
+	if(game->IsOnline())
+		game->Net_UpdateQuest(refid);
+	was required? currently i removed it, need to check it
+? Quest_Evil Progress::AllPortalsClosed was sending 2 msgs update in mp
 
 ??? co z CRC
 

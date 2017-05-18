@@ -3,11 +3,9 @@
 #include "Quest_Crazies.h"
 #include "Dialog.h"
 #include "Game.h"
-#include "Journal.h"
 #include "SaveState.h"
 #include "GameFile.h"
 #include "QuestManager.h"
-#include "GameGui.h"
 
 //=================================================================================================
 void Quest_Crazies::Start()
@@ -15,7 +13,6 @@ void Quest_Crazies::Start()
 	type = QuestType::Unique;
 	quest_id = Q_CRAZIES;
 	target_loc = -1;
-	name = game->txQuest[253];
 	crazies_state = State::None;
 	days = 0;
 	check_stone = false;
@@ -35,18 +32,12 @@ void Quest_Crazies::SetProgress(int prog2)
 	{
 	case Progress::Started: // zaatakowano przez unk
 		{
-			state = Quest::Started;
+			StartQuest(game->txQuest[253]);
 
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
-			msgs.push_back(Format(game->txQuest[170], game->day+1, game->month+1, game->year));
-			msgs.push_back(game->txQuest[254]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-			
-			if(game->IsOnline())
-				game->Net_AddQuest(refid);
+			AddEntry(game->txQuest[170], game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[254]);
 		}
 		break;
 	case Progress::KnowLocation: // trener powiedzia³ o labiryncie
@@ -60,31 +51,21 @@ void Quest_Crazies::SetProgress(int prog2)
 
 			crazies_state = State::TalkedTrainer;
 
-			msgs.push_back(Format(game->txQuest[255], game->location->name.c_str(), loc.name.c_str(), GetTargetLocationDir()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[255], game->location->name.c_str(), loc.name.c_str(), GetTargetLocationDir());
 			
 			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
 				game->Net_ChangeLocationState(target_loc, false);
-			}
 		}
 		break;
 	case Progress::Finished: // schowano kamieñ do skrzyni
 		{
-			state = Quest::Completed;
 			GetTargetLocation().active_quest = nullptr;
 
 			crazies_state = State::End;
 
-			msgs.push_back(game->txQuest[256]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[256]);
+			SetState(QuestEntry::FINISHED);
 			quest_manager.EndUniqueQuest();
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 	}
 }

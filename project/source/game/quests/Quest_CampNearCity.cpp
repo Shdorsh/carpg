@@ -3,10 +3,8 @@
 #include "Quest_CampNearCity.h"
 #include "Dialog.h"
 #include "Game.h"
-#include "Journal.h"
 #include "LocationHelper.h"
 #include "QuestManager.h"
-#include "GameGui.h"
 
 //=================================================================================================
 void Quest_CampNearCity::Start()
@@ -56,12 +54,7 @@ void Quest_CampNearCity::SetProgress(int prog2)
 			Location& sl = *game->locations[start_loc];
 			bool is_city = LocationHelper::IsCity(sl);
 
-			start_time = game->worldtime;
-			state = Quest::Started;
-			if(is_city)
-				name = game->txQuest[57];
-			else
-				name = game->txQuest[58];
+			StartQuest(is_city ? game->txQuest[57] : game->txQuest[58]);
 
 			// event
 			target_loc = game->CreateCamp(sl.pos, group);
@@ -91,23 +84,15 @@ void Quest_CampNearCity::SetProgress(int prog2)
 				break;
 			}
 
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			quest_manager.quests_timeout.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
 
-			msgs.push_back(Format(game->txQuest[29], sl.name.c_str(), game->day+1, game->month+1, game->year));
-			msgs.push_back(Format(game->txQuest[62], gn, GetLocationDirName(sl.pos, tl.pos), sl.name.c_str(),
-				is_city ? game->txQuest[63] : game->txQuest[64]));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[29], sl.name.c_str(), game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[62], gn, GetLocationDirName(sl.pos, tl.pos), sl.name.c_str(), is_city ? game->txQuest[63] : game->txQuest[64]);
 
-			if(game->IsOnline())
-			{
-				game->Net_AddQuest(refid);
-				if(now_known)
-					game->Net_ChangeLocationState(target_loc, false);
-			}
+			if(game->IsOnline() && now_known)
+				game->Net_ChangeLocationState(target_loc, false);
 		}
 		break;
 	case Progress::ClearedLocation:
@@ -120,37 +105,25 @@ void Quest_CampNearCity::SetProgress(int prog2)
 					loc.active_quest = nullptr;
 			}
 			RemoveElementTry<Quest_Dungeon*>(quest_manager.quests_timeout, this);
-			msgs.push_back(game->txQuest[65]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[65]);
 		}
 		break;
 	case Progress::Finished:
 		// player talked with captain, end of quest
 		{
-			state = Quest::Completed;
 			((City*)game->locations[start_loc])->quest_captain = CityQuestState::None;
 			game->AddReward(2500);
-			msgs.push_back(game->txQuest[66]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[66]);
+			SetState(QuestEntry::FINISHED);
 		}
 		break;
 	case Progress::Timeout:
 		// player failed to clear camp on time
 		{
-			state = Quest::Failed;
 			City* city = (City*)game->locations[start_loc];
 			city->quest_captain = CityQuestState::Failed;
-			msgs.push_back(Format(game->txQuest[67], LocationHelper::IsCity(city) ? game->txQuest[63] : game->txQuest[64]));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[67], LocationHelper::IsCity(city) ? game->txQuest[63] : game->txQuest[64]);
+			SetState(QuestEntry::FINISHED);
 			if(target_loc != -1)
 			{
 				Location& loc = *game->locations[target_loc];
@@ -158,9 +131,6 @@ void Quest_CampNearCity::SetProgress(int prog2)
 					loc.active_quest = nullptr;
 			}
 			RemoveElementTry<Quest_Dungeon*>(quest_manager.quests_timeout, this);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	}
@@ -233,9 +203,7 @@ bool Quest_CampNearCity::OnTimeout(TimeoutType ttype)
 {
 	if(prog == Progress::Started)
 	{
-		msgs.push_back(game->txQuest[277]);
-		game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-		game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+		AddEntry(game->txQuest[277]);
 
 		if(ttype == TIMEOUT_CAMP)
 			game->AbadonLocation(game->locations[target_loc]);

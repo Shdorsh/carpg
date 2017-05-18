@@ -36,7 +36,7 @@ public:
 	void Build();
 	void AddEntry(cstring text, int color, bool singleline);
 	void OnAddNote(int id);
-	void NeedUpdate(Mode mode, int quest_index = 0);
+	void NeedUpdate(Mode mode, int quest_index = -1);
 
 	static TEX tBook, tPage[3], tArrowL, tArrowR;
 	Mode mode;

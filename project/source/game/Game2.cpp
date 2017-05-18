@@ -5229,7 +5229,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 			if(if_level == ctx.dialog_level)
 			{
 				assert(ctx.dialog_quest);
-				ctx.dialog_quest->SetProgress((int)de.msg);
+				ctx.dialog_quest->ChangeProgress((int)de.msg);
 				if(ctx.dialog_wait > 0.f)
 				{
 					++ctx.dialog_pos;
@@ -5626,7 +5626,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 				{
 					if(ctx.pc->unit->gold >= 150)
 					{
-						quest_mages2->SetProgress(Quest_Mages2::Progress::BoughtPotion);
+						quest_mages2->ChangeProgress(Quest_Mages2::BoughtPotion);
 						++ctx.dialog_level;
 					}
 				}
@@ -18510,7 +18510,7 @@ void Game::UpdateGame2(float dt)
 				quest_evil->evil_state = Quest_Evil::State::Summoning;
 				if(sound_volume)
 					PlaySound2d(sEvil);
-				quest_evil->SetProgress(Quest_Evil::Progress::AltarEvent);
+				quest_evil->ChangeProgress(Quest_Evil::AltarEvent);
 				// spawn undead
 				InsideLocation* inside = (InsideLocation*)location;
 				inside->spawn = SG_NIEUMARLI;
@@ -18557,8 +18557,8 @@ void Game::UpdateGame2(float dt)
 								loc.state = Quest_Evil::Loc::State::PortalClosed;
 								u->hero->mode = HeroData::Follow;
 								u->ai->idle_action = AIController::Idle_None;
-								quest_evil->msgs.push_back(Format(txPortalClosed, location->name.c_str()));
-								game_gui->journal->NeedUpdate(Journal::Quests, quest_evil->quest_index);
+								quest_evil->entry->msgs.push_back(Format(txPortalClosed, location->name.c_str()));
+								game_gui->journal->NeedUpdate(Journal::Quests, quest_evil->refid);
 								AddGameMsg3(GMS_JOURNAL_UPDATED);
 								u->StartAutoTalk();
 								quest_evil->changed = true;
@@ -18648,18 +18648,6 @@ void Game::UpdateGame2(float dt)
 			}
 
 			at_arena.clear();
-		}
-	}
-
-	// main quest
-	if(IsLocal())
-	{
-		Quest_Main* q = (Quest_Main*)QuestManager::Get().FindQuestById(Q_MAIN);
-		if(q && q->state == Quest::Hidden)
-		{
-			q->timer += dt;
-			if(q->timer >= 0.1f)
-				q->SetProgress(0);
 		}
 	}
 }
@@ -20468,7 +20456,7 @@ void Game::CheckCraziesStone()
 					{
 						// w³o¿y³ kamieñ, koniec questa
 						chest->items.erase(chest->items.begin()+slot);
-						quest_crazies->SetProgress(Quest_Crazies::Progress::Finished);
+						quest_crazies->ChangeProgress(Quest_Crazies::Finished);
 						return;
 					}
 				}
@@ -21761,6 +21749,18 @@ void SUnit_AddDialog(Unit* unit, const string& id)
 	assert(0);
 }
 
+void SUnit_AddDialogOnce(Unit* unit, const string& id)
+{
+	// TODO
+	assert(0);
+}
+
+void SUnit_RemoveDialog(Unit* unit, const string& id)
+{
+	// TODO
+	assert(0);
+}
+
 void S_StartDialog(const string& id)
 {
 	// TODO
@@ -21793,6 +21793,41 @@ Location* S_get_current_location()
 	return nullptr;
 }
 
+const string& SLocation_get_name(Location* location)
+{
+	// TODO
+	assert(0);
+	static string s;
+	return s;
+}
+
+const string& S_GetLocationDirName(Location* from, Location* to)
+{
+	// TODO
+	assert(0);
+	static string s;
+	return s;
+}
+
+struct DateTime
+{
+	int day, month, year;
+
+	string DateStr() const
+	{
+		string s = Format("%d.%d.%d", day + 1, month + 1, year);
+		return s;
+	}
+};
+
+DateTime S_get_current_date()
+{
+	// TODO
+	assert(0);
+	DateTime dt = { 0 };
+	return dt;
+}
+
 void Game::InitializeScript()
 {
 	auto& manager = ScriptManager::Get();
@@ -21801,7 +21836,9 @@ void Game::InitializeScript()
 	manager.AddType("Unit")
 		.Method("bool HaveItem(const string& in, uint = 1)", asMETHOD(Unit, S_HaveItem))
 		.Method("uint GiveItem(Unit@, const string& in, uint = 1)", asMETHOD(Unit, S_GiveItem))
-		.Method("void AddDialog(const string& in)", asFUNCTION(SUnit_AddDialog));
+		.Method("void AddDialog(const string& in)", asFUNCTION(SUnit_AddDialog))
+		.Method("void AddDialogOnce(const string& in)", asFUNCTION(SUnit_AddDialogOnce))
+		.Method("void RemoveDialog(const string& in)", asFUNCTION(SUnit_RemoveDialog));
 
 	CHECKED(engine->RegisterGlobalFunction("Unit@ get_player()", asFUNCTION(S_get_player), asCALL_CDECL));
 	CHECKED(engine->RegisterGlobalFunction("Unit@ get_talker()", asFUNCTION(S_get_player), asCALL_CDECL));
@@ -21821,9 +21858,17 @@ void Game::InitializeScript()
 
 	manager.AddType("Location")
 		.Method("void MakeKnown()", asFUNCTION(SLocation_MakeKnown))
-		.Method("void ResetSpawn()", asFUNCTION(SLocation_ResetSpawn));
+		.Method("void ResetSpawn()", asFUNCTION(SLocation_ResetSpawn))
+		.Method("const string& get_name()", asFUNCTION(SLocation_get_name));
 
 	manager.AddFunction("Location@ GetClosestLocation(LOCATION)", asFUNCTION(S_GetClosestLocation));
+	manager.AddFunction("const string& GetLocationDirName(Location@, Location@)", asFUNCTION(S_GetLocationDirName));
 
 	manager.AddFunction("Location@ get_current_location()", asFUNCTION(S_get_current_location));
+
+	manager.AddStruct<DateTime>("DateTime", true)
+		.Method("string DateStr() const", asMETHOD(DateTime, DateStr))
+		.Method("string ToString() const", asMETHOD(DateTime, DateStr));
+
+	manager.AddFunction("DateTime get_current_date()", asFUNCTION(S_get_current_date));
 }

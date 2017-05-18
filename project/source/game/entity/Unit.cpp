@@ -2000,6 +2000,8 @@ uint Unit::S_GiveItem(Unit* unit, const string& id, uint count)
 		// TODO
 		assert(0);
 	}
+
+	return 0;
 }
 
 //=================================================================================================

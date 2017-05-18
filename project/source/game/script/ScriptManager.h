@@ -112,12 +112,18 @@ public:
 	}
 
 	template<typename T>
-	TypeBuilder AddStruct(cstring name)
+	TypeBuilder AddStruct(cstring name, bool is_pod = false)
 	{
 		assert(name);
-		CHECKED(engine->RegisterObjectType(name, sizeof(T), asOBJ_VALUE));
-		CHECKED(engine->RegisterObjectBehaviour(name, asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(internal::Constructor<T>), asCALL_CDECL_OBJFIRST));
-		CHECKED(engine->RegisterObjectBehaviour(name, asBEHAVE_DESTRUCT, "void f()", asFUNCTION(internal::Destructor<T>), asCALL_CDECL_OBJFIRST));
+		int flags = asOBJ_VALUE | asGetTypeTraits<T>();
+		if(is_pod)
+			flags |= asOBJ_POD;
+		CHECKED(engine->RegisterObjectType(name, sizeof(T), flags));
+		if(!is_pod)
+		{
+			CHECKED(engine->RegisterObjectBehaviour(name, asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(internal::Constructor<T>), asCALL_CDECL_OBJFIRST));
+			CHECKED(engine->RegisterObjectBehaviour(name, asBEHAVE_DESTRUCT, "void f()", asFUNCTION(internal::Destructor<T>), asCALL_CDECL_OBJFIRST));
+		}
 		return ForType(name);
 	}
 

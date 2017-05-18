@@ -3,12 +3,10 @@
 #include "Quest_Wanted.h"
 #include "Dialog.h"
 #include "Game.h"
-#include "Journal.h"
 #include "SaveState.h"
 #include "GameFile.h"
 #include "QuestManager.h"
 #include "City.h"
-#include "GameGui.h"
 
 //=================================================================================================
 void Quest_Wanted::Start()
@@ -64,9 +62,7 @@ void Quest_Wanted::SetProgress(int prog2)
 			}
 
 			// dane questa
-			start_time = game->worldtime;
-			state = Quest::Started;
-			name = game->txQuest[257];
+			StartQuest(game->txQuest[257]);
 
 			// dodaj list
 			const Item* base_item = FindItem("wanted_letter");
@@ -77,20 +73,16 @@ void Quest_Wanted::SetProgress(int prog2)
 			letter.desc = Format(game->txQuest[259], level*100, unit_name.c_str());
 			game->current_dialog->pc->unit->AddItem(&letter, 1, true);
 
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			quest_manager.quests_timeout.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
 
 			// wpis do dziennika
-			msgs.push_back(Format(game->txQuest[29], GetStartLocationName(), game->day+1, game->month+1, game->year));
-			msgs.push_back(Format(game->txQuest[260], level*100, unit_name.c_str(), GetTargetLocationName(), GetTargetLocationDir()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[29], GetStartLocationName(), game->day + 1, game->month + 1, game->year);
+			AddEntry(game->txQuest[260], level * 100, unit_name.c_str(), GetTargetLocationName(), GetTargetLocationDir());
 
 			if(game->IsOnline())
 			{
-				game->Net_AddQuest(refid);
 				game->Net_RegisterItem(&letter, base_item);
 				if(!game->current_dialog->is_local)
 				{
@@ -106,60 +98,37 @@ void Quest_Wanted::SetProgress(int prog2)
 		break;
 	case Progress::Timeout: // czas min¹³
 		{
-			state = Quest::Failed;
 			((City*)game->locations[start_loc])->quest_captain = CityQuestState::Failed;
 
 			Location& target = GetTargetLocation();
 			if(target.active_quest == this)
 				target.active_quest = nullptr;
 
-			msgs.push_back(Format(game->txQuest[261], unit_name.c_str()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[261], unit_name.c_str());
+			SetState(QuestEntry::FAILED);
 
 			done = false;
 		}
 		break;
 	case Progress::Killed: // zabito
 		{
-			state = Quest::Started; // if recruited that will change it to in progress
-			msgs.push_back(Format(game->txQuest[262], unit_name.c_str()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
+			SetState(QuestEntry::IN_PROGRESS); // if recruited that will change it to in progress
+			AddEntry(game->txQuest[262], unit_name.c_str());
 			RemoveElementTry<Quest_Dungeon*>(quest_manager.quests_timeout, this);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::Finished: // wykonano
 		{
-			state = Quest::Completed;
 			((City*)game->locations[start_loc])->quest_captain = CityQuestState::None;
-
 			game->AddReward(level*100);
-
-			msgs.push_back(Format(game->txQuest[263], unit_name.c_str()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[263], unit_name.c_str());
+			SetState(QuestEntry::FINISHED);
 		}
 		break;
 	case Progress::Recruited:
 		{
-			state = Quest::Failed;
-			msgs.push_back(Format(game->txQuest[276], target_unit->GetName()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[276], target_unit->GetName());
+			SetState(QuestEntry::FAILED);
 		}
 		break;
 	}
@@ -196,7 +165,8 @@ bool Quest_Wanted::OnTimeout(TimeoutType ttype)
 {
 	if(target_unit)
 	{
-		if(state == Quest::Failed)
+		// it shouldn't use state for that but oh well...
+		if(entry && entry->state == QuestEntry::FAILED)
 			((City*)game->locations[start_loc])->quest_captain = CityQuestState::Failed;
 		if(!target_unit->hero->team_member)
 		{
@@ -208,9 +178,7 @@ bool Quest_Wanted::OnTimeout(TimeoutType ttype)
 		target_unit = nullptr;
 	}
 
-	msgs.push_back(game->txQuest[277]);
-	game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-	game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+	AddEntry(game->txQuest[277]);
 
 	return true;
 }
@@ -256,7 +224,7 @@ void Quest_Wanted::HandleUnitEvent(UnitEventHandler::TYPE event_type, Unit* unit
 		in_location = game->current_location;
 		break;
 	case UnitEventHandler::LEAVE:
-		if(state == Quest::Failed)
+		if(entry && entry->state == QuestEntry::FAILED)
 			((City*)game->locations[start_loc])->quest_captain = CityQuestState::Failed;
 		target_unit = nullptr;
 		break;

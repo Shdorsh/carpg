@@ -1315,9 +1315,6 @@ Animesh::Point* Animesh::FindNextPoint(cstring name, Point* point)
 	return nullptr;
 }
 
-extern DWORD tmp;
-extern char BUF[256];
-
 //=================================================================================================
 void AnimeshInstance::Save(HANDLE file)
 {

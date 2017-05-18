@@ -53,7 +53,7 @@ inline void WriteVector(BitStream& stream, const vector<T>& v)
 	stream.Write(v.data(), sizeof(T)*count);
 }
 
-template<typename CAST_TYPE, typename COUNT_TYPE=uint, typename T>
+template<typename CAST_TYPE, typename COUNT_TYPE = uint, typename T>
 inline void WriteVectorCast(BitStream& stream, const vector<T>& v)
 {
 	static_assert(sizeof(CAST_TYPE) < sizeof(T), "CAST_TYPE must be smaller then T");
@@ -100,17 +100,18 @@ inline bool ReadString2(BitStream& stream, string& str)
 
 // odczytywanie wektora stringów
 template<typename COUNT_TYPE, typename LENGTH_TYPE>
-inline bool ReadStringArray(BitStream& stream, vector<string>& strs)
+inline bool ReadStringArray(BitStream& stream, vector<string>& strs, bool append = false)
 {
 	COUNT_TYPE count;
 	if(!stream.Read(count))
 		return false;
 	if(stream.GetNumberOfUnreadBits() / 8 < sizeof(LENGTH_TYPE)*count)
 		return false;
-	strs.resize(count);
-	for(vector<string>::iterator it = strs.begin(), end = strs.end(); it != end; ++it)
+	uint offset = (append ? strs.size() : 0);
+	strs.resize(count + offset);
+	for(uint i = 0; i < count; ++i)
 	{
-		if(!ReadString<LENGTH_TYPE>(stream, *it))
+		if(!ReadString<LENGTH_TYPE>(stream, strs[offset + i]))
 			return false;
 	}
 	return true;
@@ -160,7 +161,7 @@ inline bool ReadVectorCast(BitStream& stream, vector<T>& v)
 	static_assert(sizeof(CAST_TYPE) < sizeof(T), "CAST_TYPE must be smaller then T");
 	COUNT_TYPE count;
 	if(!stream.Read(count)
-		|| !EnsureSize(stream, count*sizeof(CAST_TYPE)))
+		|| !EnsureSize(stream, count * sizeof(CAST_TYPE)))
 		return false;
 	if(count == 0)
 	{
@@ -190,7 +191,7 @@ inline bool Skip(BitStream& stream, uint count)
 	count <<= 3;
 	if(stream.GetNumberOfUnreadBits() >= count)
 	{
-		stream.SetReadOffset(stream.GetReadOffset()+count);
+		stream.SetReadOffset(stream.GetReadOffset() + count);
 		return true;
 	}
 	else
@@ -224,7 +225,7 @@ inline bool SkipStringArray(BitStream& stream)
 	COUNT_TYPE count;
 	if(!stream.Read(count))
 		return false;
-	for(COUNT_TYPE i=0; i<count; ++i)
+	for(COUNT_TYPE i = 0; i < count; ++i)
 	{
 		if(!SkipString<LENGTH_TYPE>(stream))
 			return false;

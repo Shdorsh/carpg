@@ -3,11 +3,9 @@
 #include "Quest_Sawmill.h"
 #include "Dialog.h"
 #include "Game.h"
-#include "Journal.h"
 #include "GameFile.h"
 #include "SaveState.h"
 #include "QuestManager.h"
-#include "GameGui.h"
 
 //=================================================================================================
 void Quest_Sawmill::Start()
@@ -45,9 +43,7 @@ void Quest_Sawmill::SetProgress(int prog2)
 	case Progress::Started:
 		// zakceptowano
 		{
-			start_time = game->worldtime;
-			state = Quest::Started;
-			name = game->txQuest[124];
+			StartQuest(game->txQuest[124]);
 
 			location_event_handler = this;
 
@@ -66,32 +62,20 @@ void Quest_Sawmill::SetProgress(int prog2)
 				tl.reset = true;
 			tl.st = 8;
 
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
 
-			msgs.push_back(Format(game->txQuest[125], sl.name.c_str(), game->day+1, game->month+1, game->year));
-			msgs.push_back(Format(game->txQuest[126], tl.name.c_str(), GetTargetLocationDir()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[125], sl.name.c_str(), game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[126], tl.name.c_str(), GetTargetLocationDir());
 
-			if(game->IsOnline())
-			{
-				game->Net_AddQuest(refid);
-				if(now_known)
-					game->Net_ChangeLocationState(target_loc, false);
-			}
+			if(game->IsOnline() && now_known)
+				game->Net_ChangeLocationState(target_loc, false);
 		}
 		break;
 	case Progress::ClearedLocation:
 		// oczyszczono
 		{
-			msgs.push_back(Format(game->txQuest[127], GetTargetLocationName()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[127], GetTargetLocationName());
 		}
 		break;
 	case Progress::Talked:
@@ -102,30 +86,20 @@ void Quest_Sawmill::SetProgress(int prog2)
 
 			quest_manager.RemoveQuestRumor(P_TARTAK);
 			
-			msgs.push_back(game->txQuest[128]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[128]);
 		}
 		break;
 	case Progress::Finished:
 		// pierwsza kasa
 		{
-			state = Quest::Completed;
 			sawmill_state = State::Working;
 			days = 0;
 
-			msgs.push_back(game->txQuest[129]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[129]);
+			SetState(QuestEntry::FINISHED);
 			game->AddReward(400);
 			quest_manager.EndUniqueQuest();
 			game->AddNews(Format(game->txQuest[130], GetTargetLocationName()));
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	}

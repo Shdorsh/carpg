@@ -54,6 +54,7 @@ quest "test_quest"
 					AddQuestEntry("Przekazałem zioła. Zadanie wykonane!");
 					FinishQuest();
 					AddQuestReward(150);
+					talker.RemoveDialog("progress");
 				}
 				break;
 			}
@@ -133,7 +134,7 @@ quest "kill_animals"
 					StartQuest(Str("title"));
 					AddQuestEntry(Format(Str("start1"), current_location.name, current_date));
 					AddQuestEntry(Format(Str("start2"), current_location.name, target_loc.name, GetLocationDirName(current_location, target_loc)));
-					AddQuestTimeout(30, int(Timeout));
+					AddQuestTimeout(30);
 				}
 				break;
 			case ClearedLocation:

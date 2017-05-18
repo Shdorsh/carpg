@@ -54,6 +54,15 @@ inline void ReadString(HANDLE file, string& s)
 		s.clear();
 }
 
+template<typename T>
+inline void SkipString(HANDLE file)
+{
+	T len;
+	ReadFile(file, &len, sizeof(len), &tmp, nullptr);
+	if(len)
+		SetFilePointer(file, len, nullptr, FILE_CURRENT);
+}
+
 inline void WriteString1(HANDLE file, const string& s)
 {
 	WriteString<byte>(file, s);
@@ -85,6 +94,16 @@ inline void ReadString1(HANDLE file)
 inline void ReadString2(HANDLE file, string& s)
 {
 	ReadString<word>(file, s);
+}
+
+inline void SkipString1(HANDLE file)
+{
+	SkipString<byte>(file);
+}
+
+inline void SkipString2(HANDLE file)
+{
+	SkipString<word>(file);
 }
 
 template<typename COUNT_TYPE, typename STRING_SIZE_TYPE>

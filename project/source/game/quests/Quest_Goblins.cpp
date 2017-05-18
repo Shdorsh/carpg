@@ -145,9 +145,7 @@ void Quest_Goblins::SetProgress(int prog2)
 	case Progress::Started:
 		// zaakceptowano
 		{
-			state = Quest::Started;
-			name = game->txQuest[212];
-			start_time = game->worldtime;
+			StartQuest(game->txQuest[212]);
 			// usuñ plotkê
 			quest_manager.RemoveQuestRumor(P_GOBLINY);
 			// dodaj lokalizacje
@@ -165,13 +163,10 @@ void Quest_Goblins::SetProgress(int prog2)
 			spawn_item = Quest_Event::Item_OnGround;
 			item_to_give[0] = FindItem("q_gobliny_luk");
 			// questowe rzeczy
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
-			msgs.push_back(Format(game->txQuest[217], GetStartLocationName(), game->day+1, game->month+1, game->year));
-			msgs.push_back(Format(game->txQuest[218], GetTargetLocationName(), GetTargetLocationDir()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[217], GetStartLocationName(), game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[218], GetTargetLocationName(), GetTargetLocationDir());
 			// encounter
 			Encounter* e = game->AddEncounter(enc);
 			e->check_func = CzyMajaStaryLuk;
@@ -186,48 +181,33 @@ void Quest_Goblins::SetProgress(int prog2)
 			e->text = game->txQuest[219];
 			e->timed = false;
 
-			if(game->IsOnline())
-			{
-				game->Net_AddQuest(refid);
-				if(not_known)
-					game->Net_ChangeLocationState(target_loc, false);
-			}
+			if(game->IsOnline() && not_known)
+				game->Net_ChangeLocationState(target_loc, false);
 		}
 		break;
 	case Progress::BowStolen:
 		// gobliny ukrad³y ³uk
 		{
 			game->RemoveQuestItem(FindItem("q_gobliny_luk"));
-			msgs.push_back(game->txQuest[220]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[220]);
 			game->RemoveEncounter(enc);
 			enc = -1;
 			GetTargetLocation().active_quest = nullptr;
 			game->AddNews(game->txQuest[221]);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::TalkedAboutStolenBow:
 		// poinformowano o kradzie¿y
 		{
-			state = Quest::Failed;
-			msgs.push_back(game->txQuest[222]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[222]);
+			SetState(QuestEntry::FAILED);
 			goblins_state = State::Counting;
 			days = random(15, 30);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::InfoAboutGoblinBase:
 		// pos³aniec dostarczy³ info o bazie goblinów
 		{
-			state = Quest::Started;
 			target_loc = game->GetRandomSpawnLocation(GetStartLocation().pos, SG_GOBLINY);
 			Location& target = GetTargetLocation();
 			bool now_known = false;
@@ -245,62 +225,42 @@ void Quest_Goblins::SetProgress(int prog2)
 			unit_spawn_level = -3;
 			item_to_give[0] = FindItem("q_gobliny_luk");
 			at_level = target.GetLastLevel();
-			msgs.push_back(Format(game->txQuest[223], target.name.c_str(), GetTargetLocationDir(), GetStartLocationName()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[223], target.name.c_str(), GetTargetLocationDir(), GetStartLocationName());
+			SetState(QuestEntry::IN_PROGRESS);
 			goblins_state = State::MessengerTalked;
 
-			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
-				if(now_known)
-					game->Net_ChangeLocationState(target_loc, false);
-			}
+			if(game->IsOnline() && now_known)
+				game->Net_ChangeLocationState(target_loc, false);
 		}
 		break;
 	case Progress::GivenBow:
 		// oddano ³uk
 		{
-			state = Quest::Completed;
 			const Item* item = FindItem("q_gobliny_luk");
 			game->RemoveItem(*game->current_dialog->pc->unit, item, 1);
 			game->current_dialog->talker->AddItem(item, 1, true);
 			game->AddReward(500);
-			msgs.push_back(game->txQuest[224]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[224]);
+			SetState(QuestEntry::FINISHED);
 			goblins_state = State::GivenBow;
 			GetTargetLocation().active_quest = nullptr;
 			target_loc = -1;
 			game->AddNews(game->txQuest[225]);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::DidntTalkedAboutBow:
 		// nie chcia³eœ powiedzieæ o ³uku
 		{
-			msgs.push_back(game->txQuest[226]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[226]);
 			goblins_state = State::MageTalkedStart;
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::TalkedAboutBow:
 		// powiedzia³eœ o ³uku
 		{
-			state = Quest::Started;
-			msgs.push_back(game->txQuest[227]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[227]);
+			SetState(QuestEntry::IN_PROGRESS);
 			goblins_state = State::MageTalked;
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::PayedAndTalkedAboutBow:
@@ -308,18 +268,12 @@ void Quest_Goblins::SetProgress(int prog2)
 		{
 			game->current_dialog->pc->unit->gold -= 100;
 
-			state = Quest::Started;
-			msgs.push_back(game->txQuest[228]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[228]);
+			SetState(QuestEntry::IN_PROGRESS);
 			goblins_state = State::MageTalked;
 
-			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
-				if(!game->current_dialog->is_local)
-					game->GetPlayerInfo(game->current_dialog->pc).UpdateGold();
-			}
+			if(game->IsOnline() && !game->current_dialog->is_local)
+				game->GetPlayerInfo(game->current_dialog->pc).UpdateGold();
 		}
 		break;
 	case Progress::TalkedWithInnkeeper:
@@ -341,30 +295,20 @@ void Quest_Goblins::SetProgress(int prog2)
 			item_to_give[0] = nullptr;
 			spawn_item = Quest_Event::Item_DontSpawn;
 			at_level = target.GetLastLevel();
-			msgs.push_back(Format(game->txQuest[229], target.name.c_str(), GetTargetLocationDir(), GetStartLocationName()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[229], target.name.c_str(), GetTargetLocationDir(), GetStartLocationName());
 
 			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
 				game->Net_ChangeLocationState(target_loc, false);
-			}
 		}
 		break;
 	case Progress::KilledBoss:
 		// zabito szlachcica
 		{
-			state = Quest::Completed;
-			msgs.push_back(game->txQuest[230]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[230]);
+			SetState(QuestEntry::FINISHED);
 			GetTargetLocation().active_quest = nullptr;
 			quest_manager.EndUniqueQuest();
 			game->AddNews(game->txQuest[231]);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	}

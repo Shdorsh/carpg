@@ -3,10 +3,8 @@
 #include "Quest_DeliverLetter.h"
 #include "Dialog.h"
 #include "Game.h"
-#include "Journal.h"
 #include "LocationHelper.h"
 #include "QuestManager.h"
-#include "GameGui.h"
 
 //=================================================================================================
 void Quest_DeliverLetter::Start()
@@ -52,26 +50,20 @@ void Quest_DeliverLetter::SetProgress(int prog2)
 			letter.name = Format(game->txQuest[0], LocationHelper::IsCity(loc) ? game->txForMayor : game->txForSoltys, loc.name.c_str());
 			letter.refid = refid;
 			game->current_dialog->pc->unit->AddItem(&letter, 1, true);
-			start_time = game->worldtime;
-			state = Quest::Started;
+			StartQuest(game->txQuest[2]);
 
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
 			quest_manager.quests_timeout2.push_back(this);
 
 			Location& loc2 = *game->locations[start_loc];
-			name = game->txQuest[2];
-			msgs.push_back(Format(game->txQuest[3], LocationHelper::IsCity(loc2) ? game->txForMayor : game->txForSoltys, loc2.name.c_str(),
-				game->day+1, game->month+1, game->year));
-			msgs.push_back(Format(game->txQuest[4], LocationHelper::IsCity(loc) ? game->txForMayor : game->txForSoltys, loc.name.c_str(),
-				kierunek_nazwa[GetLocationDir(loc2.pos, loc.pos)]));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[3], LocationHelper::IsCity(loc2) ? game->txForMayor : game->txForSoltys, loc2.name.c_str(),
+				game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[4], LocationHelper::IsCity(loc) ? game->txForMayor : game->txForSoltys, loc.name.c_str(),
+				kierunek_nazwa[GetLocationDir(loc2.pos, loc.pos)]);
 
 			if(game->IsOnline())
 			{
-				game->Net_AddQuest(refid);
 				game->Net_RegisterItem(&letter, base_item);
 				if(!game->current_dialog->is_local)
 				{
@@ -90,7 +82,6 @@ void Quest_DeliverLetter::SetProgress(int prog2)
 		{
 			bool removed_item = false;
 
-			state = Quest::Failed;
 			((City*)game->locations[start_loc])->quest_mayor = CityQuestState::Failed;
 			if(game->current_location == end_loc)
 			{
@@ -98,16 +89,11 @@ void Quest_DeliverLetter::SetProgress(int prog2)
 				removed_item = true;
 			}
 
-			msgs.push_back(game->txQuest[5]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[5]);
+			SetState(QuestEntry::FAILED);
 
-			if(game->IsOnline())
-			{
-				if(removed_item && !game->current_dialog->is_local)
-					game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
-				game->Net_UpdateQuest(refid);
-			}
+			if(game->IsOnline() && removed_item && !game->current_dialog->is_local)
+				game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
 		}
 		break;
 	case Progress::GotResponse:
@@ -116,37 +102,26 @@ void Quest_DeliverLetter::SetProgress(int prog2)
 			Location& loc = *game->locations[end_loc];
 			letter.name = Format(game->txQuest[1], LocationHelper::IsCity(loc) ? game->txForMayor : game->txForSoltys, loc.name.c_str());
 
-			msgs.push_back(game->txQuest[6]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[6]);
 
 			if(game->IsOnline())
-			{
 				game->Net_RenameItem(&letter);
-				game->Net_UpdateQuest(refid);
-			}
 		}
 		break;
 	case Progress::Finished:
 		// given response, end of quest
 		{
-			state = Quest::Completed;
 			game->AddReward(100);
 
 			((City*)game->locations[start_loc])->quest_mayor = CityQuestState::None;
 			game->current_dialog->pc->unit->RemoveQuestItem(refid);
 
-			msgs.push_back(game->txQuest[7]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[7]);
+			SetState(QuestEntry::FINISHED);
 			RemoveElementTry(quest_manager.quests_timeout2, (Quest*)this);
 
-			if(game->IsOnline())
-			{
-				if(!game->current_dialog->is_local)
-					game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
-				game->Net_UpdateQuest(refid);
-			}
+			if(game->IsOnline() && !game->current_dialog->is_local)
+				game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
 		}
 		break;
 	}
@@ -178,9 +153,7 @@ bool Quest_DeliverLetter::IsTimedout() const
 //=================================================================================================
 bool Quest_DeliverLetter::OnTimeout(TimeoutType ttype)
 {
-	msgs.push_back(game->txQuest[277]);
-	game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-	game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+	AddEntry(game->txQuest[277]);
 
 	return true;
 }

@@ -13,8 +13,8 @@ public:
 		FAILED
 	};
 
-	QuestInstance* instance;
 	string title;
 	vector<string> msgs;
 	State state;
+	int refid, index;
 };

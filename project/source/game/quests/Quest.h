@@ -6,6 +6,7 @@
 #include "Unit.h"
 #include "Mapa2.h"
 #include "QuestConsts.h"
+#include "QuestEntry.h"
 
 //-----------------------------------------------------------------------------
 #define QUEST_DIALOG_START 0
@@ -31,35 +32,29 @@ enum TimeoutType
 //-----------------------------------------------------------------------------
 struct Quest
 {
-	enum State
-	{
-		Hidden,
-		Started,
-		Completed,
-		Failed
-	};
-
 	QuestManager& quest_manager;
 	QUEST quest_id;
-	State state;
-	string name;
+	QuestEntry* entry;
 	int prog, refid, start_time, start_loc;
-	uint quest_index;
 	QuestType type;
-	vector<string> msgs;
-	bool timeout;
+	bool timeout, quest_changes;
 	static Game* game;
 
 	Quest();
 	virtual ~Quest() {}
 
-	virtual void Start() = 0;
-	virtual cstring GetDialog(int type2) = 0;
+private:
+	// call ChangeProgress to change quest progress
 	virtual void SetProgress(int prog2) = 0;
-	virtual cstring FormatString(const string& str) = 0;
+	// call ChangeTimeout
 	// called on quest timeout, return true if timeout handled (if false it will be called on next time update)
 	virtual bool OnTimeout(TimeoutType ttype) { return true; }
+	void QuestHandler(delegate<void()> callback);
 
+public:
+	virtual void Start() = 0;
+	virtual cstring GetDialog(int type2) = 0;
+	virtual cstring FormatString(const string& str) = 0;
 	virtual bool IsTimedout() const { return false; }	
 	virtual bool IfHaveQuestItem() const { return false; }
 	virtual bool IfHaveQuestItem2(cstring id) const { return false; }
@@ -76,18 +71,20 @@ struct Quest
 	Location& GetStartLocation();
 	const Location& GetStartLocation() const;
 	cstring GetStartLocationName() const;
-	bool IsActive() const { return state == Hidden || state == Started; }
+	bool IsActive() const { return !entry || entry->state == QuestEntry::IN_PROGRESS; };
 	GameDialog* GetGameDialog(int type2);
-};
 
-//-----------------------------------------------------------------------------
-// u¿ywane w MP u klienta
-struct PlaceholderQuest : public Quest
-{
-	void Start() override {}
-	cstring GetDialog(int type2) override { return nullptr; }
-	void SetProgress(int prog2) override {}
-	cstring FormatString(const string& str) override { return nullptr; }
+	void ChangeProgress(int new_prog);
+	bool ChangeTimeout(TimeoutType ttype);
+	void StartQuest(cstring title);
+	void AddEntry(cstring msg);
+	void SetState(QuestEntry::State state);
+
+	template<typename... Args>
+	void AddEntry(cstring msg, const Args&... args)
+	{
+		AddEntry(Format(msg, args...));
+	}
 };
 
 //-----------------------------------------------------------------------------

@@ -5,12 +5,12 @@
 #include "SaveState.h"
 #include "Journal.h"
 #include "QuestManager.h"
+#include "GameGui.h"
 
 Game* Quest::game;
-extern DWORD tmp;
 
 //=================================================================================================
-Quest::Quest() : quest_manager(QuestManager::Get()), state(Hidden), prog(0), timeout(false)
+Quest::Quest() : quest_manager(QuestManager::Get()), prog(0), timeout(false), entry(nullptr)
 {
 
 }
@@ -19,50 +19,82 @@ Quest::Quest() : quest_manager(QuestManager::Get()), state(Hidden), prog(0), tim
 void Quest::Save(HANDLE file)
 {
 	WriteFile(file, &quest_id, sizeof(quest_id), &tmp, nullptr);
-	WriteFile(file, &state, sizeof(state), &tmp, nullptr);
-	byte len = (byte)name.length();
-	WriteFile(file, &len, sizeof(len), &tmp, nullptr);
-	WriteFile(file, name.c_str(), len, &tmp, nullptr);
 	WriteFile(file, &prog, sizeof(prog), &tmp, nullptr);
 	WriteFile(file, &refid, sizeof(refid), &tmp, nullptr);
 	WriteFile(file, &start_time, sizeof(start_time), &tmp, nullptr);
 	WriteFile(file, &start_loc, sizeof(start_loc), &tmp, nullptr);
 	WriteFile(file, &type, sizeof(type), &tmp, nullptr);
-	len = (byte)msgs.size();
-	WriteFile(file, &len, sizeof(len), &tmp, nullptr);
-	for(byte i=0; i<len; ++i)
-	{
-		word len2 = (word)msgs[i].length();
-		WriteFile(file, &len2, sizeof(len2), &tmp, nullptr);
-		WriteFile(file, msgs[i].c_str(), len2, &tmp, nullptr);
-	}
 	WriteFile(file, &timeout, sizeof(timeout), &tmp, nullptr);
 }
 
 //=================================================================================================
 void Quest::Load(HANDLE file)
 {
-	// quest_id jest ju¿ odczytane
+	// skip quest_id, it was read before calling this function
 	//ReadFile(file, &quest_id, sizeof(quest_id), &tmp, nullptr);
-	ReadFile(file, &state, sizeof(state), &tmp, nullptr);
-	byte len;
-	ReadFile(file, &len, sizeof(len), &tmp, nullptr);
-	name.resize(len);
-	ReadFile(file, (char*)name.c_str(), len, &tmp, nullptr);
+
+	// read old quest journal title/state
+	if(LOAD_VERSION <= V_0_10)
+	{
+		enum class OldQuestState
+		{
+			Hidden,
+			Started,
+			Completed,
+			Failed
+		};
+
+		OldQuestState old_state;
+		ReadFile(file, &old_state, sizeof(old_state), &tmp, nullptr);
+		if(old_state >= OldQuestState::Hidden)
+		{
+			entry = new QuestEntry;
+			ReadString1(file, entry->title);
+			switch(old_state)
+			{
+			case OldQuestState::Started:
+				entry->state = QuestEntry::IN_PROGRESS;
+				break;
+			case OldQuestState::Completed:
+				entry->state = QuestEntry::FINISHED;
+				break;
+			case OldQuestState::Failed:
+				entry->state = QuestEntry::FAILED;
+				break;
+			}
+			quest_manager.AddEntry(entry);
+		}
+		else
+			SkipString1(file);
+	}
+	
+	// read quest data
 	ReadFile(file, &prog, sizeof(prog), &tmp, nullptr);
 	ReadFile(file, &refid, sizeof(refid), &tmp, nullptr);
 	ReadFile(file, &start_time, sizeof(start_time), &tmp, nullptr);
 	ReadFile(file, &start_loc, sizeof(start_loc), &tmp, nullptr);
 	ReadFile(file, &type, sizeof(type), &tmp, nullptr);
-	ReadFile(file, &len, sizeof(len), &tmp, nullptr);
-	msgs.resize(len);
-	for(byte i=0; i<len; ++i)
+
+	// read old quest msgs
+	if(LOAD_VERSION < V_0_10)
 	{
-		word len2;
-		ReadFile(file, &len2, sizeof(len2), &tmp, nullptr);
-		msgs[i].resize(len2);
-		ReadFile(file, (char*)msgs[i].c_str(), len2, &tmp, nullptr);
+		byte count;
+		ReadFile(file, &count, sizeof(count), &tmp, nullptr);
+		if(entry)
+		{
+			assert(count > 0);
+			entry->refid = refid;
+			entry->msgs.resize(count);
+			for(byte i = 0; i < count; ++i)
+				ReadString2(file, entry->msgs[i]);
+		}
+		else
+		{
+			assert(count == 0);
+		}
 	}
+
+	// quest timeout info
 	if(LOAD_VERSION >= V_0_4)
 		ReadFile(file, &timeout, sizeof(timeout), &tmp, nullptr);
 	else
@@ -122,6 +154,82 @@ void Quest_Dungeon::Load(HANDLE file)
 		Location* loc = game->locations[target_loc];
 		if(loc->outside)
 			at_level = -1;
+	}
+}
+
+//=================================================================================================
+void Quest::QuestHandler(delegate<void()> callback)
+{
+	int old_msg_count = (entry ? (int)entry->msgs.size() : -1);
+	quest_changes = false;
+
+	callback();
+
+	if(quest_changes)
+	{
+		int msg_count = (entry ? (int)entry->msgs.size() : -1);
+		int new_msgs = (msg_count - old_msg_count);
+		assert(new_msgs > 0);
+		if(old_msg_count != -1 && game->IsOnline())
+			game->Net_UpdateQuest(refid, new_msgs);
+
+		game->game_gui->journal->NeedUpdate(Journal::Quests, refid);
+		game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+	}
+}
+
+//=================================================================================================
+void Quest::ChangeProgress(int new_prog)
+{
+	QuestHandler([this, new_prog] { SetProgress(new_prog); });
+}
+
+//=================================================================================================
+bool Quest::ChangeTimeout(TimeoutType ttype)
+{
+	bool result;
+	QuestHandler([this, ttype, &result] {result = OnTimeout(ttype); });
+	return result;
+}
+
+//=================================================================================================
+void Quest::StartQuest(cstring title)
+{
+	assert(title);
+	assert(!entry);
+
+	entry = new QuestEntry;
+	entry->state = QuestEntry::IN_PROGRESS;
+	entry->title = title;
+	entry->refid = refid;
+	quest_manager.AddEntry(entry);
+
+	start_time = game->worldtime;
+	quest_changes = true;
+
+	if(game->IsOnline())
+		game->Net_AddQuest(refid);
+}
+
+//=================================================================================================
+void Quest::AddEntry(cstring msg)
+{
+	assert(msg);
+	assert(entry);
+
+	entry->msgs.push_back(msg);
+	quest_changes = true;
+}
+
+//=================================================================================================
+void Quest::SetState(QuestEntry::State state)
+{
+	assert(entry);
+
+	if(state != entry->state)
+	{
+		entry->state = state;
+		quest_changes = true;
 	}
 }
 

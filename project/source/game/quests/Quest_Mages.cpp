@@ -37,9 +37,7 @@ void Quest_Mages::SetProgress(int prog2)
 	{
 	case Progress::Started:
 		{
-			name = game->txQuest[165];
-			start_time = game->worldtime;
-			state = Quest::Started;
+			StartQuest(game->txQuest[165]);
 
 			Location& sl = GetStartLocation();
 			target_loc = game->GetClosestLocation(L_CRYPT, sl.pos);
@@ -59,27 +57,18 @@ void Quest_Mages::SetProgress(int prog2)
 			item_to_give[0] = FindItem("q_magowie_kula");
 			spawn_item = Quest_Event::Item_InTreasure;
 
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
 
-			msgs.push_back(Format(game->txQuest[166], sl.name.c_str(), game->day+1, game->month+1, game->year));
-			msgs.push_back(Format(game->txQuest[167], tl.name.c_str(), GetTargetLocationDir()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[166], sl.name.c_str(), game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[167], tl.name.c_str(), GetTargetLocationDir());
 
-			if(game->IsOnline())
-			{
-				game->Net_AddQuest(refid);
-				if(now_known)
-					game->Net_ChangeLocationState(target_loc, false);
-			}
+			if(game->IsOnline() && now_known)
+				game->Net_ChangeLocationState(target_loc, false);
 		}
 		break;
 	case Progress::Finished:
 		{
-			state = Quest::Completed;
-
 			const Item* item = FindItem("q_magowie_kula");
 			game->current_dialog->talker->AddItem(item, 1, true);
 			game->RemoveItem(*game->current_dialog->pc->unit, item, 1);
@@ -89,35 +78,25 @@ void Quest_Mages::SetProgress(int prog2)
 			GetTargetLocation().active_quest = nullptr;
 
 			game->AddReward(1500);
-			msgs.push_back(game->txQuest[168]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[168]);
+			SetState(QuestEntry::FINISHED);
 			quest_manager.RemoveQuestRumor(P_MAGOWIE);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::EncounteredGolem:
 		{
 			Quest_Mages2* q = game->quest_mages2;
-			q->name = game->txQuest[169];
-			q->start_time = game->worldtime;
-			q->state = Quest::Started;
+			q->StartQuest(game->txQuest[169]);
 			q->mages_state = Quest_Mages2::State::EncounteredGolem;
-			q->quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(q);
 			RemoveElementTry(quest_manager.unaccepted_quests, (Quest*)q);
 			quest_manager.quest_rumor[P_MAGOWIE2] = false;
 			++quest_manager.quest_rumor_counter;
-			q->msgs.push_back(Format(game->txQuest[170], game->day+1, game->month+1, game->year));
-			q->msgs.push_back(game->txQuest[171]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, q->quest_index);
+			q->AddEntry(game->txQuest[170], game->day+1, game->month+1, game->year);
+			q->AddEntry(game->txQuest[171]);
+			game->game_gui->journal->NeedUpdate(Journal::Quests, q->refid);
 			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
 			game->AddNews(game->txQuest[172]);
-
-			if(game->IsOnline())
-				game->Net_AddQuest(q->refid);
 		}
 		break;
 	}
@@ -227,25 +206,15 @@ void Quest_Mages2::SetProgress(int prog2)
 			Location& sl = GetStartLocation();
 			Location& ml = *game->locations[mage_loc];
 
-			msgs.push_back(Format(game->txQuest[173], sl.name.c_str(), ml.name.c_str(), GetLocationDirName(sl.pos, ml.pos)));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[173], sl.name.c_str(), ml.name.c_str(), GetLocationDirName(sl.pos, ml.pos));
 			
 			mages_state = State::TalkedWithCaptain;
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::MageWantsBeer:
 		// mag chce piwa
 		{
-			msgs.push_back(Format(game->txQuest[174], game->current_dialog->talker->hero->name.c_str()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[174], game->current_dialog->talker->hero->name.c_str());
 		}
 		break;
 	case Progress::MageWantsVodka:
@@ -257,12 +226,7 @@ void Quest_Mages2::SetProgress(int prog2)
 			game->current_dialog->talker->ConsumeItem(piwo->ToConsumable());
 			game->current_dialog->dialog_wait = 2.5f;
 			game->current_dialog->can_skip = false;
-			msgs.push_back(game->txQuest[175]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[175]);
 		}
 		break;
 	case Progress::GivenVodka:
@@ -274,12 +238,7 @@ void Quest_Mages2::SetProgress(int prog2)
 			game->current_dialog->talker->ConsumeItem(woda->ToConsumable());
 			game->current_dialog->dialog_wait = 2.5f;
 			game->current_dialog->can_skip = false;
-			msgs.push_back(game->txQuest[176]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[176]);
 		}
 		break;
 	case Progress::GotoTower:
@@ -290,19 +249,14 @@ void Quest_Mages2::SetProgress(int prog2)
 			loc.st = 1;
 			loc.state = LS_KNOWN;
 			game->AddTeamMember(game->current_dialog->talker, true);
-			msgs.push_back(Format(game->txQuest[177], game->current_dialog->talker->hero->name.c_str(), GetTargetLocationName(), GetLocationDirName(game->location->pos, GetTargetLocation().pos),
-				game->location->name.c_str()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[177], game->current_dialog->talker->hero->name.c_str(), GetTargetLocationName(),
+				GetLocationDirName(game->location->pos, GetTargetLocation().pos), game->location->name.c_str());
 			mages_state = State::OldMageJoined;
 			timer = 0.f;
 			scholar = game->current_dialog->talker;
 
 			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
 				game->Net_ChangeLocationState(target_loc, false);
-			}
 		}
 		break;
 	case Progress::MageTalkedAboutTower:
@@ -310,24 +264,14 @@ void Quest_Mages2::SetProgress(int prog2)
 		{
 			game->current_dialog->talker->auto_talk = AutoTalkMode::No;
 			mages_state = State::OldMageRemembers;
-			msgs.push_back(Format(game->txQuest[178], game->current_dialog->talker->hero->name.c_str(), GetStartLocationName()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[178], game->current_dialog->talker->hero->name.c_str(), GetStartLocationName());
 		}
 		break;
 	case Progress::TalkedWithCaptain:
 		// cpt kaza³ pogadaæ z alchemikiem
 		{
 			mages_state = State::BuyPotion;
-			msgs.push_back(game->txQuest[179]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[179]);
 		}
 		break;
 	case Progress::BoughtPotion:
@@ -335,14 +279,7 @@ void Quest_Mages2::SetProgress(int prog2)
 		// wywo³ywane z DT_IF_SPECAL q_magowie_kup
 		{
 			if(prog != Progress::BoughtPotion)
-			{
-				msgs.push_back(game->txQuest[180]);
-				game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-				game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-				if(game->IsOnline())
-					game->Net_UpdateQuest(refid);
-			}
+				AddEntry(game->txQuest[180]);
 			const Item* item = FindItem("q_magowie_potion");
 			game->current_dialog->pc->unit->AddItem(item, 1, false);
 			game->current_dialog->pc->unit->gold -= 150;
@@ -367,9 +304,7 @@ void Quest_Mages2::SetProgress(int prog2)
 			game->current_dialog->dialog_wait = 3.f;
 			game->current_dialog->can_skip = false;
 			mages_state = State::MageCured;
-			msgs.push_back(game->txQuest[181]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[181]);
 			GetTargetLocation().active_quest = nullptr;
 			target_loc = game->CreateLocation(L_DUNGEON, VEC2(0,0), -64.f, MAGE_TOWER, SG_MAGOWIE_I_GOLEMY);
 			Location& loc = GetTargetLocation();
@@ -389,9 +324,6 @@ void Quest_Mages2::SetProgress(int prog2)
 			unit_dont_attack = true;
 			unit_to_spawn2 = FindUnitData("golem_iron");
 			spawn_2_guard_1 = true;
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::NotRecruitMage:
@@ -419,15 +351,10 @@ void Quest_Mages2::SetProgress(int prog2)
 			Location& target = GetTargetLocation();
 			target.state = LS_KNOWN;
 
-			msgs.push_back(Format(game->txQuest[182], u->hero->name.c_str(), evil_mage_name.c_str(), target.name.c_str(), GetTargetLocationDir(), GetStartLocationName()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[182], u->hero->name.c_str(), evil_mage_name.c_str(), target.name.c_str(), GetTargetLocationDir(), GetStartLocationName());
 
 			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
 				game->Net_ChangeLocationState(target_loc, false);
-			}
 		}
 		break;
 	case Progress::RecruitMage:
@@ -439,25 +366,19 @@ void Quest_Mages2::SetProgress(int prog2)
 			if(prog == Progress::MageDrinkPotion)
 			{
 				target.state = LS_KNOWN;
-				msgs.push_back(Format(game->txQuest[183], u->hero->name.c_str(), evil_mage_name.c_str(), target.name.c_str(), GetTargetLocationDir(), GetStartLocationName()));
+				AddEntry(game->txQuest[183], u->hero->name.c_str(), evil_mage_name.c_str(), target.name.c_str(), GetTargetLocationDir(), GetStartLocationName());
 			}
 			else
 			{
-				msgs.push_back(Format(game->txQuest[184], u->hero->name.c_str()));
+				AddEntry(game->txQuest[184], u->hero->name.c_str());
 				good_mage_name = u->hero->name;
 				u->ai->goto_inn = false;
 				game->AddTeamMember(u, true);
 			}
 
-			if(game->IsOnline())
-			{
-				if(prog == Progress::MageDrinkPotion)
-					game->Net_ChangeLocationState(target_loc, false);
-				game->Net_UpdateQuest(refid);
-			}
+			if(game->IsOnline() && prog == Progress::MageDrinkPotion)
+				game->Net_ChangeLocationState(target_loc, false);
 
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
 			mages_state = State::MageRecruited;
 		}
 		break;
@@ -467,50 +388,35 @@ void Quest_Mages2::SetProgress(int prog2)
 			if(mages_state == State::MageRecruited)
 				scholar->StartAutoTalk();
 			mages_state = State::Completed;
-			msgs.push_back(game->txQuest[185]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[185]);
 			game->AddNews(game->txQuest[186]);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::TalkedWithMage:
 		// porozmawiano z magiem po
 		{
-			msgs.push_back(Format(game->txQuest[187], game->current_dialog->talker->hero->name.c_str(), evil_mage_name.c_str()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[187], game->current_dialog->talker->hero->name.c_str(), evil_mage_name.c_str());
 			// idŸ sobie
 			Unit* u = game->current_dialog->talker;
 			game->RemoveTeamMember(u);
 			u->hero->mode = HeroData::Leave;
 			scholar = nullptr;
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::Finished:
 		// odebrano nagrodê
 		{
 			GetTargetLocation().active_quest = nullptr;
-			state = Quest::Completed;
 			if(scholar)
 			{
 				scholar->temporary = true;
 				scholar = nullptr;
 			}
 			game->AddReward(5000);
-			msgs.push_back(game->txQuest[188]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[188]);
+			SetState(QuestEntry::FINISHED);
 			quest_manager.EndUniqueQuest();
 			quest_manager.RemoveQuestRumor(P_MAGOWIE2);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	}

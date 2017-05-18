@@ -5001,21 +5001,21 @@ void Game::WriteServerChanges(BitStream& stream)
 			}
 			break;
 		case NetChange::ADD_QUEST:
-		case NetChange::ADD_QUEST_MAIN:
 			{
 				Quest* q = QuestManager::Get().FindQuest(c.id, false);
-				stream.Write(q->refid);
-				WriteString1(stream, q->name);
-				WriteString2(stream, q->msgs[0]);
-				WriteString2(stream, q->msgs[1]);
+				stream.Write(q->entry->index);
+				WriteString1(stream, q->entry->title);
+				WriteStringArray<byte, word>(stream, q->entry->msgs);
 			}
 			break;
 		case NetChange::UPDATE_QUEST:
 			{
 				Quest* q = QuestManager::Get().FindQuest(c.id, false);
-				stream.Write(q->refid);
-				stream.WriteCasted<byte>(q->state);
-				WriteString2(stream, q->msgs.back());
+				stream.Write(q->entry->index);
+				stream.WriteCasted<byte>(q->entry->state);
+				stream.WriteCasted<byte>(c.ile);
+				for(int i = 0; i<c.ile; ++i)
+					WriteString2(stream, q->entry->msgs[q->entry->msgs.size() - c.ile + i]);
 			}
 			break;
 		case NetChange::RENAME_ITEM:
@@ -5024,16 +5024,6 @@ void Game::WriteServerChanges(BitStream& stream)
 				stream.Write(item->refid);
 				WriteString1(stream, item->id);
 				WriteString1(stream, item->name);
-			}
-			break;
-		case NetChange::UPDATE_QUEST_MULTI:
-			{
-				Quest* q = QuestManager::Get().FindQuest(c.id, false);
-				stream.Write(q->refid);
-				stream.WriteCasted<byte>(q->state);
-				stream.WriteCasted<byte>(c.ile);
-				for(int i = 0; i<c.ile; ++i)
-					WriteString2(stream, q->msgs[q->msgs.size()-c.ile+i]);
 			}
 			break;
 		case NetChange::CHANGE_LEADER:
@@ -6564,72 +6554,63 @@ bool Game::ProcessControlMessageClient(BitStream& stream, bool& exit_from_server
 				}
 			}
 			break;
-		// added (main) quest
+		// added quest
 		case NetChange::ADD_QUEST:
-		case NetChange::ADD_QUEST_MAIN:
 			{
-				cstring name = (type == NetChange::ADD_QUEST ? "ADD_QUEST" : "ADD_QUEST_MAIN");
-
-				int refid;
-				if(!stream.Read(refid)
-					|| !ReadString1(stream))
+				int index;
+				if(!stream.Read(index))
 				{
-					ERROR(Format("Update client: Broken %s.", name));
+					ERROR("Update client: Broken ADD_QUEST.");
 					StreamError();
 					break;
 				}
 
-				QuestManager& quest_manager = QuestManager::Get();
+				QuestEntry* entry = new QuestEntry;
+				QuestManager::Get().AddEntry(entry);
+				if(entry->index != index)
+					ERROR(Format("Update client: Invalid ADD_QUEST index %d/%d.", entry->index, index));
 
-				PlaceholderQuest* quest = new PlaceholderQuest;
-				quest->quest_index = quest_manager.quests.size();
-				quest->name = BUF;
-				quest->refid = refid;
-				quest->msgs.resize(2);
-
-				if(!ReadString2(stream, quest->msgs[0])
-					|| !ReadString2(stream, quest->msgs[1]))
+				entry->state = QuestEntry::IN_PROGRESS;
+				if(!ReadString1(stream, entry->title)
+					|| !ReadStringArray<byte, word>(stream, entry->msgs))
 				{
-					ERROR(Format("Update client: Broken %s(2).", name));
+					ERROR("Update client: Broken ADD_QUEST(2).");
 					StreamError();
-					delete quest;
+					delete entry;
 					break;
 				}
-
-				quest->state = Quest::Started;
-				game_gui->journal->NeedUpdate(Journal::Quests, quest->quest_index);
-				if(type == NetChange::ADD_QUEST)
-					AddGameMsg3(GMS_JOURNAL_UPDATED);
-				else
-					GUI.SimpleDialog(txQuest[270], nullptr);
-				quest_manager.quests.push_back(quest);
+				
+				game_gui->journal->NeedUpdate(Journal::Quests, index);
+				AddGameMsg3(GMS_JOURNAL_UPDATED);
 			}
 			break;
 		// update quest
 		case NetChange::UPDATE_QUEST:
 			{
-				int refid;
-				byte state;
-				if(!stream.Read(refid)
-					|| !stream.Read(state)
-					|| !ReadString2(stream, g_tmp_string))
+				int index;
+				if(!stream.Read(index))
 				{
 					ERROR("Update client: Broken UPDATE_QUEST.");
 					StreamError();
 					break;
 				}
 
-				Quest* quest = QuestManager::Get().FindQuest(refid, false);
-				if(!quest)
+				QuestEntry* entry = QuestManager::Get().GetQuestEntry(index);
+				if(!entry)
 				{
-					ERROR(Format("Update client: UPDATE_QUEST, missing quest %d.", refid));
+					ERROR(Format("Update client: UPDATE_QUEST, missing quest index %d.", index));
 					StreamError();
+				}
+				else if(!stream.ReadCasted<byte>(entry->state)
+					|| !ReadStringArray<byte, word>(stream, entry->msgs, true))
+				{
+					ERROR("Update client: Broken UPDATE_QUEST(2).");
+					StreamError();
+					break;
 				}
 				else
 				{
-					quest->state = (Quest::State)state;
-					quest->msgs.push_back(g_tmp_string);
-					game_gui->journal->NeedUpdate(Journal::Quests, quest->quest_index);
+					game_gui->journal->NeedUpdate(Journal::Quests, index);
 					AddGameMsg3(GMS_JOURNAL_UPDATED);
 				}
 			}
@@ -6666,46 +6647,6 @@ bool Game::ProcessControlMessageClient(BitStream& stream, bool& exit_from_server
 						StreamError();
 						SkipString1(stream);
 					}
-				}
-			}
-			break;
-		// update quest with multiple texts
-		case NetChange::UPDATE_QUEST_MULTI:
-			{
-				int refid;
-				byte state, count;
-				if(!stream.Read(refid)
-					|| !stream.Read(state)
-					|| !stream.Read(count))
-				{
-					ERROR("Update client: Broken UPDATE_QUEST_MULTI.");
-					StreamError();
-					break;
-				}
-
-				Quest* quest = QuestManager::Get().FindQuest(refid, false);
-				if(!quest)
-				{
-					ERROR(Format("Update client: UPDATE_QUEST_MULTI, missing quest %d.", refid));
-					StreamError();
-					if(!SkipStringArray<byte, byte>(stream))
-						ERROR("Update client: Broken UPDATE_QUEST_MULTI(2).");
-				}
-				else
-				{
-					quest->state = (Quest::State)state;
-					for(byte i = 0; i<count; ++i)
-					{
-						if(!ReadString2(stream, Add1(quest->msgs)))
-						{
-							ERROR(Format("Update client: Broken UPDATE_QUEST_MULTI(3) on index %u.", i));
-							StreamError();
-							quest->msgs.pop_back();
-							break;
-						}
-					}
-					game_gui->journal->NeedUpdate(Journal::Quests, quest->quest_index);
-					AddGameMsg3(GMS_JOURNAL_UPDATED);
 				}
 			}
 			break;
@@ -10667,10 +10608,8 @@ bool Game::FilterOut(NetChange& c)
 	case NetChange::ADD_NOTE:
 	case NetChange::REGISTER_ITEM:
 	case NetChange::ADD_QUEST:
-	case NetChange::ADD_QUEST_MAIN:
 	case NetChange::UPDATE_QUEST:
 	case NetChange::RENAME_ITEM:
-	case NetChange::UPDATE_QUEST_MULTI:
 	case NetChange::REMOVE_PLAYER:
 	case NetChange::CHANGE_LEADER:
 	case NetChange::RANDOM_NUMBER:

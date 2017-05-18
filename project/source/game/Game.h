@@ -1691,18 +1691,12 @@ public:
 		c.ile = ile;
 		GetPlayerInfo(player).NeedUpdate();
 	}
-	void Net_UpdateQuest(int refid)
+	void Net_UpdateQuest(int refid, int changes = 1)
 	{
 		NetChange& c = Add1(net_changes);
 		c.type = NetChange::UPDATE_QUEST;
 		c.id = refid;
-	}
-	void Net_UpdateQuestMulti(int refid, int ile)
-	{
-		NetChange& c = Add1(net_changes);
-		c.type = NetChange::UPDATE_QUEST_MULTI;
-		c.id = refid;
-		c.ile = ile;
+		c.ile = changes;
 	}
 	void Net_RenameItem(const Item* item)
 	{

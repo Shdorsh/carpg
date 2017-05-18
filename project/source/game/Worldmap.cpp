@@ -3997,6 +3997,7 @@ void Game::SpawnEncounterUnits(GameDialog*& dialog, Unit*& talker, Quest*& quest
 			{
 				quest_crazies->crazies_state = Quest_Crazies::State::FirstAttack;
 				ile = 1;
+				quest_crazies->ChangeProgress(Quest_Crazies::Started);
 				quest_crazies->SetProgress(Quest_Crazies::Progress::Started);
 			}
 			else
@@ -4316,7 +4317,7 @@ void Game::DoWorldProgress(int days)
 	{
 		if(*it && (*it)->timed && (*it)->quest->IsTimedout())
 		{
-			(*it)->quest->OnTimeout(TIMEOUT_ENCOUNTER);
+			(*it)->quest->ChangeTimeout(TIMEOUT_ENCOUNTER);
 			(*it)->quest->enc = -1;
 			delete *it;
 			if(it+1 == end)
@@ -4343,7 +4344,7 @@ void Game::DoWorldProgress(int days)
 
 			if(!(*it)->timeout)
 			{
-				bool ok = (*it)->OnTimeout(in_camp ? TIMEOUT_CAMP : TIMEOUT_NORMAL);
+				bool ok = (*it)->ChangeTimeout(in_camp ? TIMEOUT_CAMP : TIMEOUT_NORMAL);
 				if(ok)
 					(*it)->timeout = true;
 				else
@@ -4409,7 +4410,7 @@ void Game::DoWorldProgress(int days)
 		Quest* q = *it;
 		if(q->IsTimedout())
 		{
-			if(q->OnTimeout(TIMEOUT2))
+			if(q->ChangeTimeout(TIMEOUT2))
 			{
 				q->timeout = true;
 				it = quest_manager.quests_timeout2.erase(it);

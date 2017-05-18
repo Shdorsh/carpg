@@ -382,23 +382,24 @@ void Journal::Build()
 				AddEntry(txNoQuests, 0, true);
 			else
 			{
-				for(vector<Quest*>::iterator it = quest_manager.quests.begin(), end = quest_manager.quests.end(); it != end; ++it)
+				auto& entries = quest_manager.GetQuestEntries();
+				for(auto entry : entries)
 				{
 					int color = 0;
-					if((*it)->state == Quest::Failed)
+					if(entry->state == QuestEntry::FAILED)
 						color = 1;
-					else if((*it)->state == Quest::Completed)
+					else if(entry->state == QuestEntry::FINISHED)
 						color = 2;
-					AddEntry((*it)->name.c_str(), color, true);
+					AddEntry(entry->title.c_str(), color, true);
 				}
 			}
 		}
 		else
 		{
 			// details of single quest
-			Quest* quest = quest_manager.quests[open_quest];
-			for(vector<string>::iterator it = quest->msgs.begin(), end = quest->msgs.end(); it != end; ++it)
-				AddEntry(it->c_str(), 0, false);
+			QuestEntry* entry = quest_manager.GetQuestEntry(open_quest);
+			for(auto& msg : entry->msgs)
+				AddEntry(msg.c_str(), 0, false);
 		}
 	}
 	else if(mode == Rumors)
@@ -509,13 +510,13 @@ void Journal::OnAddNote(int id)
 }
 
 //=================================================================================================
-void Journal::NeedUpdate(Mode at_mode, int quest_id)
+void Journal::NeedUpdate(Mode at_mode, int quest_index)
 {
 	if(mode == at_mode)
 	{
 		if(mode == Quests && details)
 		{
-			if(quest_id == open_quest)
+			if(quest_index == open_quest)
 				Build();
 		}
 		else

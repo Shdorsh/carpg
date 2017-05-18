@@ -2090,8 +2090,6 @@ void free_cave_data()
 	Cave::free_cave_data();
 }
 
-extern DWORD tmp;
-
 //=================================================================================================
 void Room::Save(HANDLE file)
 {

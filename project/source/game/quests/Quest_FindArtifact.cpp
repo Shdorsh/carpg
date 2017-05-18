@@ -3,12 +3,10 @@
 #include "Quest_FindArtifact.h"
 #include "Dialog.h"
 #include "Game.h"
-#include "Journal.h"
 #include "GameFile.h"
 #include "QuestManager.h"
 #include "InsideLocation.h"
 #include "MultiInsideLocation.h"
-#include "GameGui.h"
 
 //=================================================================================================
 void Quest_FindArtifact::Start()
@@ -43,9 +41,7 @@ void Quest_FindArtifact::SetProgress(int prog2)
 	{
 	case Progress::Started:
 		{
-			start_time = game->worldtime;
-			state = Quest::Started;
-			name = game->txQuest[81];
+			StartQuest(game->txQuest[81]);
 
 			CreateItemCopy(quest_item, item);
 			quest_item.id = Format("$%s", item->id.c_str());
@@ -83,20 +79,16 @@ void Quest_FindArtifact::SetProgress(int prog2)
 				now_known = true;
 			}
 
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			quest_manager.quests_timeout.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
 			game->current_dialog->talker->temporary = false;
 
-			msgs.push_back(Format(game->txQuest[82], sl.name.c_str(), game->day+1, game->month+1, game->year));
-			msgs.push_back(Format(game->txQuest[83], item->name.c_str(), tl.name.c_str(), GetLocationDirName(sl.pos, tl.pos)));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[82], sl.name.c_str(), game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[83], item->name.c_str(), tl.name.c_str(), GetLocationDirName(sl.pos, tl.pos));
 
 			if(game->IsOnline())
 			{
-				game->Net_AddQuest(refid);
 				game->Net_RegisterItem(&quest_item, item);
 				if(now_known)
 					game->Net_ChangeLocationState(target_loc, false);
@@ -105,7 +97,6 @@ void Quest_FindArtifact::SetProgress(int prog2)
 		break;
 	case Progress::Finished:
 		{
-			state = Quest::Completed;
 			if(target_loc != -1)
 			{
 				Location& loc = *game->locations[target_loc];
@@ -113,25 +104,19 @@ void Quest_FindArtifact::SetProgress(int prog2)
 					loc.active_quest = nullptr;
 			}
 			RemoveElementTry<Quest_Dungeon*>(quest_manager.quests_timeout, this);
-			msgs.push_back(game->txQuest[84]);
+			AddEntry(game->txQuest[84]);
+			SetState(QuestEntry::FINISHED);
 			game->AddReward(1000);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
 			game->current_dialog->talker->temporary = true;
 			game->current_dialog->talker->AddItem(&quest_item, 1, true);
 			game->current_dialog->pc->unit->RemoveQuestItem(refid);
 
-			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
-				if(!game->current_dialog->is_local)
-					game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
-			}
+			if(game->IsOnline() && !game->current_dialog->is_local)
+				game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
 		}
 		break;
 	case Progress::Timeout:
 		{
-			state = Quest::Failed;
 			if(target_loc != -1)
 			{
 				Location& loc = *game->locations[target_loc];
@@ -139,13 +124,9 @@ void Quest_FindArtifact::SetProgress(int prog2)
 					loc.active_quest = nullptr;
 			}
 			RemoveElementTry<Quest_Dungeon*>(quest_manager.quests_timeout, this);
-			msgs.push_back(game->txQuest[85]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[85]);
+			SetState(QuestEntry::FAILED);
 			game->current_dialog->talker->temporary = true;
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	}
@@ -184,9 +165,7 @@ bool Quest_FindArtifact::OnTimeout(TimeoutType ttype)
 		inside.RemoveQuestItemFromChest(refid, at_level);
 	}
 
-	msgs.push_back(game->txQuest[277]);
-	game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-	game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+	AddEntry(game->txQuest[277]);
 
 	return true;
 }

@@ -3,11 +3,9 @@
 #include "Quest_DeliverParcel.h"
 #include "Dialog.h"
 #include "Game.h"
-#include "Journal.h"
 #include "LocationHelper.h"
 #include "QuestManager.h"
 #include "Encounter.h"
-#include "GameGui.h"
 
 //=================================================================================================
 void Quest_DeliverParcel::Start()
@@ -52,22 +50,17 @@ void Quest_DeliverParcel::SetProgress(int prog2)
 			parcel.name = Format(game->txQuest[8], LocationHelper::IsCity(loc) ? game->txForMayor : game->txForSoltys, loc.name.c_str());
 			parcel.refid = refid;
 			game->current_dialog->pc->unit->AddItem(&parcel, 1, true);
-			start_time = game->worldtime;
-			state = Quest::Started;
-			name = game->txQuest[9];
+			StartQuest(game->txQuest[9]);
 
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
 			quest_manager.quests_timeout2.push_back(this);
 
 			Location& loc2 = *game->locations[start_loc];
-			msgs.push_back(Format(game->txQuest[3], LocationHelper::IsCity(loc2) ? game->txForMayor : game->txForSoltys, loc2.name.c_str(),
-				game->day+1, game->month+1, game->year));
-			msgs.push_back(Format(game->txQuest[10], LocationHelper::IsCity(loc) ? game->txForMayor : game->txForSoltys, loc.name.c_str(),
-				GetLocationDirName(loc2.pos, loc.pos)));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[3], LocationHelper::IsCity(loc2) ? game->txForMayor : game->txForSoltys, loc2.name.c_str(),
+				game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[10], LocationHelper::IsCity(loc) ? game->txForMayor : game->txForSoltys, loc.name.c_str(),
+				GetLocationDirName(loc2.pos, loc.pos));
 
 			if(rand2()%4 != 0)
 			{
@@ -86,7 +79,6 @@ void Quest_DeliverParcel::SetProgress(int prog2)
 
 			if(game->IsOnline())
 			{
-				game->Net_AddQuest(refid);
 				game->Net_RegisterItem(&parcel, base_item);
 				if(!game->current_dialog->is_local)
 				{
@@ -103,48 +95,36 @@ void Quest_DeliverParcel::SetProgress(int prog2)
 	case Progress::DeliverAfterTime:
 		// player failed to deliver parcel in time, but gain some gold anyway
 		{
-			state = Quest::Failed;
 			((City*)game->locations[start_loc])->quest_mayor = CityQuestState::Failed;
 
 			game->current_dialog->pc->unit->RemoveQuestItem(refid);
 			game->AddReward(125);
 
-			msgs.push_back(game->txQuest[12]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[12]);
+			SetState(QuestEntry::FAILED);
 			RemoveElementTry(quest_manager.quests_timeout2, (Quest*)this);
 
 			RemoveEncounter();
 
-			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
-				if(!game->current_dialog->is_local)
-					game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
-			}
+			if(game->IsOnline() && !game->current_dialog->is_local)
+				game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
 		}
 		break;
 	case Progress::Timeout:
 		// player failed to deliver parcel in time
 		{
-			state = Quest::Failed;
 			((City*)game->locations[start_loc])->quest_mayor = CityQuestState::Failed;
 
-			msgs.push_back(game->txQuest[13]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[13]);
+			SetState(QuestEntry::FAILED);
 			RemoveElementTry(quest_manager.quests_timeout2, (Quest*)this);
 
 			RemoveEncounter();
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::Finished:
 		// parcel delivered, end of quest
 		{
-			state = Quest::Completed;
 			((City*)game->locations[start_loc])->quest_mayor = CityQuestState::None;
 
 			game->current_dialog->pc->unit->RemoveQuestItem(refid);
@@ -152,17 +132,12 @@ void Quest_DeliverParcel::SetProgress(int prog2)
 
 			RemoveEncounter();
 
-			msgs.push_back(game->txQuest[14]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[14]);
+			SetState(QuestEntry::FINISHED);
 			RemoveElementTry(quest_manager.quests_timeout2, (Quest*)this);
 
-			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
-				if(!game->current_dialog->is_local)
-					game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
-			}
+			if(game->IsOnline() && !game->current_dialog->is_local)
+				game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
 		}
 		break;
 	case Progress::AttackedBandits:
@@ -171,12 +146,7 @@ void Quest_DeliverParcel::SetProgress(int prog2)
 			RemoveEncounter();
 			apply = false;
 
-			msgs.push_back(game->txQuest[15]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[15]);
 		}
 		break;
 	case Progress::ParcelGivenToBandits:
@@ -187,12 +157,7 @@ void Quest_DeliverParcel::SetProgress(int prog2)
 			game->current_dialog->talker->AddItem(&parcel, 1, true);
 			game->RemoveQuestItem(&parcel, refid);
 
-			msgs.push_back(game->txQuest[16]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[16]);
 		}
 		break;
 	case Progress::NoParcelAttackedBandits:
@@ -233,11 +198,7 @@ bool Quest_DeliverParcel::IsTimedout() const
 bool Quest_DeliverParcel::OnTimeout(TimeoutType ttype)
 {
 	if(ttype == TIMEOUT2)
-	{
-		msgs.push_back(game->txQuest[277]);
-		game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-		game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-	}
+		AddEntry(game->txQuest[277]);
 
 	return true;
 }

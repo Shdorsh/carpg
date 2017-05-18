@@ -9,6 +9,7 @@ struct ItemSlot;
 struct Quest;
 struct Quest_Dungeon;
 struct Unit;
+class QuestEntry;
 class QuestInstance;
 class QuestScheme;
 
@@ -64,6 +65,10 @@ public:
 	int quest_rumor_counter;
 	bool quest_rumor[P_MAX];
 
+	void AddEntry(QuestEntry* entry);
+	vector<QuestEntry*>& GetQuestEntries() { return quest_entries; }
+	QuestEntry* GetQuestEntry(int quest_index);
+
 private:
 	void LoadQuests(HANDLE file, vector<Quest*>& quests);
 
@@ -75,7 +80,10 @@ private:
 	void SetParsedQuest(QuestScheme* quest_scheme);
 	void BuildQuestScheme();
 	void AddQuestReward(uint gold);
+	void AddQuestTimeout(uint days);
+	void QuestCallback(QuestInstance* quest, delegate<void()> clbk);
 
+	vector<QuestEntry*> quest_entries;
 	QuestScheme* parsed_quest;
 	QuestInstance* current_quest;
 	string script_code;

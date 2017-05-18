@@ -115,44 +115,28 @@ void Quest_Orcs::SetProgress(int prog2)
 			spawn_unit_room = RoomTarget::Prison;
 			game->quest_orcs2->orcs_state = Quest_Orcs2::State::Accepted;
 			// questowe rzeczy
-			state = Quest::Started;
-			name = game->txQuest[191];
-			start_time = game->worldtime;
-			quest_index = quest_manager.quests.size();
+			StartQuest(game->txQuest[191]);
 			quest_manager.quests.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
-			msgs.push_back(Format(game->txQuest[192], GetStartLocationName(), game->day+1, game->month+1, game->year));
-			msgs.push_back(Format(game->txQuest[193], GetStartLocationName(), GetTargetLocationName(), GetTargetLocationDir()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[192], GetStartLocationName(), game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[193], GetStartLocationName(), GetTargetLocationName(), GetTargetLocationDir());
 
 			if(game->IsOnline())
-			{
-				game->Net_AddQuest(refid);
 				game->Net_ChangeLocationState(target_loc, false);
-			}
 		}
 		break;
 	case Progress::ClearedLocation:
 		// oczyszczono lokacjê
 		{
-			msgs.push_back(Format(game->txQuest[194], GetTargetLocationName(), GetStartLocationName()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[194], GetTargetLocationName(), GetStartLocationName());
 		}
 		break;
 	case Progress::Finished:
 		// ukoñczono - nagroda
 		{
-			state = Quest::Completed;
-
 			game->AddReward(2500);
-			msgs.push_back(game->txQuest[195]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[195]);
+			SetState(QuestEntry::FINISHED);
 			game->AddNews(Format(game->txQuest[196], GetTargetLocationName(), GetStartLocationName()));
 
 			if(game->quest_orcs2->orcs_state == Quest_Orcs2::State::OrcJoined)
@@ -164,9 +148,6 @@ void Quest_Orcs::SetProgress(int prog2)
 			}
 			else
 				game->quest_orcs2->orcs_state = Quest_Orcs2::State::Completed;
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	}
@@ -335,16 +316,11 @@ void Quest_Orcs2::SetProgress(int prog2)
 	case Progress::Joined:
 		// dodaj questa
 		{
-			start_time = game->worldtime;
-			name = game->txQuest[214];
-			state = Quest::Started;
-			quest_index = quest_manager.quests.size();
+			StartQuest(game->txQuest[214]);
 			quest_manager.quests.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
-			msgs.push_back(Format(game->txQuest[170], game->day+1, game->month+1, game->year));
-			msgs.push_back(game->txQuest[197]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);			
+			AddEntry(game->txQuest[170], game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[197]);		
 			// ustaw stan
 			if(orcs_state == Quest_Orcs2::State::Accepted)
 				orcs_state = Quest_Orcs2::State::OrcJoined;
@@ -358,9 +334,6 @@ void Quest_Orcs2::SetProgress(int prog2)
 			// do³¹cz do dru¿yny
 			game->AddTeamMember(game->current_dialog->talker, true);
 			Team.free_recruit = false;
-
-			if(game->IsOnline())
-				game->Net_AddQuest(refid);
 		}
 		break;
 	case Progress::TalkedAboutCamp:
@@ -372,13 +345,8 @@ void Quest_Orcs2::SetProgress(int prog2)
 			target.st = 13;
 			target.active_quest = this;
 			near_loc = game->GetNearestSettlement(target.pos);
-			msgs.push_back(game->txQuest[198]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[198]);
 			orcs_state = Quest_Orcs2::State::ToldAboutCamp;
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::TalkedWhereIsCamp:
@@ -391,15 +359,10 @@ void Quest_Orcs2::SetProgress(int prog2)
 			target.state = LS_KNOWN;
 			done = false;
 			location_event_handler = this;
-			msgs.push_back(Format(game->txQuest[199], GetLocationDirName(nearl.pos, target.pos), nearl.name.c_str()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[199], GetLocationDirName(nearl.pos, target.pos), nearl.name.c_str());
 
 			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
 				game->Net_ChangeLocationState(target_loc, false);
-			}
 		}
 		break;
 	case Progress::ClearedCamp:
@@ -409,9 +372,6 @@ void Quest_Orcs2::SetProgress(int prog2)
 			delete game->news.back();
 			game->news.pop_back();
 			game->AddNews(game->txQuest[200]);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::TalkedAfterClearingCamp:
@@ -421,12 +381,7 @@ void Quest_Orcs2::SetProgress(int prog2)
 			days = random(25, 50);
 			GetTargetLocation().active_quest = nullptr;
 			target_loc = -1;
-			msgs.push_back(game->txQuest[201]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[201]);
 		}
 		break;
 	case Progress::SelectWarrior:
@@ -486,13 +441,8 @@ void Quest_Orcs2::SetProgress(int prog2)
 			target.st = 15;
 			target.active_quest = this;
 			target.state = LS_HIDDEN;
-			msgs.push_back(game->txQuest[202]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[202]);
 			orcs_state = State::ToldAboutBase;
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::TalkedWhereIsBase:
@@ -508,40 +458,28 @@ void Quest_Orcs2::SetProgress(int prog2)
 			unit_event_handler = this;
 			near_loc = game->GetNearestSettlement(target.pos);
 			Location& nearl = *game->locations[near_loc];
-			msgs.push_back(Format(game->txQuest[203], GetLocationDirName(nearl.pos, target.pos), nearl.name.c_str(), target.name.c_str()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[203], GetLocationDirName(nearl.pos, target.pos), nearl.name.c_str(), target.name.c_str());
 			done = false;
 			orcs_state = State::GenerateOrcs;
 
 			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
 				game->Net_ChangeLocationState(target_loc, false);
-			}
 		}
 		break;
 	case Progress::KilledBoss:
 		// zabito bossa
 		{
 			orc->StartAutoTalk();
-			msgs.push_back(game->txQuest[204]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[204]);
 			game->AddNews(game->txQuest[205]);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::Finished:
 		// pogadano z gorushem
 		{
-			state = Quest::Completed;
 			game->AddReward(random(4000, 5000));
-			msgs.push_back(game->txQuest[206]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[206]);
+			SetState(QuestEntry::FINISHED);
 			quest_manager.EndUniqueQuest();
 			// gorush
 			game->RemoveTeamMember(orc);
@@ -620,9 +558,6 @@ void Quest_Orcs2::SetProgress(int prog2)
 			}
 			// usuñ zw³oki po opuszczeniu lokacji
 			orcs_state = State::ClearDungeon;
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	}
@@ -808,9 +743,7 @@ void Quest_Orcs2::ChangeClass(OrcClass new_orc_class)
 	orc->MakeItemsTeam(false);
 	game->UpdateUnitInventory(*orc);
 
-	msgs.push_back(Format(game->txQuest[210], class_name));
-	game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-	game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+	AddEntry(game->txQuest[210], class_name);
 
 	prog = Progress::ChangedClass;
 	orcs_state = State::PickedClass;
@@ -818,7 +751,4 @@ void Quest_Orcs2::ChangeClass(OrcClass new_orc_class)
 
 	if(clas == Class::WARRIOR)
 		orc->hero->melee = true;
-
-	if(game->IsOnline())
-		game->Net_UpdateQuest(refid);
 }

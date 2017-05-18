@@ -1,6 +1,9 @@
 #include "Pch.h"
 #include "Base.h"
 #include "BitStreamFunc.h"
+#include "Game.h"
+#include "GameGui.h"
+#include "Journal.h"
 #include "QuestManager.h"
 #include "QuestEntry.h"
 #include "QuestInstance.h"
@@ -255,43 +258,42 @@ void QuestManager::Cleanup()
 //=================================================================================================
 void QuestManager::Write(BitStream& stream)
 {
-	stream.WriteCasted<word>(quests.size());
-	for(Quest* quest : quests)
+	stream.WriteCasted<word>(quest_entries.size());
+	for(QuestEntry* entry : quest_entries)
 	{
-		stream.Write(quest->refid);
-		stream.WriteCasted<byte>(quest->state);
-		WriteString1(stream, quest->name);
-		WriteStringArray<byte, word>(stream, quest->msgs);
+		stream.Write(entry->refid);
+		stream.WriteCasted<byte>(entry->state);
+		WriteString1(stream, entry->title);
+		WriteStringArray<byte, word>(stream, entry->msgs);
 	}
 }
 
 //=================================================================================================
 bool QuestManager::Read(BitStream& stream)
 {
-	const int QUEST_MIN_SIZE = sizeof(int) + sizeof(byte) * 3;
-	word quest_count;
-	if(!stream.Read(quest_count)
-		|| !EnsureSize(stream, QUEST_MIN_SIZE * quest_count))
+	const int ENTRY_MIN_SIZE = sizeof(int) + sizeof(byte) * 3;
+	word entries_count;
+	if(!stream.Read(entries_count)
+		|| !EnsureSize(stream, ENTRY_MIN_SIZE * entries_count))
 	{
-		ERROR("Read world: Broken packet for quests.");
+		ERROR("Read world: Broken packet for quest entries.");
 		return false;
 	}
-	quests.resize(quest_count);
 
-	int index = 0;
-	for(Quest*& quest : quests)
+	quest_entries.resize(entries_count);
+	for(int i=0; i<entries_count; ++i)
 	{
-		quest = new PlaceholderQuest;
-		quest->quest_index = index;
-		if(!stream.Read(quest->refid) ||
-			!stream.ReadCasted<byte>(quest->state) ||
-			!ReadString1(stream, quest->name) ||
-			!ReadStringArray<byte, word>(stream, quest->msgs))
+		QuestEntry* entry = new QuestEntry;
+		if(!stream.Read(entry->refid) ||
+			!stream.ReadCasted<byte>(entry->state) ||
+			!ReadString1(stream, entry->title) ||
+			!ReadStringArray<byte, word>(stream, entry->msgs))
 		{
-			ERROR(Format("Read world: Broken packet for quest %d.", index));
+			ERROR(Format("Read world: Broken packet for quest entry %d.", i));
+			delete entry;
 			return false;
 		}
-		++index;
+		quest_entries[i] = entry;
 	}
 
 	return true;
@@ -373,7 +375,6 @@ void QuestManager::LoadQuests(HANDLE file, vector<Quest*>& quests)
 
 		Quest* quest = CreateQuest(quest_type);
 		quest->quest_id = quest_type;
-		quest->quest_index = i;
 		quest->Load(file);
 		quests[i] = quest;
 	}
@@ -554,6 +555,7 @@ class Quest
 	REGISTER_API("void FinishQuest()", FinishQuest);
 	REGISTER_API("void FailQuest()", FailQuest);
 	REGISTER_API("void AddQuestReward(uint)", AddQuestReward);
+	REGISTER_API("void AddQuestTimeout(uint)", AddQuestTimeout);
 
 #undef REGISTER_API
 }
@@ -561,44 +563,44 @@ class Quest
 void QuestManager::StartQuest(const string& title)
 {
 	QuestInstance* quest = GetCurrentQuest();
-	if(quest->quest_entry)
+	if(quest->entry)
 		throw ScriptException("QuestEntry already started.");
-	quest->quest_entry = new QuestEntry;
-	quest->quest_entry->title = title;
-	quest->quest_entry->state = QuestEntry::IN_PROGRESS;
-	//journal_changes = true;
+	quest->entry = new QuestEntry;
+	quest->entry->title = title;
+	quest->entry->state = QuestEntry::IN_PROGRESS;
+	journal_changes = true;
 }
 
 void QuestManager::AddQuestEntry(const string& text)
 {
 	QuestInstance* quest = GetCurrentQuest();
-	if(!quest->quest_entry)
+	if(!quest->entry)
 		throw ScriptException("QuestEntry missing.");
-	quest->quest_entry->msgs.push_back(text);
-	//journal_changes = true;
+	quest->entry->msgs.push_back(text);
+	journal_changes = true;
 }
 
 void QuestManager::FinishQuest()
 {
 	QuestInstance* quest = GetCurrentQuest();
-	if(!quest->quest_entry)
+	if(!quest->entry)
 		throw ScriptException("QuestEntry missing.");
-	if(quest->quest_entry->state != QuestEntry::FINISHED)
+	if(quest->entry->state != QuestEntry::FINISHED)
 	{
-		quest->quest_entry->state = QuestEntry::FINISHED;
-		//journal_changes = true;
+		quest->entry->state = QuestEntry::FINISHED;
+		journal_changes = true;
 	}
 }
 
 void QuestManager::FailQuest()
 {
 	QuestInstance* quest = GetCurrentQuest();
-	if(!quest->quest_entry)
+	if(!quest->entry)
 		throw ScriptException("QuestEntry missing.");
-	if(quest->quest_entry->state != QuestEntry::FAILED)
+	if(quest->entry->state != QuestEntry::FAILED)
 	{
-		quest->quest_entry->state = QuestEntry::FAILED;
-		//journal_changes = true;
+		quest->entry->state = QuestEntry::FAILED;
+		journal_changes = true;
 	}
 }
 
@@ -740,4 +742,48 @@ void QuestManager::AddQuestReward(uint gold)
 {
 	// TODO
 	assert(0);
+}
+
+void QuestManager::AddQuestTimeout(uint days)
+{
+	// TODO
+	assert(0);
+}
+
+QuestEntry* QuestManager::GetQuestEntry(int quest_index)
+{
+	if(quest_index < 0 || quest_index >= (int)quest_entries.size())
+		return nullptr;
+	return quest_entries[quest_index];
+}
+
+void QuestManager::AddEntry(QuestEntry* entry)
+{
+	assert(entry);
+	entry->index = (int)quest_entries.size();
+	quest_entries.push_back(entry);
+}
+
+void QuestManager::QuestCallback(QuestInstance* quest, delegate<void()> clbk)
+{
+	assert(quest);
+	current_quest = quest;
+	journal_changes = true;
+	int old_msg_count = (quest->entry ? (int)quest->entry->msgs.size() : -1);
+
+	clbk();
+
+	if(journal_changes)
+	{
+		Game& game = Game::Get();
+		int msg_count = (quest->entry ? (int)quest->entry->msgs.size() : -1);
+		int new_msgs = (msg_count - old_msg_count);
+		assert(new_msgs > 0);
+		if(old_msg_count != -1 && game.IsOnline())
+			game.Net_UpdateQuest(quest->refid, new_msgs);
+
+		game.game_gui->journal->NeedUpdate(Journal::Quests, quest->entry->index);
+		game.AddGameMsg3(GMS_JOURNAL_UPDATED);
+	}
+	current_quest = nullptr;
 }

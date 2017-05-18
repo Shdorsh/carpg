@@ -3,11 +3,9 @@
 #include "Quest_BanditsCollectToll.h"
 #include "Dialog.h"
 #include "Game.h"
-#include "Journal.h"
 #include "QuestManager.h"
 #include "Encounter.h"
 #include "City.h"
-#include "GameGui.h"
 
 //=================================================================================================
 void Quest_BanditsCollectToll::Start()
@@ -43,9 +41,7 @@ void Quest_BanditsCollectToll::SetProgress(int prog2)
 	case Progress::Started:
 		// quest accepted
 		{
-			start_time = game->worldtime;
-			state = Quest::Started;
-			name = game->txQuest[51];
+			StartQuest(game->txQuest[51]);
 
 			Location& sl = *game->locations[start_loc];
 			Location& ol = *game->locations[other_loc];
@@ -62,58 +58,37 @@ void Quest_BanditsCollectToll::SetProgress(int prog2)
 			e->zasieg = 64;
 			e->location_event_handler = this;
 
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
 
-			msgs.push_back(Format(game->txQuest[29], sl.name.c_str(), game->day+1, game->month+1, game->year));
-			msgs.push_back(Format(game->txQuest[53], sl.name.c_str(), ol.name.c_str(), GetLocationDirName(sl.pos, ol.pos)));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_AddQuest(refid);
+			AddEntry(game->txQuest[29], sl.name.c_str(), game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[53], sl.name.c_str(), ol.name.c_str(), GetLocationDirName(sl.pos, ol.pos));
 		}
 		break;
 	case Progress::Timout:
 		// player failed to kill bandits in time
 		{
-			state = Quest::Failed;
 			RemoveEncounter();
 			((City*)game->locations[start_loc])->quest_captain = CityQuestState::Failed;
-			msgs.push_back(game->txQuest[54]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[54]);
+			SetState(QuestEntry::FAILED);
 		}
 		break;
 	case Progress::KilledBandits:
 		// player killed bandits
 		{
-			msgs.push_back(game->txQuest[55]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[55]);
 			RemoveEncounter();
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::Finished:
 		// player talked with captain after killing bandits, end of quest
 		{
-			state = Quest::Completed;
-			msgs.push_back(game->txQuest[56]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[56]);
+			SetState(QuestEntry::FINISHED);
 			game->AddReward(400);
 			((City*)game->locations[start_loc])->quest_captain = CityQuestState::None;
 			game->AddNews(game->txQuest[278]);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	}
@@ -144,9 +119,7 @@ bool Quest_BanditsCollectToll::IsTimedout() const
 //=================================================================================================
 bool Quest_BanditsCollectToll::OnTimeout(TimeoutType ttype)
 {
-	msgs.push_back(game->txQuest[277]);
-	game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-	game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+	AddEntry(game->txQuest[277]);
 
 	return true;
 }

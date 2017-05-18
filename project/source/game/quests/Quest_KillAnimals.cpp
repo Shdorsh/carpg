@@ -3,10 +3,8 @@
 #include "Quest_KillAnimals.h"
 #include "Dialog.h"
 #include "Game.h"
-#include "Journal.h"
 #include "QuestManager.h"
 #include "City.h"
-#include "GameGui.h"
 
 //=================================================================================================
 void Quest_KillAnimals::Start()
@@ -41,9 +39,7 @@ void Quest_KillAnimals::SetProgress(int prog2)
 	case Progress::Started:
 		// player accepted quest
 		{
-			start_time = game->worldtime;
-			state = Quest::Started;
-			name = game->txQuest[76];
+			StartQuest(game->txQuest[76]);
 
 			Location& sl = *game->locations[start_loc];
 
@@ -60,22 +56,15 @@ void Quest_KillAnimals::SetProgress(int prog2)
 				now_known = true;
 			}
 
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			quest_manager.quests_timeout.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
 
-			msgs.push_back(Format(game->txQuest[29], sl.name.c_str(), game->day+1, game->month+1, game->year));
-			msgs.push_back(Format(game->txQuest[77], sl.name.c_str(), tl.name.c_str(), GetLocationDirName(sl.pos, tl.pos)));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[29], sl.name.c_str(), game->day+1, game->month+1, game->year);
+			AddEntry(game->txQuest[77], sl.name.c_str(), tl.name.c_str(), GetLocationDirName(sl.pos, tl.pos));
 
-			if(game->IsOnline())
-			{
-				game->Net_AddQuest(refid);
-				if(now_known)
-					game->Net_ChangeLocationState(target_loc, false);
-			}
+			if(game->IsOnline() && now_known)
+				game->Net_ChangeLocationState(target_loc, false);
 		}
 		break;
 	case Progress::ClearedLocation:
@@ -88,36 +77,24 @@ void Quest_KillAnimals::SetProgress(int prog2)
 					loc.active_quest = nullptr;
 			}
 			RemoveElementTry<Quest_Dungeon*>(quest_manager.quests_timeout, this);
-			msgs.push_back(Format(game->txQuest[78], game->locations[target_loc]->name.c_str()));
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[78], game->locations[target_loc]->name.c_str());
 		}
 		break;
 	case Progress::Finished:
 		// player talked with captain, end of quest
 		{
-			state = Quest::Completed;
 			((City*)game->locations[start_loc])->quest_captain = CityQuestState::None;
 			game->AddReward(1200);
-			msgs.push_back(game->txQuest[79]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
+			AddEntry(game->txQuest[79]);
+			SetState(QuestEntry::FINISHED);
 		}
 		break;
 	case Progress::Timeout:
 		// player failed to clear location in time
 		{
-			state = Quest::Failed;
 			((City*)game->locations[start_loc])->quest_captain = CityQuestState::Failed;
-			msgs.push_back(game->txQuest[80]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[80]);
+			SetState(QuestEntry::FAILED);
 			if(target_loc != -1)
 			{
 				Location& loc = *game->locations[target_loc];
@@ -125,9 +102,6 @@ void Quest_KillAnimals::SetProgress(int prog2)
 					loc.active_quest = nullptr;
 			}
 			RemoveElementTry<Quest_Dungeon*>(quest_manager.quests_timeout, this);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	}
@@ -158,10 +132,7 @@ bool Quest_KillAnimals::OnTimeout(TimeoutType ttype)
 {
 	if(prog == Progress::Started)
 	{
-		msgs.push_back(game->txQuest[277]);
-		game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-		game->AddGameMsg3(GMS_JOURNAL_UPDATED);
-
+		AddEntry(game->txQuest[277]);
 		game->AbadonLocation(game->locations[target_loc]);
 	}
 

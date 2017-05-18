@@ -3,10 +3,8 @@
 #include "Quest_RetrievePackage.h"
 #include "Dialog.h"
 #include "Game.h"
-#include "Journal.h"
 #include "LocationHelper.h"
 #include "QuestManager.h"
-#include "GameGui.h"
 
 //=================================================================================================
 void Quest_RetrievePackage::Start()
@@ -68,33 +66,26 @@ void Quest_RetrievePackage::SetProgress(int prog2)
 			item_to_give[0] = &parcel;
 			at_level = loc2.GetRandomLevel();
 
-			start_time = game->worldtime;
-			state = Quest::Started;
-			name = game->txQuest[265];
+			StartQuest(game->txQuest[265]);
 
-			msgs.push_back(Format(game->txQuest[3], who, loc.name.c_str(), game->day+1, game->month+1, game->year));
+			AddEntry(game->txQuest[3], who, loc.name.c_str(), game->day+1, game->month+1, game->year);
 			if(loc2.type == L_CAMP)
 			{
 				game->target_loc_is_camp = true;
-				msgs.push_back(Format(game->txQuest[22], who, loc.name.c_str(), GetLocationDirName(loc.pos, loc2.pos)));
+				AddEntry(game->txQuest[22], who, loc.name.c_str(), GetLocationDirName(loc.pos, loc2.pos));
 			}
 			else
 			{
 				game->target_loc_is_camp = false;
-				msgs.push_back(Format(game->txQuest[23], who, loc.name.c_str(), loc2.name.c_str(), GetLocationDirName(loc.pos, loc2.pos)));
+				AddEntry(game->txQuest[23], who, loc.name.c_str(), loc2.name.c_str(), GetLocationDirName(loc.pos, loc2.pos));
 			}
 
-			quest_index = quest_manager.quests.size();
 			quest_manager.quests.push_back(this);
 			quest_manager.quests_timeout.push_back(this);
 			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
-			
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
 
 			if(game->IsOnline())
 			{
-				game->Net_AddQuest(refid);
 				game->Net_RegisterItem(&parcel, base_item);
 				if(now_known)
 					game->Net_ChangeLocationState(target_loc, false);
@@ -104,7 +95,6 @@ void Quest_RetrievePackage::SetProgress(int prog2)
 	case Progress::Timeout:
 		// player failed to retrieve package in time
 		{
-			state = Quest::Failed;
 			((City*)game->locations[start_loc])->quest_mayor = CityQuestState::Failed;
 
 			if(target_loc != -1)
@@ -114,19 +104,14 @@ void Quest_RetrievePackage::SetProgress(int prog2)
 					loc.active_quest = nullptr;
 			}
 
-			msgs.push_back(game->txQuest[24]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[24]);
+			SetState(QuestEntry::FAILED);
 			RemoveElementTry<Quest_Dungeon*>(quest_manager.quests_timeout, this);
-
-			if(game->IsOnline())
-				game->Net_UpdateQuest(refid);
 		}
 		break;
 	case Progress::Finished:
 		// player returned package to mayor, end of quest
 		{
-			state = Quest::Completed;
 			game->AddReward(500);
 
 			((City*)game->locations[start_loc])->quest_mayor = CityQuestState::None;
@@ -138,17 +123,12 @@ void Quest_RetrievePackage::SetProgress(int prog2)
 					loc.active_quest = nullptr;
 			}
 
-			msgs.push_back(game->txQuest[25]);
-			game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-			game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+			AddEntry(game->txQuest[25]);
+			SetState(QuestEntry::FINISHED);
 			RemoveElementTry<Quest_Dungeon*>(quest_manager.quests_timeout, this);
 
-			if(game->IsOnline())
-			{
-				game->Net_UpdateQuest(refid);
-				if(!game->current_dialog->is_local)
-					game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
-			}
+			if(game->IsOnline() && !game->current_dialog->is_local)
+				game->Net_RemoveQuestItem(game->current_dialog->pc, refid);
 		}
 		break;
 	}
@@ -189,9 +169,7 @@ bool Quest_RetrievePackage::OnTimeout(TimeoutType ttype)
 			u->RemoveQuestItem(refid);
 	}
 
-	msgs.push_back(game->txQuest[277]);
-	game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
-	game->AddGameMsg3(GMS_JOURNAL_UPDATED);
+	AddEntry(game->txQuest[277]);
 
 	return true;
 }

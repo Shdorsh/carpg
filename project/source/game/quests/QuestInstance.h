@@ -8,9 +8,9 @@ struct Unit;
 class QuestInstance
 {
 public:
-	QuestScheme* quest;
-	QuestEntry* quest_entry;
-	int progress;
+	QuestScheme* scheme;
+	QuestEntry* entry;
+	int refid, progress;
 	Unit* start_unit;
 	Location* start_location;
 
