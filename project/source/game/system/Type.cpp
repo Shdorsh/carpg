@@ -16,6 +16,9 @@ Type::Field::~Field()
 	case FLAGS:
 		delete flags;
 		break;
+	case ENUM:
+		delete enums;
+		break;
 	}
 }
 

@@ -6,8 +6,10 @@ enum class QuestType
 	Mayor,
 	Captain,
 	Random,
-	Unique
+	Unique,
+	None
 };
+extern cstring quest_type_str[(int)QuestType::None];
 
 //-----------------------------------------------------------------------------
 // identyfikatory questów
@@ -37,6 +39,7 @@ enum QUEST
 	Q_CRAZIES,
 	Q_WANTED,
 	Q_MAIN,
+	Q_NONE = -1
 };
 
 //-----------------------------------------------------------------------------

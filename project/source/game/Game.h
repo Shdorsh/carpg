@@ -1275,8 +1275,8 @@ public:
 	void GenerateQuestUnits();
 	void GenerateQuestUnits2(bool on_enter);
 	void UpdateQuests(int days);
-	void SaveQuestsData(HANDLE file);
-	void LoadQuestsData(HANDLE file);
+	void SaveEventsData(HANDLE file);
+	void LoadEventsData(HANDLE file);
 	void RemoveQuestUnit(UnitData* ud, bool on_leave);
 	void RemoveQuestUnits(bool on_leave);
 	void GenerateSawmill(bool in_progress);

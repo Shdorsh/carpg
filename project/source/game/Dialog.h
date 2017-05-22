@@ -142,7 +142,7 @@ public:
 private:
 	void InitTokenizer();
 	GameDialog* LoadDialog();
-	bool LoadDialogText();
+	bool LoadDialogText(Tokenizer& t);
 
 	typedef std::map<cstring, GameDialog*, CstringComparer> DialogsMap;
 	DialogsMap dialogs;

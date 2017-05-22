@@ -1,4 +1,5 @@
 ﻿++ fixed quest timeouts not sent in multiplayer
+? test "list quest"
 
 + remove Engine SW_HIDE
 - Quest_DeliverNews timeout is removed at first person told too, not when talked to all
@@ -7,6 +8,9 @@
 		game->Net_UpdateQuest(refid);
 	was required? currently i removed it, need to check it
 ? Quest_Evil Progress::AllPortalsClosed was sending 2 msgs update in mp
+- Quest_KillAnimals calls AbadonLocation on Cave
+? Quest_KillAnimals, does it ensure respawn of units?
+
 
 ??? co z CRC
 

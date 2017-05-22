@@ -25,6 +25,7 @@
 #include "AIController.h"
 #include "Spell.h"
 #include "Team.h"
+#include "script/ScriptManager.h"
 
 // limit fps
 #define LIMIT_DT 0.3f
@@ -1707,6 +1708,7 @@ void Game::OnCleanup()
 	ClearQuadtree();
 	GameDialogManager::Get().Cleanup();
 	ClearLanguages();
+	ScriptManager::Get().Release();
 
 	// shadery
 	ReleaseShaders();

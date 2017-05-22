@@ -7,6 +7,11 @@
 
 vector<QuestScheme*> quest_schemes;
 
+QuestScheme::~QuestScheme()
+{
+	DeleteElements(dialogs);
+}
+
 GameDialog* QuestScheme::FindDialog(const string& id)
 {
 	return container::Find(dialogs, [id](GameDialog* dialog) {return dialog->id == id; });

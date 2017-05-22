@@ -94,8 +94,42 @@ public:
 
 extern Logger* logger;
 
+// helper functions/macros
 #define LOG(msg) logger->Info(msg)
 #define INFO(msg) logger->Info(msg)
 #define WARN(msg) logger->Warn(msg)
 #define ERROR(msg) logger->Error(msg)
 #define FATAL(msg) logger->Fatal(msg)
+
+inline void Info(cstring msg)
+{
+	logger->Info(msg);
+}
+
+template<typename... Args>
+inline void Info(cstring msg, const Args&... args)
+{
+	logger->Info(Format(msg, args...));
+}
+
+inline void Warn(cstring msg)
+{
+	logger->Warn(msg);
+}
+
+template<typename... Args>
+inline void Warn(cstring msg, const Args&... args)
+{
+	logger->Warn(Format(msg, args...));
+}
+
+inline void Error(cstring msg)
+{
+	logger->Error(msg);
+}
+
+template<typename... Args>
+inline void Error(cstring msg, const Args&... args)
+{
+	logger->Error(Format(msg, args...));
+}

@@ -301,6 +301,7 @@ struct BuildingScriptHandler : public TypeImpl<BuildingScript>
 			in_shuffle = false;
 
 		t.FromString(script.code_str);
+		t.Next();
 
 		while(!t.IsEof())
 		{

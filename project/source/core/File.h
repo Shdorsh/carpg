@@ -282,6 +282,12 @@ public:
 			Read(&v[0], sizeof(T)*count);
 	}
 
+	template<typename COUNT_TYPE, typename STRING_SIZE_TYPE>
+	void ReadStringArray(vector<string>& strings)
+	{
+		::ReadStringArray<COUNT_TYPE, STRING_SIZE_TYPE>(file, strings);
+	}
+
 	uint GetSize() const
 	{
 		return GetFileSize(file, nullptr);
@@ -426,6 +432,12 @@ public:
 		WriteCasted<word>(v.size());
 		if(!v.empty())
 			Write(&v[0], sizeof(T)*v.size());
+	}
+
+	template<typename COUNT_TYPE, typename STRING_SIZE_TYPE>
+	void WriteStringArray(vector<string>& strings)
+	{
+		::WriteStringArray<COUNT_TYPE, STRING_SIZE_TYPE>(file, strings);
 	}
 
 	void Flush()

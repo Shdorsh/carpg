@@ -477,7 +477,7 @@ void Game::SaveGame(HANDLE file)
 
 	// save quests
 	QuestManager::Get().Save(file);
-	SaveQuestsData(file);
+	SaveEventsData(file);
 
 	// newsy
 	count = news.size();
@@ -596,11 +596,11 @@ void Game::SaveStock(HANDLE file, vector<ItemSlot>& cnt)
 }
 
 //=================================================================================================
-void Game::SaveQuestsData(HANDLE file)
+void Game::SaveEventsData(HANDLE file)
 {
 	int refid;
 
-	// sekret
+	// secret
 	WriteFile(file, &secret_state, sizeof(secret_state), &tmp, nullptr);
 	WriteString1(file, GetSecretNote()->desc);
 	WriteFile(file, &secret_where, sizeof(secret_where), &tmp, nullptr);
@@ -622,7 +622,7 @@ void Game::SaveQuestsData(HANDLE file)
 			WriteFile(file, &(*it)->refid, sizeof((*it)->refid), &tmp, nullptr);
 	}
 
-	// zawody na arenie
+	// arena tournament
 	WriteFile(file, &tournament_year, sizeof(tournament_year), &tmp, nullptr);
 	WriteFile(file, &tournament_city, sizeof(tournament_city), &tmp, nullptr);
 	WriteFile(file, &tournament_city_year, sizeof(tournament_city_year), &tmp, nullptr);
@@ -1063,53 +1063,8 @@ void Game::LoadGame(HANDLE file)
 	QuestManager& quest_manager = QuestManager::Get();
 	quest_manager.Load(file);
 
-	quest_sawmill = (Quest_Sawmill*)quest_manager.FindQuestById(Q_SAWMILL);
-	quest_mine = (Quest_Mine*)quest_manager.FindQuestById(Q_MINE);
-	quest_bandits = (Quest_Bandits*)quest_manager.FindQuestById(Q_BANDITS);
-	quest_goblins = (Quest_Goblins*)quest_manager.FindQuestById(Q_GOBLINS);
-	quest_mages = (Quest_Mages*)quest_manager.FindQuestById(Q_MAGES);
-	quest_mages2 = (Quest_Mages2*)quest_manager.FindQuestById(Q_MAGES2);
-	quest_orcs = (Quest_Orcs*)quest_manager.FindQuestById(Q_ORCS);
-	quest_orcs2 = (Quest_Orcs2*)quest_manager.FindQuestById(Q_ORCS2);
-	quest_evil = (Quest_Evil*)quest_manager.FindQuestById(Q_EVIL);
-	quest_crazies = (Quest_Crazies*)quest_manager.FindQuestById(Q_CRAZIES);
-
-	if(!quest_mages2)
-	{
-		quest_mages2 = new Quest_Mages2;
-		quest_mages2->refid = quest_manager.quest_counter++;
-		quest_mages2->Start();
-		quest_manager.unaccepted_quests.push_back(quest_mages2);
-	}
-
-	for(vector<QuestItemRequest*>::iterator it = quest_manager.quest_item_requests.begin(), end = quest_manager.quest_item_requests.end(); it != end; ++it)
-	{
-		QuestItemRequest* qir = *it;
-		*qir->item = quest_manager.FindQuestItem(qir->name.c_str(), qir->quest_refid);
-		if(qir->items)
-		{
-			bool ok = true;
-			for(vector<ItemSlot>::iterator it2 = qir->items->begin(), end2 = qir->items->end(); it2 != end2; ++it2)
-			{
-				if(it2->item == QUEST_ITEM_PLACEHOLDER)
-				{
-					ok = false;
-					break;
-				}
-			}
-			if(ok)
-			{
-				if(LOAD_VERSION < V_0_2_10)
-					RemoveNullItems(*qir->items);
-				SortItems(*qir->items);
-				if(qir->unit && LOAD_VERSION < V_0_2_10)
-					qir->unit->RecalculateWeight();
-			}
-		}
-		delete *it;
-	}
-	quest_manager.quest_item_requests.clear();
-	LoadQuestsData(file);
+	// events
+	LoadEventsData(file);
 
 	// newsy
 	uint count;
@@ -1518,24 +1473,11 @@ void Game::LoadStock(HANDLE file, vector<ItemSlot>& cnt)
 }
 
 //=================================================================================================
-void Game::LoadQuestsData(HANDLE file)
+void Game::LoadEventsData(HANDLE file)
 {
 	int refid;
 	
-	// load quests old data (now are stored inside quest)
-	if(LOAD_VERSION < V_0_4)
-	{
-		quest_sawmill->LoadOld(file);
-		quest_mine->LoadOld(file);
-		quest_bandits->LoadOld(file);
-		quest_mages2->LoadOld(file);
-		quest_orcs2->LoadOld(file);
-		quest_goblins->LoadOld(file);
-		quest_evil->LoadOld(file);
-		quest_crazies->LoadOld(file);
-	}
-
-	// sekret
+	// secret quest
 	ReadFile(file, &secret_state, sizeof(secret_state), &tmp, nullptr);
 	ReadString1(file, GetSecretNote()->desc);
 	ReadFile(file, &secret_where, sizeof(secret_where), &tmp, nullptr);
@@ -1564,7 +1506,7 @@ void Game::LoadQuestsData(HANDLE file)
 		}
 	}
 
-	// zawody na arenie
+	// arena tournament
 	ReadFile(file, &tournament_year, sizeof(tournament_year), &tmp, nullptr);
 	ReadFile(file, &tournament_city, sizeof(tournament_city), &tmp, nullptr);
 	ReadFile(file, &tournament_city_year, sizeof(tournament_city_year), &tmp, nullptr);

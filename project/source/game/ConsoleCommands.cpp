@@ -15,6 +15,7 @@
 #include "AIController.h"
 #include "BitStreamFunc.h"
 #include "Team.h"
+#include "QuestManager.h"
 
 //-----------------------------------------------------------------------------
 extern string g_ctime;
@@ -64,7 +65,7 @@ void Game::AddCommands()
 	cmds.push_back(ConsoleCommand(CMD_LOAD, "load", "load game (load 1-10)", F_GAME|F_MENU|F_SERVER));
 	cmds.push_back(ConsoleCommand(CMD_SHOW_MINIMAP, "show_minimap", "reveal minimap", F_GAME|F_CHEAT));
 	cmds.push_back(ConsoleCommand(CMD_SKIP_DAYS, "skip_days", "skip days [skip_days [count])", F_GAME|F_CHEAT));
-	cmds.push_back(ConsoleCommand(CMD_LIST, "list", "display list of items/units sorted by id/name, unit item unitn itemn (list type [filter])", F_ANYWHERE));
+	cmds.push_back(ConsoleCommand(CMD_LIST, "list", "display list of items/units/quests sorted by id/name, unit item unitn itemn (list type [filter])", F_ANYWHERE));
 	cmds.push_back(ConsoleCommand(CMD_HEALUNIT, "healunit", "heal unit in front of player", F_GAME|F_CHEAT));
 	cmds.push_back(ConsoleCommand(CMD_SUICIDE, "suicide", "kill player", F_GAME|F_CHEAT));
 	cmds.push_back(ConsoleCommand(CMD_CITIZEN, "citizen", "citizens/crazies don't attack player or his team", F_GAME|F_CHEAT|F_WORLD_MAP));
@@ -103,6 +104,7 @@ void Game::AddCommands()
 	cmds.push_back(ConsoleCommand(CMD_TILE_INFO, "tile_info", "display info about map tile", F_GAME|F_CHEAT));
 	cmds.push_back(ConsoleCommand(CMD_SET_SEED, "set_seed", "set randomness seed", F_ANYWHERE|F_WORLD_MAP|F_CHEAT));
 	cmds.push_back(ConsoleCommand(CMD_CRASH, "crash", "crash game to death!", F_ANYWHERE|F_WORLD_MAP|F_CHEAT));
+	cmds.push_back(ConsoleCommand(CMD_FORCE_QUEST, "force_quest", "force select next quest (use 'list quests' to get list)", F_GAME | F_WORLD_MAP | F_CHEAT | F_SERVER));
 }
 
 //=================================================================================================
@@ -737,35 +739,49 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 						MSG("No unit selected.");
 					break;
 				case CMD_LIST:
-					if(t.Next())
+					if(!t.Next())
 					{
-						int co;
-
+						MSG("Display list of items/units/quests (item/items, itemn/item_names, unit/units, unitn/unit_names, quest). Examples:");
+						MSG("'list item' - list of items ordered by id");
+						MSG("'list itemn' - list of items ordered by name");
+						MSG("'list unit t' - list of units ordered by id starting from t");
+					}
+					else
+					{
+						enum Type
 						{
-							const string& lis = t.MustGetItem();
-							if(lis == "item" || lis == "items")
-								co = 0;
-							else if(lis == "itemn" || lis == "item_names")
-								co = 1;
-							else if(lis == "unit" || lis == "units")
-								co = 2;
-							else if(lis == "unitn" || lis == "unit_names")
-								co = 3;
-							else
-							{
-								MSG(Format("Unknown list type '%s'!", lis.c_str()));
-								return;
-							}
+							ITEM,
+							ITEM_NAME,
+							UNIT,
+							UNIT_NAME,
+							QUEST
+						} type;
+
+						const string& lis = t.MustGetItem();
+						if(lis == "item" || lis == "items")
+							type = ITEM;
+						else if(lis == "itemn" || lis == "item_names")
+							type = ITEM_NAME;
+						else if(lis == "unit" || lis == "units")
+							type = UNIT;
+						else if(lis == "unitn" || lis == "unit_names")
+							type = UNIT_NAME;
+						else if(lis == "quest")
+							type = QUEST;
+						else
+						{
+							MSG(Format("Unknown list type '%s'!", lis.c_str()));
+							return;
 						}
 
-						if(t.Next())
+						if(t.Next() && type != QUEST)
 						{
 							const string& reg = t.MustGetItem();
-							if(co == 0 || co == 1)
+							if(type == ITEM || type == ITEM_NAME)
 							{
 								LocalVector2<const Item*> items;
 
-								if(co == 0)
+								if(type == ITEM)
 								{
 									for(auto it : g_items)
 									{
@@ -790,12 +806,12 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 									return;
 								}
 
-								std::sort(items.begin(), items.end(), (co == 0 ? SortItemsById : SortItemsByName));
+								std::sort(items.begin(), items.end(), (type == 0 ? SortItemsById : SortItemsByName));
 
 								string s = Format("Items list (%d):\n", items.size());
 								MSG(Format("Items list (%d):", items.size()));
 
-								if(co == 0)
+								if(type == ITEM)
 								{
 									for each(const Item* item in items)
 									{
@@ -822,11 +838,11 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 
 								LOG(s.c_str());
 							}
-							else
+							else if(type == UNIT || type == UNIT_NAME)
 							{
 								LocalVector2<const UnitData*> unitsd;
 
-								if(co == 2)
+								if(type == UNIT)
 								{
 									for(UnitData* ud : unit_datas)
 									{
@@ -849,12 +865,12 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 									return;
 								}
 
-								std::sort(unitsd.begin(), unitsd.end(), (co == 2 ? SortUnitsById : SortUnitsByName));
+								std::sort(unitsd.begin(), unitsd.end(), (type == UNIT ? SortUnitsById : SortUnitsByName));
 
 								string s = Format("Units list (%d):\n", unitsd.size());
 								MSG(Format("Units list (%d):", unitsd.size()));
 
-								if(co == 2)
+								if(type == UNIT)
 								{
 									for each(const UnitData* u in unitsd)
 									{
@@ -884,19 +900,19 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 						}
 						else
 						{
-							if(co == 0 || co == 1)
+							if(type == ITEM || type == ITEM_NAME)
 							{
 								LocalVector2<const Item*> items;
 
 								for(auto it : g_items)
 									items.push_back(it.second);
 
-								std::sort(items.begin(), items.end(), (co == 0 ? SortItemsById : SortItemsByName));
+								std::sort(items.begin(), items.end(), (type == ITEM ? SortItemsById : SortItemsByName));
 
 								string s = Format("Items list (%d):\n", items.size());
 								MSG(Format("Items list (%d):", items.size()));
 
-								if(co == 0)
+								if(type == ITEM)
 								{
 									for each(const Item* item in items)
 									{
@@ -923,19 +939,19 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 
 								LOG(s.c_str());
 							}
-							else
+							else if(type == UNIT || type == UNIT_NAME)
 							{
 								LocalVector2<const UnitData*> unitsd;
 
 								for(UnitData* ud : unit_datas)
 									unitsd.push_back(ud);
 
-								std::sort(unitsd.begin(), unitsd.end(), (co == 2 ? SortUnitsById : SortUnitsByName));
+								std::sort(unitsd.begin(), unitsd.end(), (type == UNIT ? SortUnitsById : SortUnitsByName));
 
 								string s = Format("Units list (%d):\n", unitsd.size());
 								MSG(Format("Units list (%d):", unitsd.size()));
 
-								if(co == 2)
+								if(type == UNIT)
 								{
 									for each(const UnitData* u in unitsd)
 									{
@@ -962,14 +978,49 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 
 								LOG(s.c_str());
 							}
+							else
+							{
+								assert(type == QUEST);
+								// copy for sorting
+								vector<QuestInfo> infos = QuestManager::Get().GetQuestInfos();
+								std::sort(infos.begin(), infos.end(), [](const QuestInfo& qi1, const QuestInfo& qi2)
+								{
+									if(qi1.type == qi2.type)
+										return qi1.id > qi2.id;
+									else
+										return qi1.type > qi2.type;
+								});
+
+								QuestType type = (QuestType)-1;
+								string s = Format("Quests list (%d):\n", infos.size());
+								for(auto& info : infos)
+								{
+									if(type != info.type)
+									{
+										switch(info.type)
+										{
+										case QuestType::Captain:
+											s += "captain";
+											break;
+										case QuestType::Mayor:
+											s += "mayor";
+											break;
+										case QuestType::Random:
+											s += "random";
+											break;
+										case QuestType::Unique:
+											s += "unique";
+											break;
+										}
+										s += '\n';
+										type = info.type;
+									}
+									s += Format("\t%s\n", info.id);
+								}
+								
+								LOG(s.c_str());
+							}
 						}
-					}
-					else
-					{
-						MSG("Display list of items/units (item/items, itemn/item_names, unit/units, unitn/unit_names). Examples:");
-						MSG("'list item' - list of items ordered by id");
-						MSG("'list itemn' - list of items ordered by name");
-						MSG("'list unit t' - list of units ordered by id starting from t");
 					}
 					break;
 				case CMD_HEALUNIT:
@@ -1807,6 +1858,34 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 				case CMD_CRASH:
 					void DoCrash();
 					DoCrash();
+					break;
+				case CMD_FORCE_QUEST:
+					if(t.Next())
+					{
+						const string& id = t.MustGetItem();
+						auto& quest_manager = QuestManager::Get();
+						if(id == "null")
+						{
+							quest_manager.SetForcedQuest(nullptr);
+							MSG("Reseted force quest.");
+						}
+						else if(id == "none")
+						{
+							static QuestInfo none_quest = QuestInfo("none", QuestType::None, Q_NONE);
+							quest_manager.SetForcedQuest(&none_quest);
+							MSG("Force quest set to 'none'.");
+						}
+						auto quest_info = quest_manager.FindQuestInfo(id);
+						if(quest_info)
+						{
+							quest_manager.SetForcedQuest(quest_info);
+							MSG(Format("Force quest set to '%s'.", quest_info->id));
+						}
+						else
+							MSG(Format("Missing quest '%s'. Use 'list quest' to get ids.", id.c_str()));
+					}
+					else
+						MSG("Quest id required. Use 'none' to force none, 'null' to reset choice.");
 					break;
 				default:
 					assert(0);

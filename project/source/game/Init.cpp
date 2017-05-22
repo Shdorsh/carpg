@@ -15,9 +15,12 @@
 #include "Crc.h"
 #include "script/ScriptManager.h"
 #include "QuestManager.h"
+#include "GameLoader.h"
 
 extern void HumanPredraw(void* ptr, MATRIX* mat, int n);
 extern const int ITEM_IMAGE_SIZE;
+extern string g_system_dir;
+GameLoader game_loader;
 
 //=================================================================================================
 // Initialize game and show loadscreen.
@@ -56,6 +59,9 @@ bool Game::InitGame()
 void Game::PreconfigureGame()
 {
 	INFO("Game: Preconfiguring game.");
+
+	game_loader.system_dir = g_system_dir;
+	game_loader.errors = 0;
 
 	// set default render states
 	V(device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD));
@@ -175,6 +181,7 @@ void Game::LoadSystem()
 	INFO("Game: Loading system.");
 	resMgr.PrepareLoadScreen2(0.1f, 13, txCreateListOfFiles);
 
+	QuestManager::Get().Init();
 	ScriptManager::Get().Init();
 	AddFilesystem();
 	LoadDatafiles();
@@ -184,6 +191,7 @@ void Game::LoadSystem()
 	ConfigureGame();
 	resMgr.NextTask();
 	QuestManager::Get().BuildScripts();
+	QuestManager::Get().LoadRandomQuestInfo();
 	resMgr.EndLoadScreenStage();
 }
 
@@ -384,6 +392,7 @@ void Game::PostconfigureGame()
 #endif
 
 	// show errors notification
+	load_errors += game_loader.errors;
 	bool start_game_mode = true;
 	if(load_errors > 0)
 	{

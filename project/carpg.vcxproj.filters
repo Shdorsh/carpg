@@ -1262,6 +1262,9 @@
     <ClInclude Include="source\game\quests\Quest_Wanted.h">
       <Filter>game\quests\hardcoded</Filter>
     </ClInclude>
+    <ClInclude Include="source\game\GameLoader.h">
+      <Filter>game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="source\resource\resource.rc">

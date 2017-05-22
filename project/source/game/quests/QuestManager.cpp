@@ -3,6 +3,7 @@
 #include "BitStreamFunc.h"
 #include "Game.h"
 #include "GameGui.h"
+#include "GameLoader.h"
 #include "Journal.h"
 #include "QuestManager.h"
 #include "QuestEntry.h"
@@ -34,6 +35,31 @@
 #include "Quest_Wanted.h"
 
 QuestManager Singleton<QuestManager>::instance;
+
+cstring quest_type_str[(int)QuestType::None] = {
+	"mayor",
+	"captain",
+	"random",
+	"unique"
+};
+
+//=================================================================================================
+QuestManager::QuestManager() : forced_quest(nullptr)
+{
+
+}
+
+//=================================================================================================
+QuestManager::~QuestManager()
+{
+
+}
+
+//=================================================================================================
+void QuestManager::Init()
+{
+	AddQuestInfos();
+}
 
 //=================================================================================================
 Quest* QuestManager::CreateQuest(QUEST quest_id)
@@ -93,128 +119,51 @@ Quest* QuestManager::CreateQuest(QUEST quest_id)
 }
 
 //=================================================================================================
-Quest* QuestManager::GetMayorQuest(int force)
+AnyQuestInfo QuestManager::GetRandomQuest(QuestType type)
 {
-	if(force == -1)
+	if(type == QuestType::Unique)
+		return nullptr;
+
+	if(forced_quest)
 	{
-		switch(rand2() % 12)
+		if(forced_quest->type == QuestType::None)
 		{
-		case 0:
-		case 1:
-		case 2:
-			return new Quest_DeliverLetter;
-		case 3:
-		case 4:
-		case 5:
-			return new Quest_DeliverParcel;
-		case 6:
-		case 7:
-			return new Quest_SpreadNews;
-			break;
-		case 8:
-		case 9:
-			return new Quest_RetrievePackage;
-		case 10:
-		case 11:
-		default:
-			return nullptr;
+			if(type == QuestType::Random)
+				ERROR("Random quest don't support 'none' yet. Ignoring forced quest.");
+			else
+				return nullptr;
 		}
+		if(forced_quest->type == type)
+			return forced_quest->quest;
+		else
+			WARN(Format("Can't force quest '%s' for %s. Types don't match.", forced_quest->id, quest_type_str[(int)type]));
 	}
+
+	auto& chance = quest_chance[(int)type];
+	if(chance.IsEmpty())
+		return nullptr;
 	else
-	{
-		switch(force)
-		{
-		case 0:
-		default:
-			return nullptr;
-		case 1:
-			return new Quest_DeliverLetter;
-		case 2:
-			return new Quest_DeliverParcel;
-		case 3:
-			return new Quest_SpreadNews;
-		case 4:
-			return new Quest_RetrievePackage;
-		}
-	}
+		return chance.Get();
 }
 
 //=================================================================================================
-Quest* QuestManager::GetCaptainQuest(int force)
+Quest* QuestManager::StartQuest(AnyQuestInfo quest_info)
 {
-	if(force == -1)
-	{
-		switch(rand2() % 11)
-		{
-		case 0:
-		case 1:
-			return new Quest_RescueCaptive;
-		case 2:
-		case 3:
-			return new Quest_BanditsCollectToll;
-		case 4:
-		case 5:
-			return new Quest_CampNearCity;
-		case 6:
-		case 7:
-			return new Quest_KillAnimals;
-		case 8:
-		case 9:
-			return new Quest_Wanted;
-		case 10:
-		default:
-			return nullptr;
-		}
-	}
-	else
-	{
-		switch(force)
-		{
-		case 0:
-		default:
-			return nullptr;
-		case 1:
-			return new Quest_RescueCaptive;
-		case 2:
-			return new Quest_BanditsCollectToll;
-		case 3:
-			return new Quest_CampNearCity;
-		case 4:
-			return new Quest_KillAnimals;
-		case 5:
-			return new Quest_Wanted;
-		}
-	}
-}
+	assert(quest_info);
 
-//=================================================================================================
-Quest* QuestManager::GetAdventurerQuest(int force)
-{
-	if(force == -1)
+	if(quest_info.is_new)
 	{
-		switch(rand2() % 3)
-		{
-		case 0:
-		default:
-			return new Quest_FindArtifact;
-		case 1:
-			return new Quest_LostArtifact;
-		case 2:
-			return new Quest_StolenArtifact;
-		}
+		// TODO
+		assert(0);
+		return nullptr;
 	}
 	else
 	{
-		switch(force)
-		{
-		case 1:
-		default:
-			return new Quest_FindArtifact;
-		case 2:
-			return new Quest_LostArtifact;
-		case 3:
-			return new Quest_StolenArtifact;
-		}
+		Quest* quest = CreateQuest(quest_info.quest_id);
+		quest->refid = quest_counter++;
+		quest->Start();
+		unaccepted_quests.push_back(quest);
+		return quest;
 	}
 }
 
@@ -253,6 +202,7 @@ void QuestManager::Cleanup()
 	DeleteElements(quests);
 	DeleteElements(unaccepted_quests);
 	DeleteElements(quest_item_requests);
+	DeleteElements(quest_schemes);
 }
 
 //=================================================================================================
@@ -304,13 +254,20 @@ void QuestManager::Save(HANDLE file)
 {
 	FileWriter f(file);
 
+	SaveQuests(f);
+	SaveQuestEntries(f);
+}
+
+//=================================================================================================
+void QuestManager::SaveQuests(FileWriter& f)
+{
 	f << quests.size();
 	for(vector<Quest*>::iterator it = quests.begin(), end = quests.end(); it != end; ++it)
-		(*it)->Save(file);
+		(*it)->Save(f.file);
 
 	f << unaccepted_quests.size();
 	for(vector<Quest*>::iterator it = unaccepted_quests.begin(), end = unaccepted_quests.end(); it != end; ++it)
-		(*it)->Save(file);
+		(*it)->Save(f.file);
 
 	f << quests_timeout.size();
 	for(Quest_Dungeon* q : quests_timeout)
@@ -328,12 +285,37 @@ void QuestManager::Save(HANDLE file)
 }
 
 //=================================================================================================
+void QuestManager::SaveQuestEntries(FileWriter& f)
+{
+	f << quest_entries.size();
+	for(QuestEntry* entry : quest_entries)
+	{
+		f << entry->refid;
+		f << entry->state;
+		f << entry->title;
+		f.WriteStringArray<byte, word>(entry->msgs);
+	}
+}
+
+//=================================================================================================
 void QuestManager::Load(HANDLE file)
 {
 	FileReader f(file);
 
-	LoadQuests(file, quests);
-	LoadQuests(file, unaccepted_quests);
+	LoadQuests(f);
+	if(LOAD_VERSION >= V_0_10)
+		LoadQuestEntries(f);
+	ConfigureQuests();
+	ProcessQuestItemRequests();
+	if(LOAD_VERSION < V_0_4)
+		LoadOldQuestsData(f);
+}
+
+//=================================================================================================
+void QuestManager::LoadQuests(FileReader& f)
+{
+	LoadQuests(f.file, quests);
+	LoadQuests(f.file, unaccepted_quests);
 
 	quests_timeout.resize(f.Read<uint>());
 	for(Quest_Dungeon*& q : quests_timeout)
@@ -361,10 +343,105 @@ void QuestManager::Load(HANDLE file)
 }
 
 //=================================================================================================
+void QuestManager::LoadQuestEntries(FileReader& f)
+{
+	uint count;
+	f >> count;
+	for(uint i = 0; i < count; ++i)
+	{
+		QuestEntry* entry = new QuestEntry;
+		entry->index = i;
+		f >> entry->refid;
+		f >> entry->state;
+		f >> entry->title;
+		f.ReadStringArray<byte, word>(entry->msgs);
+		AnyQuest quest = FindQuest2(entry->refid);
+		if(quest)
+		{
+			if(quest.is_new)
+				quest.instance->entry = entry;
+			else
+				quest.quest->entry = entry;
+		}
+	}
+}
+
+//=================================================================================================
+void QuestManager::ConfigureQuests()
+{
+	Game& game = Game::Get();
+
+	game.quest_sawmill = (Quest_Sawmill*)FindQuestById(Q_SAWMILL);
+	game.quest_mine = (Quest_Mine*)FindQuestById(Q_MINE);
+	game.quest_bandits = (Quest_Bandits*)FindQuestById(Q_BANDITS);
+	game.quest_goblins = (Quest_Goblins*)FindQuestById(Q_GOBLINS);
+	game.quest_mages = (Quest_Mages*)FindQuestById(Q_MAGES);
+	game.quest_mages2 = (Quest_Mages2*)FindQuestById(Q_MAGES2);
+	game.quest_orcs = (Quest_Orcs*)FindQuestById(Q_ORCS);
+	game.quest_orcs2 = (Quest_Orcs2*)FindQuestById(Q_ORCS2);
+	game.quest_evil = (Quest_Evil*)FindQuestById(Q_EVIL);
+	game.quest_crazies = (Quest_Crazies*)FindQuestById(Q_CRAZIES);
+
+	if(!game.quest_mages2)
+	{
+		game.quest_mages2 = new Quest_Mages2;
+		game.quest_mages2->refid = quest_counter++;
+		game.quest_mages2->Start();
+		unaccepted_quests.push_back(game.quest_mages2);
+	}
+}
+
+//=================================================================================================
+void QuestManager::ProcessQuestItemRequests()
+{
+	for(vector<QuestItemRequest*>::iterator it = quest_item_requests.begin(), end = quest_item_requests.end(); it != end; ++it)
+	{
+		QuestItemRequest* qir = *it;
+		*qir->item = FindQuestItem(qir->name.c_str(), qir->quest_refid);
+		if(qir->items)
+		{
+			bool ok = true;
+			for(vector<ItemSlot>::iterator it2 = qir->items->begin(), end2 = qir->items->end(); it2 != end2; ++it2)
+			{
+				if(it2->item == QUEST_ITEM_PLACEHOLDER)
+				{
+					ok = false;
+					break;
+				}
+			}
+			if(ok)
+			{
+				if(LOAD_VERSION < V_0_2_10)
+					RemoveNullItems(*qir->items);
+				SortItems(*qir->items);
+				if(qir->unit && LOAD_VERSION < V_0_2_10)
+					qir->unit->RecalculateWeight();
+			}
+		}
+		delete *it;
+	}
+	quest_item_requests.clear();
+}
+
+//=================================================================================================
+void QuestManager::LoadOldQuestsData(FileReader& f)
+{
+	Game& game = Game::Get();
+
+	// load quests old data (now are stored inside quest)
+	game.quest_sawmill->LoadOld(f.file);
+	game.quest_mine->LoadOld(f.file);
+	game.quest_bandits->LoadOld(f.file);
+	game.quest_mages2->LoadOld(f.file);
+	game.quest_orcs2->LoadOld(f.file);
+	game.quest_goblins->LoadOld(f.file);
+	game.quest_evil->LoadOld(f.file);
+	game.quest_crazies->LoadOld(f.file);
+}
+
+//=================================================================================================
 void QuestManager::LoadQuests(HANDLE file, vector<Quest*>& quests)
 {
-	DWORD tmp;
-
 	uint count;
 	ReadFile(file, &count, sizeof(count), &tmp, nullptr);
 	quests.resize(count);
@@ -547,10 +624,10 @@ class Quest
 }
 
 )code";
-
+	
 #define REGISTER_API(decl, func) CHECKED(engine->RegisterGlobalFunction(decl, asMETHOD(QuestManager, func), asCALL_THISCALL_ASGLOBAL, this))
 
-	REGISTER_API("void StartQuest(const string& in)", StartQuest);
+	REGISTER_API("void StartQuest(const string& in)", StartQuestEntry);
 	REGISTER_API("void AddQuestEntry(const string& in)", AddQuestEntry);
 	REGISTER_API("void FinishQuest()", FinishQuest);
 	REGISTER_API("void FailQuest()", FailQuest);
@@ -560,7 +637,7 @@ class Quest
 #undef REGISTER_API
 }
 
-void QuestManager::StartQuest(const string& title)
+void QuestManager::StartQuestEntry(const string& title)
 {
 	QuestInstance* quest = GetCurrentQuest();
 	if(quest->entry)
@@ -728,6 +805,11 @@ void QuestManager::BuildScripts()
 	core::io::WriteStringToFile("debug/scripts.txt", script_code);
 #endif
 
+	// add quest infos
+	for(auto scheme : quest_schemes)
+		quest_infos.push_back({ scheme->id.c_str(), scheme->type, scheme });
+
+	// build scripts
 	auto module = ScriptManager::Get().GetModule();
 
 	module->AddScriptSection("quest script", script_code.c_str());
@@ -786,4 +868,133 @@ void QuestManager::QuestCallback(QuestInstance* quest, delegate<void()> clbk)
 		game.AddGameMsg3(GMS_JOURNAL_UPDATED);
 	}
 	current_quest = nullptr;
+}
+
+AnyQuest QuestManager::FindQuest2(int refid)
+{
+	for(auto quest : quests)
+	{
+		if(quest->refid == refid)
+			return quest;
+	}
+
+	for(auto quest : unaccepted_quests)
+	{
+		if(quest->refid == refid)
+			return quest;
+	}
+
+	for(auto instance : quest_instances)
+	{
+		if(instance->refid == refid)
+			return instance;
+	}
+
+	return nullptr;
+}
+
+void QuestManager::AddQuestInfos()
+{
+	quest_infos.push_back({ "bandits", QuestType::Unique, Q_BANDITS });
+	quest_infos.push_back({ "crazies", QuestType::Unique, Q_CRAZIES });
+	quest_infos.push_back({ "evil", QuestType::Unique, Q_EVIL });
+	quest_infos.push_back({ "goblins", QuestType::Unique, Q_GOBLINS });
+	quest_infos.push_back({ "mages", QuestType::Unique, Q_MAGES });
+	quest_infos.push_back({ "mages2", QuestType::Unique, Q_MAGES2 });
+	quest_infos.push_back({ "mine", QuestType::Unique, Q_MINE });
+	quest_infos.push_back({ "orcs", QuestType::Unique, Q_ORCS });
+	quest_infos.push_back({ "orcs2", QuestType::Unique, Q_ORCS2 });
+	quest_infos.push_back({ "sawmill", QuestType::Unique, Q_SAWMILL });
+
+	quest_infos.push_back({ "bandits_collect_toll", QuestType::Captain, Q_BANDITS_COLLECT_TOLL });
+	quest_infos.push_back({ "camp_near_city", QuestType::Captain, Q_CAMP_NEAR_CITY });
+	quest_infos.push_back({ "rescue_captive", QuestType::Captain, Q_RESCUE_CAPTIVE });
+	quest_infos.push_back({ "kill_animals", QuestType::Captain, Q_KILL_ANIMALS });
+	quest_infos.push_back({ "wanted", QuestType::Captain, Q_WANTED });
+
+	quest_infos.push_back({ "deliver_letter", QuestType::Mayor, Q_DELIVER_LETTER });
+	quest_infos.push_back({ "deliver_parcel", QuestType::Mayor, Q_DELIVER_PARCEL });
+	quest_infos.push_back({ "spread_news", QuestType::Mayor, Q_SPREAD_NEWS });
+	quest_infos.push_back({ "retrive_package", QuestType::Mayor, Q_RETRIEVE_PACKAGE });
+
+	quest_infos.push_back({ "find_artifact", QuestType::Captain, Q_FIND_ARTIFACT });
+	quest_infos.push_back({ "lost_artifact", QuestType::Captain, Q_LOST_ARTIFACT });
+	quest_infos.push_back({ "stolen_artifact", QuestType::Captain, Q_STOLEN_ARTIFACT });
+}
+
+QuestInfo* QuestManager::FindQuestInfo(const string& id)
+{
+	for(auto& info : quest_infos)
+	{
+		if(id == info.id)
+			return &info;
+	}
+
+	return nullptr;
+}
+
+void QuestManager::SetForcedQuest(QuestInfo* quest_info)
+{
+	forced_quest = quest_info;
+}
+
+void QuestManager::LoadRandomQuestInfo()
+{
+	string path = Format("%s/quests.txt", game_loader.system_dir.c_str());
+	Tokenizer t;
+	if(!t.FromFile(path.c_str()))
+	{
+		Error("Failed to load quests from '%s'.", path.c_str());
+		game_loader.errors++;
+		return;
+	}
+
+	t.AddEnums<QuestType>(0, {
+		{"mayor", QuestType::Mayor},
+		{"captain", QuestType::Captain},
+		{"random", QuestType::Random},
+		{"unique", QuestType::Unique}
+	});
+	t.AddKeyword("null", 0, 1);
+
+	try
+	{
+		while(t.Next())
+		{
+			QuestType type = (QuestType)t.MustGetKeywordId(0);
+			if(type == QuestType::Unique)
+				t.Throw("Unique quests can't be used on random quest list.");
+			auto& chances = quest_chance[(int)type];
+			t.Next();
+			t.AssertSymbol('{');
+			t.Next();
+			while(!t.IsSymbol('}'))
+			{
+				int chance = t.MustGetInt();
+				if(chance <= 0)
+					t.Throw("Chance must be larger then 0.");
+				t.Next();
+				if(t.IsKeyword(0, 1)) // null
+				{
+					if(type == QuestType::Random)
+						t.Throw("Null quest for random type is not implemented yet.");
+					chances.Add(AnyQuestInfo(nullptr), chance);
+				}
+				else
+				{
+					auto& id = t.MustGetString();
+					auto quest_info = FindQuestInfo(id);
+					if(!quest_info)
+						t.Throw("Missing quest '%s'.", id.c_str());
+					chances.Add(quest_info->quest, chance);
+				}
+				t.Next();
+			}
+		}
+	}
+	catch(Tokenizer::Exception& e)
+	{
+		Error("Failed to load quests from '%s': %s", path.c_str(), e.ToString());
+		game_loader.errors++;
+	}
 }

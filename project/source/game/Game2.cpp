@@ -4061,28 +4061,10 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 						city_ctx->quest_mayor_time = worldtime;
 						city_ctx->quest_mayor = CityQuestState::InProgress;
 
-						int force = -1;
-						if(DEBUG_BOOL && Key.Focus() && Key.Down('G'))
+						auto quest_info = QuestManager::Get().GetRandomQuest(QuestType::Mayor);
+						if(quest_info)
 						{
-							if(Key.Down('0'))
-								force = 0;
-							else if(Key.Down('1'))
-								force = 1;
-							else if(Key.Down('2'))
-								force = 2;
-							else if(Key.Down('3'))
-								force = 3;
-							else if(Key.Down('4'))
-								force = 4;
-						}
-						Quest* quest = QuestManager::Get().GetMayorQuest(force);
-
-						if(quest)
-						{
-							// add new quest
-							quest->refid = quest_manager.quest_counter++;
-							quest->Start();
-							quest_manager.unaccepted_quests.push_back(quest);
+							auto quest = QuestManager::Get().StartQuest(quest_info);
 							StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_START), if_level, quest);
 						}
 						else
@@ -4140,30 +4122,10 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 						city_ctx->quest_captain_time = worldtime;
 						city_ctx->quest_captain = CityQuestState::InProgress;
 
-						int force = -1;
-						if(DEBUG_BOOL && Key.Focus() && Key.Down('G'))
+						auto quest_info = QuestManager::Get().GetRandomQuest(QuestType::Captain);
+						if(quest_info)
 						{
-							if(Key.Down('0'))
-								force = 0;
-							else if(Key.Down('1'))
-								force = 1;
-							else if(Key.Down('2'))
-								force = 2;
-							else if(Key.Down('3'))
-								force = 3;
-							else if(Key.Down('4'))
-								force = 4;
-							else if(Key.Down('5'))
-								force = 5;
-						}
-						Quest* quest = QuestManager::Get().GetCaptainQuest(force);
-
-						if(quest)
-						{
-							// add new quest
-							quest->refid = quest_manager.quest_counter++;
-							quest->Start();
-							quest_manager.unaccepted_quests.push_back(quest);
+							auto quest = QuestManager::Get().StartQuest(quest_info);
 							StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_START), if_level, quest);
 						}
 						else
@@ -4214,13 +4176,12 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 							else if(Key.Down('3'))
 								force = 3;
 						}
-						Quest* quest = QuestManager::Get().GetAdventurerQuest(force);
 
-						quest->refid = quest_manager.quest_counter++;
-						ctx.talker->quest_refid = quest->refid;
-						quest->Start();
-						quest_manager.unaccepted_quests.push_back(quest);
+						auto quest_info = QuestManager::Get().GetRandomQuest(QuestType::Random);
+						assert(quest_info);
+						auto quest = QuestManager::Get().StartQuest(quest_info);
 						StartNextDialog(ctx, quest->GetGameDialog(QUEST_DIALOG_START), if_level, quest);
+						ctx.talker->quest_refid = quest->refid;
 					}
 					else
 					{

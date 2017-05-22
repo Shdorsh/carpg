@@ -158,6 +158,7 @@
     <ClInclude Include="source\game\Encounter.h" />
     <ClInclude Include="source\game\entity\BloodType.h" />
     <ClInclude Include="source\game\entity\UnitEventHandler.h" />
+    <ClInclude Include="source\game\GameLoader.h" />
     <ClInclude Include="source\game\GameStats.h" />
     <ClInclude Include="source\game\quests\QuestConsts.h" />
     <ClInclude Include="source\game\quests\QuestEntry.h" />

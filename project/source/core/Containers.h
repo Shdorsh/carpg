@@ -774,6 +774,7 @@ inline void LoopAndRemove(vector<T>& items, Action action)
 	items.erase(std::remove_if(items.begin(), items.end(), action), items.end());
 }
 
+// container for item/weight pair
 template<typename T>
 struct WeightPair
 {
@@ -783,6 +784,7 @@ struct WeightPair
 	WeightPair(T& item, int weight) : item(item), weight(weight) {}
 };
 
+// return random item using weighted item pair
 template<typename T>
 inline T& RandomItemWeight(vector<WeightPair<T>>& items, int max_weight)
 {
@@ -796,6 +798,32 @@ inline T& RandomItemWeight(vector<WeightPair<T>>& items, int max_weight)
 	// if it gets here max_count is wrong, return random item
 	return random_item(items).item;
 }
+
+// helper to return random weighted item
+template<typename T>
+class WeightData
+{
+	vector<WeightPair<T>> data;
+	int max;
+
+public:
+	void Add(T item, int weight)
+	{
+		assert(weight > 0);
+		data.push_back({ item, weight });
+		max += weight;
+	}
+
+	T Get()
+	{
+		return RandomItemWeight(data, max);
+	}
+
+	bool IsEmpty() const
+	{
+		return max == 0;
+	}
+};
 
 extern ObjectPool<vector<byte>> BufPool;
 

@@ -13,5 +13,7 @@ public:
 	QuestType type;
 	vector<GameDialog*> dialogs;
 
+	~QuestScheme();
+
 	GameDialog* FindDialog(const string& id);
 };

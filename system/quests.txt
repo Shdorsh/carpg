@@ -1,0 +1,27 @@
+// quests given by city mayor/village soltys
+mayor {
+	3 "deliver_letter"
+	3 "deliver_parcel"
+	2 "spread_news"
+	2 "retrive_package"
+	2 null
+}
+
+// quests given by guard captain near barracks
+captain {
+	2 "rescue_captive"
+	2 "bandits_collect_toll"
+	2 "camp_near_city"
+	2 "kill_animals"
+	2 "wanted"
+	1 null
+}
+
+// quests given by traveler in inn
+// currently traveler spawns always in city, 50% chance in village
+// null not implemented
+random {
+	1 "find_artifact"
+	1 "lost_artifact"
+	1 "stolen_artifact"
+}

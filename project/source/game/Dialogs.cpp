@@ -634,7 +634,7 @@ void GameDialogManager::LoadDialogTexts()
 			{
 				t.Next();
 
-				if(!LoadDialogText())
+				if(!LoadDialogText(t))
 				{
 					skip = true;
 					++errors;
@@ -663,7 +663,7 @@ void GameDialogManager::LoadDialogTexts()
 }
 
 //=================================================================================================
-bool GameDialogManager::LoadDialogText()
+bool GameDialogManager::LoadDialogText(Tokenizer& t)
 {
 	GameDialog* dialog = nullptr;
 
