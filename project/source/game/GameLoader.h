@@ -3,7 +3,7 @@
 struct GameLoader
 {
 	string system_dir;
-	uint errors;
+	uint errors, warnings;
 };
 
 extern GameLoader game_loader;

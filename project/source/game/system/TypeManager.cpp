@@ -451,7 +451,7 @@ void TypeManager::LoadStrings(cstring filename)
 			Type& type = GetType((TypeId)id);
 
 			bool ok;
-			if(type.localized_fields.empty())
+			if(type.localized_fields.empty() && !type.localization_handler)
 			{
 				ERROR(Format("TypeManager: Type '%s' don't have any localized fields.", type.token.c_str()));
 				t.Next();
@@ -502,6 +502,12 @@ bool TypeManager::LoadStringsImpl(Type& type)
 			return false;
 		}
 		t.Next();
+
+		if(type.localization_handler)
+		{
+			type.localization_handler->LoadStrings(t, proxy.item);
+			return true;
+		}
 		
 		uint set_fields = 0;
 		if(t.IsSymbol('='))

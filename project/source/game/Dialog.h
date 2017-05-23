@@ -64,6 +64,7 @@ struct Unit;
 struct Quest;
 struct Item;
 struct PlayerController;
+class QuestScheme;
 
 //-----------------------------------------------------------------------------
 struct News
@@ -134,15 +135,22 @@ class GameDialogManager : public Singleton<GameDialogManager>
 {
 public:
 	void Cleanup();
+	// load all dialogs (from system/dialogs.txt)
 	uint LoadDialogs(uint& errors);
+	// load single dialog - used in dialog quest (system/types/quests.txt)
+	// passed tokenizer is only used from string/position
 	GameDialog* LoadDialog(Tokenizer& t);
+	// load all dialogs text (from system/lang/*/dialogs.txt)
 	void LoadDialogTexts();
+	// load single dialog text - used in dialog text (system/lang/*/types/quests.txt)
+	bool LoadDialogText(Tokenizer& t, QuestScheme* quest_scheme);
+	// find dialog by id
 	GameDialog* FindDialog(cstring id);
 
 private:
 	void InitTokenizer();
 	GameDialog* LoadDialog();
-	bool LoadDialogText(Tokenizer& t);
+	bool LoadDialogTextImpl(Tokenizer& t, QuestScheme* quest_scheme);
 
 	typedef std::map<cstring, GameDialog*, CstringComparer> DialogsMap;
 	DialogsMap dialogs;

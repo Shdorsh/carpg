@@ -1,6 +1,7 @@
 #include "Pch.h"
 #include "Base.h"
 #include "Dialog.h"
+#include "GameLoader.h"
 #include "QuestManager.h"
 #include "QuestScheme.h"
 #include "TypeVectorContainer.h"
@@ -82,6 +83,57 @@ public:
 	}
 };
 
+class QuestSchemeLocalizationHandler : public Type::CustomLocalizationHandler
+{
+public:
+	Tokenizer t;
+	string id;
+
+	QuestSchemeLocalizationHandler()
+	{
+		t.AddKeyword("dialog", 0);
+	}
+
+	void LoadStrings(Tokenizer& in_t, TypeItem* item) override
+	{
+		auto& quest_scheme = item->To<QuestScheme>();
+
+		t.FromTokenizer(in_t);
+		t.Next();
+
+		while(!t.IsSymbol('}'))
+		{
+			if(t.IsKeyword(0))
+			{
+				t.Next();
+				GameDialogManager::Get().LoadDialogText(t, &quest_scheme);
+				continue;
+			}
+			else if(t.IsString())
+			{
+				id = t.GetString();
+				t.Next();
+				t.AssertSymbol('=');
+				t.Next();
+				const string& text = t.MustGetString();
+				std::pair<LanguageMap::iterator, bool> const& r = quest_scheme.strs.insert(LanguageMap::value_type(id, text));
+				if(!r.second)
+				{
+					WARN(Format("Quest '%s' string '%s' already exists: \"%s\"; new text: \"%s\".",
+						quest_scheme.id.c_str(), id.c_str(), r.first->second.c_str(), text.c_str()));
+					++game_loader.warnings;
+				}
+				t.Next();
+			}
+			else
+				t.Unexpected("dialog keyword or string");
+		}
+
+		t.Next();
+		in_t.FromTokenizer(t);
+	}
+};
+
 class QuestSchemeHandler : public TypeImpl<QuestScheme>
 {
 public:
@@ -102,6 +154,7 @@ public:
 		AddCustomField("code", new QuestSchemeCodeHandler)
 			.NotRequired()
 			.AllowMultiple();
+		SetCustomLocalizationHandler(new QuestSchemeLocalizationHandler);
 
 		container = new TypeVectorContainer(this, QuestManager::Get().quest_schemes);
 	}

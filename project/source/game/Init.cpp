@@ -62,6 +62,7 @@ void Game::PreconfigureGame()
 
 	game_loader.system_dir = g_system_dir;
 	game_loader.errors = 0;
+	game_loader.warnings = 0;
 
 	// set default render states
 	V(device->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD));

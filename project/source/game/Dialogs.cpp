@@ -2,8 +2,8 @@
 #include "Base.h"
 #include "Dialog.h"
 #include "Game.h"
-#include "Crc.h"
 #include "QuestManager.h"
+#include "QuestScheme.h"
 
 extern string g_system_dir;
 extern string g_lang_prefix;
@@ -634,7 +634,7 @@ void GameDialogManager::LoadDialogTexts()
 			{
 				t.Next();
 
-				if(!LoadDialogText(t))
+				if(!LoadDialogTextImpl(t, nullptr))
 				{
 					skip = true;
 					++errors;
@@ -663,14 +663,34 @@ void GameDialogManager::LoadDialogTexts()
 }
 
 //=================================================================================================
-bool GameDialogManager::LoadDialogText(Tokenizer& t)
+bool GameDialogManager::LoadDialogText(Tokenizer& t, QuestScheme* quest_scheme)
+{
+	auto pos = t.GetPos();
+	auto result = LoadDialogTextImpl(t, quest_scheme);
+	if(!result)
+	{
+		t.MoveTo(pos);
+		t.Next();
+		if(t.IsSymbol('{'))
+			t.ForceMoveToClosingSymbol('{');
+		return false;
+	}
+	else
+		return true;
+}
+
+//=================================================================================================
+bool GameDialogManager::LoadDialogTextImpl(Tokenizer& t, QuestScheme* quest_scheme)
 {
 	GameDialog* dialog = nullptr;
 
 	try
 	{
 		const string& id = t.MustGetItemKeyword();
-		dialog = FindDialog(id.c_str());
+		if(quest_scheme)
+			dialog = quest_scheme->FindDialog(id);
+		else
+			dialog = FindDialog(id.c_str());
 		if(!dialog)
 			t.Throw("Missing dialog '%s'.", id.c_str());
 		
@@ -738,10 +758,14 @@ bool GameDialogManager::LoadDialogText(Tokenizer& t)
 	}
 	catch(Tokenizer::Exception& e)
 	{
+		string err = "Failed to load ";
+		if(quest_scheme)
+			err += Format("quest '%s' ", quest_scheme->id.c_str());
+		err += "dialog ";
 		if(dialog)
-			ERROR(Format("Failed to load dialog '%s' texts: %s", dialog->id.c_str(), e.ToString()));
-		else
-			ERROR(Format("Failed to load dialog texts: %s", e.ToString()));
+			err += Format("'%s' ", dialog->id.c_str());
+		err + Format("texts: %s", e.ToString());
+		ERROR(err.c_str());
 		return false;
 	}
 }

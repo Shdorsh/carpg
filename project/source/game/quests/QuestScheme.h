@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Language.h"
 #include "QuestConsts.h"
 #include "TypeItem.h"
 
@@ -12,6 +13,7 @@ public:
 	vector<string> progress;
 	QuestType type;
 	vector<GameDialog*> dialogs;
+	LanguageMap strs;
 
 	~QuestScheme();
 

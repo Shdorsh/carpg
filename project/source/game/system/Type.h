@@ -93,6 +93,13 @@ public:
 		virtual bool Compare(TypeItem* item1, TypeItem* item2, uint offset) = 0;
 		virtual void Copy(TypeItem* from, TypeItem* to, uint offset) = 0;
 	};
+
+	class CustomLocalizationHandler
+	{
+	public:
+		virtual ~CustomLocalizationHandler() {}
+		virtual void LoadStrings(Tokenizer& t, TypeItem* item) = 0;
+	};
 	
 	class Field
 	{
@@ -260,7 +267,6 @@ public:
 	Field& AddItemList(cstring name, uint offset);
 	void AddLocalizedString(cstring name, uint offset, bool required = true);
 
-
 	// called after loading everything
 	virtual void AfterLoad() {}
 	// called at start of loading single item
@@ -292,6 +298,9 @@ public:
 	TypeId GetTypeId() { return type_id; }
 	void HaveCustomCrc() { custom_crc = true; }
 
+	void SetCustomLocalizationHandler(CustomLocalizationHandler* handler) { localization_handler = handler; }
+	CustomLocalizationHandler* GetCustomLocalizationHandler() const { return localization_handler; }
+
 protected:
 	void CalculateCrc();
 	void DeleteContainer();
@@ -299,6 +308,7 @@ protected:
 	TypeId type_id;
 	string token, name, group_name, file_group;
 	Container* container;
+	CustomLocalizationHandler* localization_handler;
 	vector<Field*> fields;
 	vector<LocalizedField*> localized_fields;
 	vector<TypeId> depends_on;
