@@ -31,7 +31,7 @@ public:
 	bool OnTimeout(TimeoutType ttype);
 	bool IfNeedTalk(cstring topic) const;
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 
 private:
 	vector<Entry> entries;

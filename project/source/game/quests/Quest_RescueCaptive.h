@@ -31,7 +31,7 @@ public:
 	void HandleUnitEvent(UnitEventHandler::TYPE event_type, Unit* unit);
 	bool IfNeedTalk(cstring topic) const;
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 	int GetUnitEventHandlerQuestRefid() { return refid; }
 
 private:

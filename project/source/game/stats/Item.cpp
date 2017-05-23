@@ -1408,12 +1408,18 @@ static bool LoadAlias(Tokenizer& t, CRC32& crc)
 		t.Next();
 
 		const string& id = t.MustGetItemKeyword();
-		ItemListResult result;
-		const Item* item = FindItem(id.c_str(), false, &result);
-		if(!item)
-			t.Throw("Missing item '%s'.", id.c_str());
-		if(result.lis)
-			t.Throw("Item '%s' is list.", id.c_str());
+		const Item* item;
+		if(id == "null")
+			item = nullptr;
+		else
+		{
+			ItemListResult result;
+			const Item* item = FindItem(id.c_str(), false, &result);
+			if(!item)
+				t.Throw("Missing item '%s'.", id.c_str());
+			if(result.lis)
+				t.Throw("Item '%s' is list.", id.c_str());
+		}
 		crc.Update(id);
 		t.Next();
 

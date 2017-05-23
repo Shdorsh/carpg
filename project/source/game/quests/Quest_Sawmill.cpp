@@ -160,7 +160,7 @@ void Quest_Sawmill::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_Sawmill::Load(HANDLE file)
+bool Quest_Sawmill::Load(HANDLE file)
 {
 	Quest_Dungeon::Load(file);
 
@@ -177,6 +177,8 @@ void Quest_Sawmill::Load(HANDLE file)
 		if(sawmill_state != State::None && build_state != BuildState::Finished)
 			f >> hd_lumberjack;
 	}
+
+	return true;
 }
 
 //=================================================================================================

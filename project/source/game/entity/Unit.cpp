@@ -1493,7 +1493,7 @@ void Unit::Load(HANDLE file, bool local)
 	ReadFile(file, &assist, sizeof(assist), &tmp, nullptr);
 
 	// auto talking
-	if(LOAD_VERSION >= V_CURRENT)
+	if(LOAD_VERSION >= V_0_4)
 	{
 		f >> auto_talk;
 		if(auto_talk != AutoTalkMode::No)

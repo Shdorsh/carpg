@@ -71,7 +71,7 @@ public:
 		return refid;
 	}
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 	void LoadOld(HANDLE file);
 
 	int GetIncome(int days_passed);

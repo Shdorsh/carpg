@@ -24,7 +24,6 @@ item q_magowie_kula
 item beer
 item vodka
 item q_magowie_potion
-item q_main_letter
 item key_kopalnia
 item al_angelskin
 item q_orkowie_klucz

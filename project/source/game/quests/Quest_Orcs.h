@@ -33,7 +33,7 @@ public:
 	bool IfSpecial(DialogContext& ctx, cstring msg);
 	void HandleLocationEvent(LocationEventHandler::Event event);
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 	int GetLocationEventHandlerQuestRefid()
 	{
 		return refid;
@@ -115,7 +115,7 @@ public:
 	int GetUnitEventHandlerQuestRefid() { return refid; }
 	int GetLocationEventHandlerQuestRefid() { return refid; }
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 	void LoadOld(HANDLE file);
 
 	OrcClass GetOrcClass() const { return orc_class; }

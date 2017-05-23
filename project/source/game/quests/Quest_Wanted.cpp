@@ -246,7 +246,7 @@ void Quest_Wanted::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_Wanted::Load(HANDLE file)
+bool Quest_Wanted::Load(HANDLE file)
 {
 	Quest_Dungeon::Load(file);
 
@@ -284,4 +284,6 @@ void Quest_Wanted::Load(HANDLE file)
 
 	if(game->mp_load)
 		game->Net_RegisterItem(&letter, base_item);
+
+	return true;
 }

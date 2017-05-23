@@ -239,7 +239,7 @@ void Quest_DeliverParcel::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_DeliverParcel::Load(HANDLE file)
+bool Quest_DeliverParcel::Load(HANDLE file)
 {
 	Quest_Encounter::Load(file);
 
@@ -273,4 +273,6 @@ void Quest_DeliverParcel::Load(HANDLE file)
 		e->timed = true;
 		e->location_event_handler = nullptr;
 	}
+
+	return true;
 }

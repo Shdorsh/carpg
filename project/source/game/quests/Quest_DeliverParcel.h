@@ -29,7 +29,7 @@ public:
 	bool IfHaveQuestItem() const;
 	const Item* GetQuestItem();
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 
 private:
 	int end_loc;

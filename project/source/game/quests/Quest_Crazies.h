@@ -30,7 +30,7 @@ public:
 	cstring FormatString(const string& str);
 	bool IfNeedTalk(cstring topic) const;
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 	void LoadOld(HANDLE file);
 
 	State crazies_state;

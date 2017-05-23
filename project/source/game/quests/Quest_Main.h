@@ -4,12 +4,7 @@
 #include "Quest.h"
 
 //-----------------------------------------------------------------------------
-/*
-1. start in city with messagebox
-2. go & talk with city mayor
-3. this will reveal location near other city
-4. trying enter there shows messagebox that it's incomplete
-*/
+// removed in 0.10
 class Quest_Main : public Quest
 {
 public:
@@ -19,14 +14,9 @@ public:
 		TalkedWithMayor
 	};
 
-	int target_loc, close_loc;
-	float timer;
-
-	void Start();
-	cstring GetDialog(int type2);
-	void SetProgress(int prog2);
-	cstring FormatString(const string& str);
-	bool IfNeedTalk(cstring topic) const;
-	void Save(HANDLE file);
-	void Load(HANDLE file);
+	void Start() override;
+	cstring GetDialog(int type2) override;
+	void SetProgress(int prog2) override;
+	cstring FormatString(const string& str) override;
+	bool Load(HANDLE file) override;
 };

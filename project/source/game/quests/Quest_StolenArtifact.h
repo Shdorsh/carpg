@@ -24,7 +24,7 @@ public:
 	bool IfHaveQuestItem2(cstring id) const;
 	const Item* GetQuestItem();
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 
 private:
 	const Item* item;

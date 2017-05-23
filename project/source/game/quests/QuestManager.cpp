@@ -452,8 +452,10 @@ void QuestManager::LoadQuests(HANDLE file, vector<Quest*>& quests)
 
 		Quest* quest = CreateQuest(quest_type);
 		quest->quest_id = quest_type;
-		quest->Load(file);
-		quests[i] = quest;
+		if(quest->Load(file))
+			quests[i] = quest;
+		else
+			delete quest;
 	}
 }
 
@@ -997,4 +999,10 @@ void QuestManager::LoadRandomQuestInfo()
 		Error("Failed to load quests from '%s': %s", path.c_str(), e.ToString());
 		game_loader.errors++;
 	}
+}
+
+void QuestManager::RemoveQuestEntry(QuestEntry* entry)
+{
+	assert(entry);
+	DeleteElement(quest_entries, entry);
 }

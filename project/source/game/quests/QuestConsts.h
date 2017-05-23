@@ -38,7 +38,7 @@ enum QUEST
 	Q_FIND_ARTIFACT,
 	Q_CRAZIES,
 	Q_WANTED,
-	Q_MAIN,
+	Q_MAIN, // removed in 0.10
 	Q_NONE = -1
 };
 

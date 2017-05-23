@@ -103,7 +103,7 @@ void Quest_Crazies::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_Crazies::Load(HANDLE file)
+bool Quest_Crazies::Load(HANDLE file)
 {
 	Quest_Dungeon::Load(file);
 
@@ -115,6 +115,8 @@ void Quest_Crazies::Load(HANDLE file)
 		f >> days;
 		f >> check_stone;
 	}
+
+	return true;
 }
 
 //=================================================================================================

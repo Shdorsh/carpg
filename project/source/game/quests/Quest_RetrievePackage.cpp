@@ -196,7 +196,7 @@ void Quest_RetrievePackage::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_RetrievePackage::Load(HANDLE file)
+bool Quest_RetrievePackage::Load(HANDLE file)
 {
 	Quest_Dungeon::Load(file);
 
@@ -219,4 +219,6 @@ void Quest_RetrievePackage::Load(HANDLE file)
 		unit_spawn_level = -3;
 		spawn_item = Quest_Dungeon::Item_GiveSpawned;
 	}
+
+	return true;
 }

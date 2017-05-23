@@ -210,7 +210,7 @@ void Quest_Orcs::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_Orcs::Load(HANDLE file)
+bool Quest_Orcs::Load(HANDLE file)
 {
 	Quest_Dungeon::Load(file);
 
@@ -229,6 +229,8 @@ void Quest_Orcs::Load(HANDLE file)
 		unit_spawn_level2 = -3;
 		spawn_unit_room = RoomTarget::Prison;
 	}
+
+	return true;
 }
 
 //=================================================================================================
@@ -651,7 +653,7 @@ void Quest_Orcs2::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_Orcs2::Load(HANDLE file)
+bool Quest_Orcs2::Load(HANDLE file)
 {
 	Quest_Dungeon::Load(file);
 
@@ -683,6 +685,8 @@ void Quest_Orcs2::Load(HANDLE file)
 			callback = WarpToThroneOrcBoss;
 		}
 	}
+
+	return true;
 }
 
 //=================================================================================================

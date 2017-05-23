@@ -1,123 +1,44 @@
 #include "Pch.h"
 #include "Base.h"
 #include "Quest_Main.h"
-#include "Dialog.h"
-#include "Game.h"
 #include "QuestManager.h"
-#include "Team.h"
+
+// removed in 0.10
 
 //=================================================================================================
 void Quest_Main::Start()
 {
-	quest_id = Q_MAIN;
-	type = QuestType::Unique;
-	timer = 0.f;
+	assert(0);
 }
 
 //=================================================================================================
 cstring Quest_Main::GetDialog(int type2)
 {
-	return "q_dialog_main";
+	assert(0);
+	return nullptr;
 }
 
 //=================================================================================================
 void Quest_Main::SetProgress(int prog2)
 {
-	prog = prog2;
-
-	switch(prog)
-	{
-	case Progress::Started:
-		{
-			//StartQuest(game->txQuest[269]);
-
-#ifndef _DEBUG
-			GUI.SimpleDialog(game->txQuest[270], nullptr);
-#endif
-
-			// to delete
-			//msgs.push_back(Format(game->txQuest[170], game->day + 1, game->month + 1, game->year));
-			//msgs.push_back(Format(game->txQuest[267], GetStartLocationName()));
-
-			quest_manager.quests.push_back(this);
-			RemoveElement<Quest*>(quest_manager.unaccepted_quests, this);
-		}
-		break;
-	case Progress::TalkedWithMayor:
-		{
-			game->AddGold(75 + 25 * Team.GetActiveTeamSize(), nullptr, true);
-			const Item* letter = FindItem("q_main_letter");
-			game->current_dialog->pc->unit->AddItem(letter, 1, true);
-
-			close_loc = game->GetRandomCity(start_loc);
-			Location& close = *game->locations[close_loc];
-			target_loc = game->CreateLocation(L_ACADEMY, close.pos, 64.f, -1, SG_LOSOWO, false);
-			Location& target = *game->locations[target_loc];
-			target.state = LS_KNOWN;
-			//msgs.push_back(Format(game->txQuest[268], GetLocationDirName(close.pos, target.pos), close.name.c_str()));
-
-			if(game->IsOnline())
-			{
-				game->Net_ChangeLocationState(target_loc, false);
-				if(!game->current_dialog->is_local)
-				{
-					game->Net_AddItem(game->current_dialog->pc, letter, true);
-					game->Net_AddedItemMsg(game->current_dialog->pc);
-				}
-				else
-					game->AddGameMsg3(GMS_ADDED_ITEM);
-			}
-			else
-				game->AddGameMsg3(GMS_ADDED_ITEM);
-		}
-		break;
-	}
+	assert(0);
 }
 
 //=================================================================================================
 cstring Quest_Main::FormatString(const string& str)
 {
-	if(str == "player_name")
-		return game->current_dialog->pc->name.c_str();
-	else if(str == "target_dir")
-		return GetLocationDirName(game->locations[close_loc]->pos, game->locations[target_loc]->pos);
-	else if(str == "close_name")
-		return game->locations[close_loc]->name.c_str();
-	else
-	{
-		assert(0);
-		return nullptr;
-	}
+	assert(0);
+	return nullptr;
 }
 
 //=================================================================================================
-bool Quest_Main::IfNeedTalk(cstring topic) const
-{
-	return strcmp(topic, "main") == 0;
-}
-
-//=================================================================================================
-void Quest_Main::Save(HANDLE file)
-{
-	Quest::Save(file);
-
-	FileWriter f(file);
-
-	if(prog == Progress::TalkedWithMayor)
-	{
-		f << close_loc;
-		f << target_loc;
-	}
-	else
-		f << timer;
-}
-
-//=================================================================================================
-void Quest_Main::Load(HANDLE file)
+bool Quest_Main::Load(HANDLE file)
 {
 	Quest::Load(file);
 
 	FileReader f(file);
+	int target_loc, close_loc;
+	float timer;
 
 	if(prog == Progress::TalkedWithMayor)
 	{
@@ -126,4 +47,9 @@ void Quest_Main::Load(HANDLE file)
 	}
 	else
 		f >> timer;
+
+	if(entry)
+		QuestManager::Get().RemoveQuestEntry(entry);
+
+	return false;
 }

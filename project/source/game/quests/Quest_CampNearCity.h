@@ -25,7 +25,7 @@ public:
 	void HandleLocationEvent(LocationEventHandler::Event event);
 	bool IfNeedTalk(cstring topic) const;
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 	int GetLocationEventHandlerQuestRefid()
 	{
 		return refid;

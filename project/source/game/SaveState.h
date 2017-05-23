@@ -1,8 +1,13 @@
 #pragma once
 
+// Changing item weight/cost, removing items require increasing version number
+// otherwise theses values are not recalculated!
+
 enum SAVE_VERSION
 {
+	// unsupported versions
 	V_0_2 = 0, // 0.2/0.2.1
+
 	V_0_2_5 = 1, // 0.2.5
 	V_0_2_10 = 2, // 0.2.10
 	V_0_2_12 = 3, // 0.2.12
@@ -18,3 +23,4 @@ enum SAVE_VERSION
 extern const int SAVE_VERSION;
 extern int LOAD_VERSION;
 extern const INT2 SUPPORT_LOAD_VERSION;
+extern bool LOAD_LAST_VERSION;

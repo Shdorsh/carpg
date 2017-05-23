@@ -36,7 +36,7 @@ public:
 	bool IfNeedTalk(cstring topic) const;
 	void Special(DialogContext& ctx, cstring msg);
 	bool IfSpecial(DialogContext& ctx, cstring msg);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 };
 
 //-----------------------------------------------------------------------------
@@ -103,7 +103,7 @@ public:
 	void HandleUnitEvent(UnitEventHandler::TYPE event_type, Unit* unit);
 	int GetUnitEventHandlerQuestRefid() { return refid; }
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 	void LoadOld(HANDLE file);
 
 	Talked talked;

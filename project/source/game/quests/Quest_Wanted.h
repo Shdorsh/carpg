@@ -26,7 +26,7 @@ public:
 	bool OnTimeout(TimeoutType ttype);
 	void HandleUnitEvent(UnitEventHandler::TYPE event_type, Unit* unit);
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 	int GetUnitEventHandlerQuestRefid()
 	{
 		return refid;

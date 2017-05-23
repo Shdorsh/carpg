@@ -364,7 +364,7 @@ void Quest_Bandits::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_Bandits::Load(HANDLE file)
+bool Quest_Bandits::Load(HANDLE file)
 {
 	Quest_Dungeon::Load(file);
 
@@ -412,6 +412,8 @@ void Quest_Bandits::Load(HANDLE file)
 		unit_auto_talk = true;
 		callback = WarpToThroneBanditBoss;
 	}
+
+	return true;
 }
 
 //=================================================================================================

@@ -28,7 +28,7 @@ void Quest::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest::Load(HANDLE file)
+bool Quest::Load(HANDLE file)
 {
 	// skip quest_id, it was read before calling this function
 	//ReadFile(file, &quest_id, sizeof(quest_id), &tmp, nullptr);
@@ -99,6 +99,8 @@ void Quest::Load(HANDLE file)
 		ReadFile(file, &timeout, sizeof(timeout), &tmp, nullptr);
 	else
 		timeout = false;
+
+	return true;
 }
 
 //=================================================================================================
@@ -139,7 +141,7 @@ void Quest_Dungeon::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_Dungeon::Load(HANDLE file)
+bool Quest_Dungeon::Load(HANDLE file)
 {
 	Quest::Load(file);
 
@@ -155,6 +157,8 @@ void Quest_Dungeon::Load(HANDLE file)
 		if(loc->outside)
 			at_level = -1;
 	}
+
+	return true;
 }
 
 //=================================================================================================
@@ -290,9 +294,11 @@ void Quest_Encounter::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_Encounter::Load(HANDLE file)
+bool Quest_Encounter::Load(HANDLE file)
 {
 	Quest::Load(file);
 
 	ReadFile(file, &enc, sizeof(enc), &tmp, nullptr);
+
+	return true;
 }

@@ -24,7 +24,7 @@ public:
 	bool OnTimeout(TimeoutType ttype);
 	void HandleLocationEvent(LocationEventHandler::Event event);
 	bool IfNeedTalk(cstring topic) const;
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 	int GetLocationEventHandlerQuestRefid()
 	{
 		return refid;

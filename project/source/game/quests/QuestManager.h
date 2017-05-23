@@ -110,6 +110,7 @@ public:
 	QuestInfo* FindQuestInfo(const string& id);
 	void SetForcedQuest(QuestInfo* quest_info);
 	void LoadRandomQuestInfo();
+	void RemoveQuestEntry(QuestEntry* entry);
 
 	vector<Quest*> unaccepted_quests;
 	vector<Quest*> quests;

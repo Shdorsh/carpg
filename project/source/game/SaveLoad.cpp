@@ -677,6 +677,7 @@ void Game::LoadGame(HANDLE file)
 		uint build;
 		f >> build;
 	}
+	LOAD_LAST_VERSION = (LOAD_VERSION == V_CURRENT);
 
 	// start version
 	if(LOAD_VERSION >= V_0_4)

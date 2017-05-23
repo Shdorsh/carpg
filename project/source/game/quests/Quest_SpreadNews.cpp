@@ -222,7 +222,7 @@ void Quest_SpreadNews::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_SpreadNews::Load(HANDLE file)
+bool Quest_SpreadNews::Load(HANDLE file)
 {
 	Quest::Load(file);
 
@@ -233,4 +233,6 @@ void Quest_SpreadNews::Load(HANDLE file)
 		entries.resize(count);
 		ReadFile(file, &entries[0], sizeof(Entry)*count, &tmp, nullptr);
 	}
+
+	return true;
 }

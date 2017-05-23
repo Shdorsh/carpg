@@ -2553,7 +2553,7 @@ alias p_antimagic potion_antimagic
 alias p_str potion_str
 alias p_end potion_end
 alias p_dex potion_dex
-// renamed items in 0.5
+// renamed items in 0.10
 alias blacksmith_hammer blunt_blacksmith
 alias water potion_water
 alias water p_water
@@ -2575,3 +2575,5 @@ alias emerald vs_emerald
 alias ruby vs_ruby
 alias diamond vs_diamond
 alias krystal vs_krystal
+// removed in 0.10
+alias null q_main_letter

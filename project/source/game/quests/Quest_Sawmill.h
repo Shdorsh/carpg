@@ -42,7 +42,7 @@ public:
 	void HandleLocationEvent(LocationEventHandler::Event event);
 	int GetLocationEventHandlerQuestRefid() { return refid; }
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 	void LoadOld(HANDLE file);
 
 	State sawmill_state;

@@ -45,7 +45,7 @@ public:
 	void HandleLocationEvent(LocationEventHandler::Event event);
 	void HandleUnitEvent(UnitEventHandler::TYPE event, Unit* unit);
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
 	void LoadOld(HANDLE file);
 	int GetUnitEventHandlerQuestRefid()
 	{

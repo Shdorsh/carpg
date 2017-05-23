@@ -252,7 +252,7 @@ void Quest_StolenArtifact::Save(HANDLE file)
 }
 
 //=================================================================================================
-void Quest_StolenArtifact::Load(HANDLE file)
+bool Quest_StolenArtifact::Load(HANDLE file)
 {
 	Quest_Dungeon::Load(file);
 
@@ -270,4 +270,6 @@ void Quest_StolenArtifact::Load(HANDLE file)
 
 	if(game->mp_load)
 		game->Net_RegisterItem(&quest_item, item);
+
+	return true;
 }

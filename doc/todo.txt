@@ -1,5 +1,10 @@
-﻿++ fixed quest timeouts not sent in multiplayer
+﻿! fix old V_CURRENT
+! load item nullts, recalculate weight/value, sort
+
+++ fixed quest timeouts not sent in multiplayer
 ? test "list quest"
+? test loading removed Q_MAIN
++ remove q_main_letter at loading, from items.txt
 
 + remove Engine SW_HIDE
 - Quest_DeliverNews timeout is removed at first person told too, not when talked to all
@@ -42,6 +47,10 @@ FAR FAR TODO:
 	+ change tab text
 	+ drag & drop
 	+ context menu FEATURE
+
+COMPABILITY TO REMOVE:
+pre 0.10:
+Quest_Main
 
 ZNANE BŁEDY:
 - wyszukiwanie ścieżek ai nie działa zbyt dobrze i mogą się zablokować
