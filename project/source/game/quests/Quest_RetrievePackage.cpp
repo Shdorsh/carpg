@@ -55,7 +55,7 @@ void Quest_RetrievePackage::SetProgress(int prog2)
 
 			cstring who = (LocationHelper::IsCity(loc) ? game->txForMayor : game->txForSoltys);
 
-			const Item* base_item = FindItem("parcel");
+			const Item* base_item = content::GetItem("parcel");
 			CreateItemCopy(parcel, base_item);
 			parcel.id = "$stolen_parcel";
 			parcel.name = Format(game->txQuest[8], who, loc.name.c_str());
@@ -204,7 +204,7 @@ bool Quest_RetrievePackage::Load(HANDLE file)
 	{
 		ReadFile(file, &from_loc, sizeof(from_loc), &tmp, nullptr);
 
-		const Item* base_item = FindItem("parcel");
+		const Item* base_item = content::GetItem("parcel");
 		Location& loc = *game->locations[start_loc];
 		CreateItemCopy(parcel, base_item);
 		parcel.id = "$stolen_parcel";

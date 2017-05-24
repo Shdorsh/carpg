@@ -15,5 +15,6 @@ struct GroundItem
 	static const int MIN_SIZE = 23;
 
 	void Save(HANDLE file);
-	void Load(HANDLE file);
+	bool Load(HANDLE file);
+	static void Load(HANDLE file, vector<GroundItem*>& items);
 };

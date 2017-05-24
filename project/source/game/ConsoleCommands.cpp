@@ -351,7 +351,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 					if(t.Next())
 					{
 						const string& item_name = t.MustGetItem();
-						const Item* item = FindItem(item_name.c_str());
+						const Item* item = content::FindItem(item_name.c_str(), false);
 						if(!item || IS_SET(item->flags, ITEM_SECRET))
 							MSG(Format("Can't find item with id '%s'!", item_name.c_str()));
 						else
@@ -385,7 +385,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 					if(t.Next())
 					{
 						const string& item_name = t.MustGetItem();
-						const Item* item = FindItem(item_name.c_str());
+						const Item* item = content::FindItem(item_name.c_str(), false);
 						if(!item || IS_SET(item->flags, ITEM_SECRET))
 							MSG(Format("Can't find item with id '%s'!", item_name.c_str()));
 						else

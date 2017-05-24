@@ -945,7 +945,7 @@ void Game::LoadGame(HANDLE file)
 		chest_food_seller.clear();
 
 	// vars
-	if(LOAD_VERSION < V_0_10)
+	if(LOAD_VERSION < V_CURRENT)
 	{
 		bool used_cheats;
 		f >> used_cheats;
@@ -1447,7 +1447,7 @@ void Game::LoadStock(HANDLE file, vector<ItemSlot>& cnt)
 			ReadFile(file, BUF, len, &tmp, nullptr);
 			ReadFile(file, &it->count, sizeof(it->count), &tmp, nullptr);
 			if(BUF[0] != '$')
-				it->item = FindItem(BUF);
+				it->item = content::FindItem(BUF);
 			else
 			{
 				int quest_refid;
@@ -1464,12 +1464,23 @@ void Game::LoadStock(HANDLE file, vector<ItemSlot>& cnt)
 			it->count = 0;
 		}
 	}
-	
-	if(can_sort && LOAD_VERSION < V_0_2_20 && !cnt.empty())
+
+	if(can_sort)
 	{
-		if(LOAD_VERSION < V_0_2_10)
-			RemoveNullItems(cnt);
-		SortItems(cnt);
+		if(LOAD_VERSION >= V_CURRENT)
+		{
+			if(!LOAD_LAST_VERSION)
+			{
+				RemoveNullItems(cnt);
+				SortItems(cnt);
+			}
+		}
+		else if(LOAD_VERSION < V_0_2_20 && !cnt.empty())
+		{
+			if(LOAD_VERSION < V_0_2_10)
+				RemoveNullItems(cnt);
+			SortItems(cnt);
+		}
 	}
 }
 

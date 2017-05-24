@@ -54,7 +54,7 @@ void Quest_Mages::SetProgress(int prog2)
 			}
 			
 			at_level = tl.GetLastLevel();
-			item_to_give[0] = FindItem("q_magowie_kula");
+			item_to_give[0] = content::GetItem("q_magowie_kula");
 			spawn_item = Quest_Event::Item_InTreasure;
 
 			quest_manager.quests.push_back(this);
@@ -69,7 +69,7 @@ void Quest_Mages::SetProgress(int prog2)
 		break;
 	case Progress::Finished:
 		{
-			const Item* item = FindItem("q_magowie_kula");
+			const Item* item = content::GetItem("q_magowie_kula");
 			game->current_dialog->talker->AddItem(item, 1, true);
 			game->RemoveItem(*game->current_dialog->pc->unit, item, 1);
 			game->quest_mages2->scholar = game->current_dialog->talker;
@@ -163,7 +163,7 @@ bool Quest_Mages::Load(HANDLE file)
 
 	if(!done)
 	{
-		item_to_give[0] = FindItem("q_magowie_kula");
+		item_to_give[0] = content::GetItem("q_magowie_kula");
 		spawn_item = Quest_Event::Item_InTreasure;
 	}
 
@@ -222,7 +222,7 @@ void Quest_Mages2::SetProgress(int prog2)
 	case Progress::MageWantsVodka:
 		// daj piwo, chce wódy
 		{
-			const Item* piwo = FindItem("beer");
+			const Item* piwo = content::GetItem("beer");
 			game->RemoveItem(*game->current_dialog->pc->unit, piwo, 1);
 			game->current_dialog->talker->action = A_NONE;
 			game->current_dialog->talker->ConsumeItem(piwo->ToConsumable());
@@ -234,7 +234,7 @@ void Quest_Mages2::SetProgress(int prog2)
 	case Progress::GivenVodka:
 		// da³eœ wóde
 		{
-			const Item* woda = FindItem("vodka");
+			const Item* woda = content::GetItem("vodka");
 			game->RemoveItem(*game->current_dialog->pc->unit, woda, 1);
 			game->current_dialog->talker->action = A_NONE;
 			game->current_dialog->talker->ConsumeItem(woda->ToConsumable());
@@ -282,7 +282,7 @@ void Quest_Mages2::SetProgress(int prog2)
 		{
 			if(prog != Progress::BoughtPotion)
 				AddEntry(game->txQuest[180]);
-			const Item* item = FindItem("q_magowie_potion");
+			const Item* item = content::GetItem("q_magowie_potion");
 			game->current_dialog->pc->unit->AddItem(item, 1, false);
 			game->current_dialog->pc->unit->gold -= 150;
 
@@ -299,7 +299,7 @@ void Quest_Mages2::SetProgress(int prog2)
 	case Progress::MageDrinkPotion:
 		// wypi³ miksturkê
 		{
-			const Item* mikstura = FindItem("q_magowie_potion");
+			const Item* mikstura = content::GetItem("q_magowie_potion");
 			game->RemoveItem(*game->current_dialog->pc->unit, mikstura, 1);
 			game->current_dialog->talker->action = A_NONE;
 			game->current_dialog->talker->ConsumeItem(mikstura->ToConsumable());

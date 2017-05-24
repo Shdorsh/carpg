@@ -58,3 +58,6 @@ Building generation takes two steps:
  	citizens and citizens_world don't keep their value 
 Buildings that aren't required but are marked as LIST won't show on worldmap
 	until visited.
+
+4. Items
+Alias can be used for backward compability, to allow item renames between versions. Alias can be used to remove old items for example "alias null q_main_letter", null is not currenly allowed for equipable items. Items order and weight is recalculated is save version is changed so it must be updated to recalculate this values.

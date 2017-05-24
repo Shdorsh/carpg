@@ -149,7 +149,7 @@ void Quest_Evil::SetProgress(int prog2)
 		// dosta³eœ ksi¹¿ke
 		{
 			AddEntry(game->txQuest[243]);
-			const Item* item = FindItem("q_zlo_ksiega");
+			const Item* item = content::GetItem("q_zlo_ksiega");
 			game->current_dialog->pc->unit->AddItem(item, 1, true);
 
 			if(game->IsOnline())
@@ -209,7 +209,7 @@ void Quest_Evil::SetProgress(int prog2)
 
 			// dodaj jozana do dru¿yny
 			Unit& u = *game->current_dialog->talker;
-			const Item* item = FindItem("q_zlo_ksiega");
+			const Item* item = content::GetItem("q_zlo_ksiega");
 			u.AddItem(item, 1, true);
 			game->RemoveItem(*game->current_dialog->pc->unit, item, 1);
 			game->AddTeamMember(&u, true);

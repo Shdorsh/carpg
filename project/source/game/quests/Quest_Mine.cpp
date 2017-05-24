@@ -201,7 +201,7 @@ void Quest_Mine::SetProgress(int prog2)
 	case Progress::TalkedWithMiner:
 		{
 			AddEntry(game->txQuest[147]);
-			const Item* item = FindItem("key_kopalnia");
+			const Item* item = content::GetItem("key_kopalnia");
 			game->current_dialog->pc->unit->AddItem(item, 1, true);
 
 			if(game->IsOnline())
@@ -354,7 +354,7 @@ void Quest_Mine::InitSub()
 
 	ItemListResult result = FindItemList("ancient_armory_armors");
 	result.lis->Get(3, sub.item_to_give);
-	sub.item_to_give[3] = FindItem("al_angelskin");
+	sub.item_to_give[3] = content::GetItem("al_angelskin");
 	sub.spawn_item = Quest_Event::Item_InChest;
 	sub.target_loc = dungeon_loc;
 	sub.at_level = 0;

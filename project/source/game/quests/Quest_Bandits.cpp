@@ -93,7 +93,7 @@ void Quest_Bandits::SetProgress(int prog2)
 	case Progress::Talked:
 		if(prog == Progress::FoundBandits)
 		{
-			const Item* item = FindItem("q_bandyci_paczka");
+			const Item* item = content::GetItem("q_bandyci_paczka");
 			if(!game->current_dialog->pc->unit->HaveItem(item))
 			{
 				game->current_dialog->pc->unit->AddItem(item, 1, true);
@@ -123,7 +123,7 @@ void Quest_Bandits::SetProgress(int prog2)
 		else
 		{
 			StartQuest(game->txQuest[153]);
-			const Item* item = FindItem("q_bandyci_paczka");
+			const Item* item = content::GetItem("q_bandyci_paczka");
 			game->current_dialog->pc->unit->AddItem(item, 1, true);
 			other_loc = game->GetRandomSettlement(start_loc);
 			Location& sl = GetStartLocation();
@@ -164,7 +164,7 @@ void Quest_Bandits::SetProgress(int prog2)
 		// podczas rozmowy z bandytami, 66% szansy na znalezienie przy nich listu za 1 razem
 		{
 			if(get_letter || rand2()%3 != 0)
-				game->current_dialog->talker->AddItem(FindItem("q_bandyci_list"), 1, true);
+				game->current_dialog->talker->AddItem(content::GetItem("q_bandyci_list"), 1, true);
 			get_letter = true;
 			AddEntry(game->txQuest[157]);
 			game->RemoveEncounter(enc);
@@ -184,7 +184,7 @@ void Quest_Bandits::SetProgress(int prog2)
 			AddEntry(game->txQuest[158]);
 			target_loc = camp_loc;
 			location_event_handler = this;
-			game->RemoveItem(*game->current_dialog->pc->unit, FindItem("q_bandyci_list"), 1);
+			game->RemoveItem(*game->current_dialog->pc->unit, content::GetItem("q_bandyci_list"), 1);
 		}
 		break;
 	case Progress::NeedClearCamp:
@@ -283,7 +283,7 @@ void Quest_Bandits::Special(DialogContext& ctx, cstring msg)
 {
 	if(strcmp(msg, "bandyci_daj_paczke") == 0)
 	{
-		const Item* item = FindItem("q_bandyci_paczka");
+		const Item* item = content::GetItem("q_bandyci_paczka");
 		ctx.talker->AddItem(item, 1, true);
 		game->RemoveQuestItem(item);
 	}

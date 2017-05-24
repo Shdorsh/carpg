@@ -377,7 +377,7 @@ void Game::PostconfigureGame()
 	terrain->RemoveHeightMap(true);
 
 	// get pointer to gold item
-	gold_item_ptr = FindItem("gold");
+	gold_item_ptr = content::GetItem("gold");
 
 	// copy first dungeon texture to second
 	tFloor[1] = tFloorBase;
@@ -740,7 +740,7 @@ void Game::AddLoadTasks()
 		if(!nosound && bu.sound_id)
 			resMgr.GetLoadedSound(bu.sound_id, bu.sound);
 		if(bu.item_id)
-			bu.item = FindItem(bu.item_id);
+			bu.item = content::GetItem(bu.item_id);
 	}
 
 	// units

@@ -20,7 +20,7 @@ void GroundItem::Save(HANDLE file)
 }
 
 //=================================================================================================
-void GroundItem::Load(HANDLE file)
+bool GroundItem::Load(HANDLE file)
 {
 	ReadFile(file, &pos, sizeof(pos), &tmp, nullptr);
 	ReadFile(file, &rot, sizeof(rot), &tmp, nullptr);
@@ -31,7 +31,7 @@ void GroundItem::Load(HANDLE file)
 	BUF[len] = 0;
 	ReadFile(file, BUF, len, &tmp, nullptr);
 	if(BUF[0] != '$')
-		item = FindItem(BUF);
+		item = content::FindItem(BUF);
 	else
 	{
 		int quest_refid;
@@ -40,4 +40,21 @@ void GroundItem::Load(HANDLE file)
 		item = QUEST_ITEM_PLACEHOLDER;
 	}
 	ReadFile(file, &netid, sizeof(netid), &tmp, nullptr);
+
+	return item != nullptr;
+}
+
+//=================================================================================================
+void GroundItem::Load(HANDLE file, vector<GroundItem*>& items)
+{
+	Ptr<GroundItem> item(nullptr);
+	uint count;
+	ReadFile(file, &count, sizeof(count), &tmp, nullptr);
+	items.reserve(count);
+	for(uint i = 0; i < count; ++i)
+	{
+		item.Ensure();
+		if(item->Load(file))
+			items.push_back(item.Pin());
+	}
 }

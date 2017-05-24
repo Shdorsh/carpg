@@ -1,7 +1,4 @@
-﻿! fix old V_CURRENT
-! load item nullts, recalculate weight/value, sort
-
-++ fixed quest timeouts not sent in multiplayer
+﻿++ fixed quest timeouts not sent in multiplayer
 ? test "list quest"
 ? test loading removed Q_MAIN
 + remove q_main_letter at loading, from items.txt
@@ -47,6 +44,8 @@ FAR FAR TODO:
 	+ change tab text
 	+ drag & drop
 	+ context menu FEATURE
+
++ system, allow recalculate weight/value without changing source code, loose files?
 
 COMPABILITY TO REMOVE:
 pre 0.10:

@@ -2569,7 +2569,7 @@ void Game::UpdatePlayer(LevelContext& ctx, float dt)
 						break;
 					}
 
-					if(key && pc->unit->HaveItem(FindItem(key)))
+					if(key && pc->unit->HaveItem(content::GetItem(key)))
 					{
 						if(sound_volume)
 						{
@@ -5093,7 +5093,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 				}
 				else if(strcmp(msg, "szaleni_sprzedaj") == 0)
 				{
-					const Item* kamien = FindItem("q_szaleni_kamien");
+					const Item* kamien = content::GetItem("q_szaleni_kamien");
 					RemoveItem(*ctx.pc->unit, kamien, 1);
 					ctx.pc->unit->gold += 10;
 					if(!ctx.is_local)
@@ -5170,7 +5170,7 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 				else if(strcmp(msg, "sekret_daj") == 0)
 				{
 					secret_state = SECRET_REWARD;
-					const Item* item = FindItem("sword_forbidden");
+					const Item* item = content::GetItem("sword_forbidden");
 					ctx.pc->unit->AddItem(item, 1, true);
 					if(!ctx.is_local)
 					{
@@ -13991,7 +13991,7 @@ void Game::EnterLevel(bool first, bool reenter, bool from_lower, int from_portal
 		else
 		{
 			// dodaj kartkê (overkill sprawdzania!)
-			const Item* kartka = FindItem("sekret_kartka2");
+			const Item* kartka = content::GetItem("sekret_kartka2");
 			assert(kartka);
 			Chest* c = local_ctx.FindChestInRoom(r);
 			assert(c);
@@ -18816,7 +18816,7 @@ void Game::UpdateContest(float dt)
 				{
 					assert(next_drink);
 					contest_time = 0.f;
-					const Consumable& drink = FindItem(next_drink)->ToConsumable();
+					const Consumable& drink = content::GetItem(next_drink)->ToConsumable();
 					for(vector<Unit*>::iterator it = contest_units.begin(), end = contest_units.end(); it != end; ++it)
 						(*it)->ConsumeItem(drink, true);
 				}
@@ -20401,7 +20401,7 @@ void Game::CheckCraziesStone()
 {
 	quest_crazies->check_stone = false;
 
-	const Item* kamien = FindItem("q_szaleni_kamien");
+	const Item* kamien = content::GetItem("q_szaleni_kamien");
 	if(!Team.FindItemInTeam(kamien, -1, nullptr, nullptr, false))
 	{
 		// usuñ kamieñ z gry o ile to nie encounter bo i tak jest resetowany

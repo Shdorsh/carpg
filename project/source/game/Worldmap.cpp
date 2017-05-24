@@ -2688,7 +2688,7 @@ void Game::GenerateStockItems()
 			InsertItemBare(chest_food_seller, item, value / item->value);
 		}
 		if(rand2() % 4 == 0)
-			InsertItemBare(chest_food_seller, FindItem("frying_pan"));
+			InsertItemBare(chest_food_seller, content::GetItem("frying_pan"));
 		SortItems(chest_food_seller);
 	}
 }
@@ -2697,8 +2697,8 @@ void Game::GenerateMerchantItems(vector<ItemSlot>& items, int price_limit)
 {
 	const Item* item;
 	items.clear();
-	InsertItemBare(items, FindItem("p_nreg"), random(5,10));
-	InsertItemBare(items, FindItem("p_hp"), random(5,10));
+	InsertItemBare(items, content::GetItem("p_nreg"), random(5,10));
+	InsertItemBare(items, content::GetItem("p_hp"), random(5,10));
 	for(int i=0, ile=random(15,20); i<ile; ++i)
 	{
 		switch(rand2()%6)
@@ -3526,8 +3526,8 @@ void Game::SpawnForestItems(int count_mod)
 		int count;
 	};
 	ItemToSpawn items_to_spawn[] = {
-		FindItem("green_herb"), green_herbs,
-		FindItem("healing_herb"), herbs
+		content::GetItem("green_herb"), green_herbs,
+		content::GetItem("healing_herb"), herbs
 	};
 	TerrainTile* tiles = ((OutsideLocation*)location)->tiles;
 	VEC2 region_size(2.f, 2.f);
@@ -4069,7 +4069,7 @@ void Game::SpawnEncounterUnits(GameDialog*& dialog, Unit*& talker, Quest*& quest
 
 		if(kamien)
 		{
-			int slot = talker->FindItem(FindItem("q_szaleni_kamien"));
+			int slot = talker->FindItem(content::GetItem("q_szaleni_kamien"));
 			if(slot != -1)
 				talker->items[slot].team_count = 0;
 		}
@@ -6075,7 +6075,7 @@ void Game::GenerateMushrooms(int days_since)
 	INT2 pt;
 	VEC2 pos;
 	int dir;
-	const Item* shroom = FindItem("mushroom");
+	const Item* shroom = content::GetItem("mushroom");
 
 	for(int i=0; i<days_since*20; ++i)
 	{
@@ -6115,8 +6115,8 @@ void Game::GenerateCityPickableItems()
 
 	// piwa w karczmie
 	InsideBuilding* inn = city_ctx->FindInn();
-	const Item* beer = FindItem("beer");
-	const Item* vodka = FindItem("vodka");
+	const Item* beer = content::GetItem("beer");
+	const Item* vodka = content::GetItem("vodka");
 	for(vector<Object>::iterator it = inn->ctx.objects->begin(), end = inn->ctx.objects->end(); it != end; ++it)
 	{
 		if(it->base == table)
@@ -6188,12 +6188,12 @@ void Game::GenerateCityPickableItems()
 		if(o)
 		{
 			PickableItemBegin(local_ctx, *o);
-			const Item* heal_pot = FindItem("p_hp");
+			const Item* heal_pot = content::GetItem("p_hp");
 			PickableItemAdd(heal_pot);
 			if(rand2()%2 == 0)
 				PickableItemAdd(heal_pot);
 			if(rand2()%2 == 0)
-				PickableItemAdd(FindItem("p_nreg"));
+				PickableItemAdd(content::GetItem("p_nreg"));
 		}
 	}
 }

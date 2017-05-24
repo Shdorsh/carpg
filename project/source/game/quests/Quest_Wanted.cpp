@@ -65,7 +65,7 @@ void Quest_Wanted::SetProgress(int prog2)
 			StartQuest(game->txQuest[257]);
 
 			// dodaj list
-			const Item* base_item = FindItem("wanted_letter");
+			const Item* base_item = content::GetItem("wanted_letter");
 			CreateItemCopy(letter, base_item);
 			letter.id = "$wanted_letter";
 			letter.name = game->txQuest[258];
@@ -275,7 +275,7 @@ bool Quest_Wanted::Load(HANDLE file)
 	}
 
 	// list
-	const Item* base_item = FindItem("wanted_letter");
+	const Item* base_item = content::GetItem("wanted_letter");
 	CreateItemCopy(letter, base_item);
 	letter.id = "$wanted_letter";
 	letter.name = game->txQuest[258];

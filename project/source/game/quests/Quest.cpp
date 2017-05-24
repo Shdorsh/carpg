@@ -34,7 +34,7 @@ bool Quest::Load(HANDLE file)
 	//ReadFile(file, &quest_id, sizeof(quest_id), &tmp, nullptr);
 
 	// read old quest journal title/state
-	if(LOAD_VERSION <= V_0_10)
+	if(LOAD_VERSION <= V_CURRENT)
 	{
 		enum class OldQuestState
 		{
@@ -76,7 +76,7 @@ bool Quest::Load(HANDLE file)
 	ReadFile(file, &type, sizeof(type), &tmp, nullptr);
 
 	// read old quest msgs
-	if(LOAD_VERSION < V_0_10)
+	if(LOAD_VERSION < V_CURRENT)
 	{
 		byte count;
 		ReadFile(file, &count, sizeof(count), &tmp, nullptr);

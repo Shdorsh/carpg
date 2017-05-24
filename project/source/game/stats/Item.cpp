@@ -131,7 +131,7 @@ bool ItemCmp(const Item* a, const Item* b)
 }
 
 //=================================================================================================
-const Item* FindItem(cstring id, bool report, ItemListResult* lis)
+const Item* content::FindItem(cstring id, ItemListResult* lis)
 {
 	assert(id);
 
@@ -169,10 +169,17 @@ const Item* FindItem(cstring id, bool report, ItemListResult* lis)
 	if(it2 != item_aliases.end())
 		return it2->second;
 
-	if(report)
-		WARN(Format("Missing item '%s'.", id));
-
 	return nullptr;
+}
+
+//=================================================================================================
+const Item* content::GetItem(cstring id, ItemListResult* lis)
+{
+	auto item = FindItem(id, lis);
+	assert(item);
+	if(!item)
+		Warn("Missing item '%s'.", id);
+	return item;
 }
 
 //=================================================================================================
@@ -749,7 +756,7 @@ bool LoadItemList(Tokenizer& t, CRC32& crc)
 
 		while(!t.IsSymbol('}'))
 		{
-			item = FindItem(t.MustGetItemKeyword().c_str(), false, &used_list);
+			item = content::FindItem(t.MustGetItemKeyword().c_str(), &used_list);
 			if(used_list.lis != nullptr)
 				t.Throw("Item list can't have item list '%s' inside.", used_list.GetId());
 			if(!item)
@@ -803,7 +810,7 @@ bool LoadLeveledItemList(Tokenizer& t, CRC32& crc)
 
 		while(!t.IsSymbol('}'))
 		{
-			item = FindItem(t.MustGetItemKeyword().c_str(), false, &used_list);
+			item = content::FindItem(t.MustGetItemKeyword().c_str(), &used_list);
 			if(used_list.lis != nullptr)
 				t.Throw("Leveled item list can't have item list '%s' inside.", used_list.GetId());
 			if(!item)
@@ -934,7 +941,7 @@ bool LoadStock(Tokenizer& t, CRC32& crc)
 					}
 					else if(t.IsItem())
 					{
-						const Item* item = FindItem(t.GetItem().c_str(), false, &used_list);
+						const Item* item = content::FindItem(t.GetItem().c_str(), &used_list);
 						stock->code.push_back(SE_CITY);
 						stock->code.push_back(SE_ADD);
 						crc.Update(SE_CITY);
@@ -980,7 +987,7 @@ bool LoadStock(Tokenizer& t, CRC32& crc)
 						int count = 0, chance = 0;
 						while(!t.IsSymbol('}'))
 						{
-							const Item* item = FindItem(t.MustGetItem().c_str(), false, &used_list);
+							const Item* item = content::FindItem(t.MustGetItem().c_str(), &used_list);
 							if(used_list.lis != nullptr)
 							{
 								StockEntry t = (used_list.is_leveled ? SE_LEVELED_LIST : SE_LIST);
@@ -1027,7 +1034,7 @@ bool LoadStock(Tokenizer& t, CRC32& crc)
 						crc.Update(2);
 						for(int i = 0; i < 2; ++i)
 						{
-							const Item* item = FindItem(t.MustGetItem().c_str(), false, &used_list);
+							const Item* item = content::FindItem(t.MustGetItem().c_str(), &used_list);
 							if(used_list.lis != nullptr)
 							{
 								StockEntry t = (used_list.is_leveled ? SE_LEVELED_LIST : SE_LIST);
@@ -1076,7 +1083,7 @@ bool LoadStock(Tokenizer& t, CRC32& crc)
 						crc.Update(a);
 						crc.Update(b);
 
-						const Item* item = FindItem(t.MustGetItem().c_str(), false, &used_list);
+						const Item* item = content::FindItem(t.MustGetItem().c_str(), &used_list);
 						if(used_list.lis != nullptr)
 						{
 							StockEntry t = (used_list.is_leveled ? SE_LEVELED_LIST : SE_LIST);
@@ -1122,7 +1129,7 @@ bool LoadStock(Tokenizer& t, CRC32& crc)
 				crc.Update(type);
 				crc.Update(count);
 
-				const Item* item = FindItem(t.MustGetItem().c_str(), false, &used_list);
+				const Item* item = content::FindItem(t.MustGetItem().c_str(), &used_list);
 				if(used_list.lis != nullptr)
 				{
 					StockEntry t = (used_list.is_leveled ? SE_LEVELED_LIST : SE_LIST);
@@ -1148,7 +1155,7 @@ bool LoadStock(Tokenizer& t, CRC32& crc)
 				stock->code.push_back(SE_ADD);
 				crc.Update(SE_ADD);
 
-				const Item* item = FindItem(t.MustGetItem().c_str(), false, &used_list);
+				const Item* item = content::FindItem(t.MustGetItem().c_str(), &used_list);
 				if(used_list.lis != nullptr)
 				{
 					StockEntry t = (used_list.is_leveled ? SE_LEVELED_LIST : SE_LIST);
@@ -1306,7 +1313,7 @@ bool LoadStartItems(Tokenizer& t, CRC32& crc)
 				t.Next();
 
 				const string& str = t.MustGetItemKeyword();
-				const Item* item = FindItem(str.c_str(), false);
+				const Item* item = content::FindItem(str.c_str(), false);
 				if(!item)
 					t.Throw("Missing item '%s'.", str.c_str());
 				t.Next();
@@ -1371,7 +1378,7 @@ bool LoadBetterItems(Tokenizer& t, CRC32& crc)
 		while(!t.IsSymbol('}'))
 		{
 			const string& str = t.MustGetItemKeyword();
-			const Item* item = FindItem(str.c_str(), false, &result);
+			const Item* item = content::FindItem(str.c_str(), &result);
 			if(result.lis)
 				t.Throw("'%s' is list.", str.c_str());
 			if(!item)
@@ -1380,7 +1387,7 @@ bool LoadBetterItems(Tokenizer& t, CRC32& crc)
 			t.Next();
 
 			const string& str2 = t.MustGetItemKeyword();
-			const Item* item2 = FindItem(str2.c_str(), false, &result);
+			const Item* item2 = content::FindItem(str2.c_str(), &result);
 			if(result.lis)
 				t.Throw("'%s' is list.", str2.c_str());
 			if(!item2)
@@ -1407,14 +1414,14 @@ static bool LoadAlias(Tokenizer& t, CRC32& crc)
 	{
 		t.Next();
 
+		ItemListResult result;
 		const string& id = t.MustGetItemKeyword();
 		const Item* item;
 		if(id == "null")
 			item = nullptr;
 		else
 		{
-			ItemListResult result;
-			const Item* item = FindItem(id.c_str(), false, &result);
+			item = content::FindItem(id.c_str(), &result);
 			if(!item)
 				t.Throw("Missing item '%s'.", id.c_str());
 			if(result.lis)
@@ -1424,7 +1431,7 @@ static bool LoadAlias(Tokenizer& t, CRC32& crc)
 		t.Next();
 
 		const string& alias = t.MustGetItemKeyword();
-		const Item* item2 = FindItem(alias.c_str(), false, &result);
+		const Item* item2 = content::FindItem(alias.c_str(), &result);
 		if(item2 || result.lis)
 			t.Throw("Can't create alias '%s', already exists.", alias.c_str());
 		crc.Update(alias);

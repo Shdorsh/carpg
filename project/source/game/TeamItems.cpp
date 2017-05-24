@@ -462,9 +462,9 @@ void Game::TeamShareDecline(DialogContext& ctx)
 //=================================================================================================
 void Game::BuyTeamItems()
 {
-	const Item* hp1 = FindItem("p_hp");
-	const Item* hp2 = FindItem("p_hp2");
-	const Item* hp3 = FindItem("p_hp3");
+	const Item* hp1 = content::GetItem("p_hp");
+	const Item* hp2 = content::GetItem("p_hp2");
+	const Item* hp3 = content::GetItem("p_hp3");
 
 	for(Unit* unit : Team.active_members)
 	{

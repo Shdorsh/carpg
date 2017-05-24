@@ -144,13 +144,7 @@ void OutsideLocation::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 		}
 
 		// przedmioty
-		ReadFile(file, &ile, sizeof(ile), &tmp, nullptr);
-		items.resize(ile);
-		for(vector<GroundItem*>::iterator it = items.begin(), end = items.end(); it != end; ++it)
-		{
-			*it = new GroundItem;
-			(*it)->Load(file);
-		}
+		GroundItem::Load(file, items);
 
 		// u¿ywalne
 		ReadFile(file, &ile, sizeof(ile), &tmp, nullptr);

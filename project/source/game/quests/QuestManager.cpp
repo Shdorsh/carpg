@@ -303,7 +303,7 @@ void QuestManager::Load(HANDLE file)
 	FileReader f(file);
 
 	LoadQuests(f);
-	if(LOAD_VERSION >= V_0_10)
+	if(LOAD_VERSION >= V_CURRENT)
 		LoadQuestEntries(f);
 	ConfigureQuests();
 	ProcessQuestItemRequests();
@@ -411,11 +411,24 @@ void QuestManager::ProcessQuestItemRequests()
 			}
 			if(ok)
 			{
-				if(LOAD_VERSION < V_0_2_10)
-					RemoveNullItems(*qir->items);
-				SortItems(*qir->items);
-				if(qir->unit && LOAD_VERSION < V_0_2_10)
-					qir->unit->RecalculateWeight();
+				if(LOAD_VERSION >= V_CURRENT)
+				{
+					if(!LOAD_LAST_VERSION)
+					{
+						RemoveNullItems(*qir->items);
+						SortItems(*qir->items);
+						if(qir->unit)
+							qir->unit->RecalculateWeight();
+					}
+				}
+				else
+				{
+					if(LOAD_VERSION < V_0_2_10)
+						RemoveNullItems(*qir->items);
+					SortItems(*qir->items);
+					if(qir->unit && LOAD_VERSION < V_0_2_10)
+						qir->unit->RecalculateWeight();
+				}
 			}
 		}
 		delete *it;

@@ -482,7 +482,7 @@ static void LoadLanguageFile3(Tokenizer& t, cstring filename)
 						t.Next();
 						const string& s = t.MustGetText();
 						ItemListResult lis;
-						Item* item = (Item*)FindItem(s.c_str(), false, &lis);
+						Item* item = (Item*)content::FindItem(s.c_str(), &lis);
 						if(!item)
 							t.Throw(Format("Invalid item '%s'.", s.c_str()));
 						if(lis.lis)

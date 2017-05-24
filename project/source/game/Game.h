@@ -844,7 +844,7 @@ public:
 	bool CheckMoonStone(GroundItem* item, Unit& unit);
 	Item* GetSecretNote()
 	{
-		return (Item*)FindItem("sekret_kartka");
+		return (Item*)content::GetItem("sekret_kartka");
 	}
 	int secret_where, secret_where2;
 

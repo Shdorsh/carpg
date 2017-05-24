@@ -77,7 +77,7 @@ void Chest::Load(HANDLE file, bool local)
 				ReadFile(file, &it->count, sizeof(it->count), &tmp, nullptr);
 				ReadFile(file, &it->team_count, sizeof(it->team_count), &tmp, nullptr);
 				if(BUF[0] != '$')
-					it->item = ::FindItem(BUF);
+					it->item = content::FindItem(BUF);
 				else
 				{
 					int quest_refid;
@@ -96,11 +96,22 @@ void Chest::Load(HANDLE file, bool local)
 		}
 	}
 
-	if(can_sort && LOAD_VERSION < V_0_2_20 && !items.empty())
+	if(can_sort)
 	{
-		if(LOAD_VERSION < V_0_2_10)
-			RemoveNullItems(items);
-		SortItems(items);
+		if(LOAD_VERSION >= V_CURRENT)
+		{
+			if(!LOAD_LAST_VERSION)
+			{
+				RemoveNullItems(items);
+				SortItems(items);
+			}
+		}
+		else if(LOAD_VERSION < V_0_2_20 && !items.empty())
+		{
+			if(LOAD_VERSION < V_0_2_10)
+				RemoveNullItems(items);
+			SortItems(items);
+		}
 	}
 
 	ReadFile(file, &pos, sizeof(pos), &tmp, nullptr);

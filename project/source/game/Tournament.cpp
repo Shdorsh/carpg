@@ -421,9 +421,9 @@ void Game::UpdateTournament(float dt)
 				if(!tournament_master->talking && tournament_master->busy == Unit::Busy_No)
 				{
 					// daj miksturki lecznicze
-					static const Item* p1 = FindItem("p_hp");
-					static const Item* p2 = FindItem("p_hp2");
-					static const Item* p3 = FindItem("p_hp3");
+					static const Item* p1 = content::GetItem("p_hp");
+					static const Item* p2 = content::GetItem("p_hp2");
+					static const Item* p3 = content::GetItem("p_hp3");
 					for(vector<Unit*>::iterator it = at_arena.begin(), end = at_arena.end(); it != end; ++it)
 					{
 						Unit& u = **it;

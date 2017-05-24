@@ -137,7 +137,7 @@ void InsideBuilding::Load(HANDLE file, bool local)
 	ReadFile(file, &outside_rot, sizeof(outside_rot), &tmp, nullptr);
 	ReadFile(file, &top, sizeof(top), &tmp, nullptr);
 	ReadFile(file, &xsphere_radius, sizeof(xsphere_radius), &tmp, nullptr);
-	if(LOAD_VERSION >= V_0_10)
+	if(LOAD_VERSION >= V_CURRENT)
 	{
 		ReadString1(file);
 		type = content::FindBuilding(BUF);
@@ -180,13 +180,7 @@ void InsideBuilding::Load(HANDLE file, bool local)
 	for(vector<Object>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
 		it->Load(file);
 
-	ReadFile(file, &ile, sizeof(ile), &tmp, nullptr);
-	items.resize(ile);
-	for(vector<GroundItem*>::iterator it = items.begin(), end = items.end(); it != end; ++it)
-	{
-		*it = new GroundItem;
-		(*it)->Load(file);
-	}
+	GroundItem::Load(file, items);
 
 	ReadFile(file, &ile, sizeof(ile), &tmp, nullptr);
 	useables.resize(ile);

@@ -44,7 +44,7 @@ void Quest_DeliverLetter::SetProgress(int prog2)
 		// give letter to player
 		{
 			Location& loc = *game->locations[end_loc];
-			const Item* base_item = FindItem("letter");
+			const Item* base_item = content::GetItem("letter");
 			CreateItemCopy(letter, base_item);
 			letter.id = "$letter";
 			letter.name = Format(game->txQuest[0], LocationHelper::IsCity(loc) ? game->txForMayor : game->txForSoltys, loc.name.c_str());
@@ -193,7 +193,7 @@ bool Quest_DeliverLetter::Load(HANDLE file)
 
 		Location& loc = *game->locations[end_loc];
 
-		const Item* base_item = FindItem("letter");
+		const Item* base_item = content::GetItem("letter");
 		CreateItemCopy(letter, base_item);
 		letter.id = "$letter";
 		letter.name = Format(game->txQuest[prog == Progress::GotResponse ? 1 : 0], LocationHelper::IsCity(loc) ? game->txForMayor : game->txForSoltys,

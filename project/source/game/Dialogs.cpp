@@ -416,7 +416,7 @@ GameDialog* GameDialogManager::LoadDialog()
 						{
 							const string& id = t.MustGetItemKeyword();
 							ItemListResult result;
-							const Item* item = FindItem(id.c_str(), false, &result);
+							const Item* item = content::FindItem(id.c_str(), &result);
 							if(item && result.lis == nullptr)
 							{
 								t.Next();

@@ -38,9 +38,9 @@ inline bool ReadItemSimple(BitStream& stream, const Item*& item)
 		return false;
 
 	if(BUF[0] == '$')
-		item = FindItem(BUF+1);
+		item = content::FindItem(BUF+1);
 	else
-		item = FindItem(BUF);
+		item = content::FindItem(BUF);
 
 	return (item != nullptr);
 }
@@ -1447,13 +1447,15 @@ bool Game::ReadUnit(BitStream& stream, Unit& unit)
 				unit.slots[i] = nullptr;
 			else
 			{
-				const Item* item = FindItem(BUF);
+				const Item* item = content::FindItem(BUF);
 				if(item && ItemTypeToSlot(item->type) == (ITEM_SLOT)i)
 					unit.slots[i] = item;
 				else
 				{
 					if(item)
-						ERROR(Format("Invalid slot type (%d != %d).", ItemTypeToSlot(item->type), i));
+						Error("Invalid slot type (%d != %d) for item '%s'.", ItemTypeToSlot(item->type), i, BUF);
+					else
+						Error("Missing item '%s' for slot %d.", BUF, i);
 					return false;
 				}
 			}
@@ -1617,7 +1619,7 @@ bool Game::ReadUnit(BitStream& stream, Unit& unit)
 			// used item
 			if(BUF[0])
 			{
-				unit.used_item = FindItem(BUF);
+				unit.used_item = content::FindItem(BUF);
 				if(!unit.used_item)
 				{
 					ERROR(Format("Missing used item '%s'.", BUF));
@@ -1876,9 +1878,12 @@ bool Game::ReadPlayerData(BitStream& stream)
 		}
 		if(BUF[0])
 		{
-			unit->slots[i] = FindItem(BUF);
+			unit->slots[i] = content::FindItem(BUF);
 			if(!unit->slots[i])
+			{
+				Error("Read player data: Missing item '%s'.", BUF);
 				return false;
+			}
 		}
 		else
 			unit->slots[i] = nullptr;
@@ -3838,7 +3843,7 @@ bool Game::ProcessControlMessageServer(BitStream& stream, PlayerInfo& info)
 				}
 				else
 				{
-					const Item* item = FindItem(BUF);
+					const Item* item = content::FindItem(BUF);
 					if(item && count)
 						AddItem(*info.u, item, count, is_team);
 					else
@@ -6525,7 +6530,7 @@ bool Game::ProcessControlMessageClient(BitStream& stream, bool& exit_from_server
 			else
 			{
 				const Item* base;
-				base = FindItem(BUF);
+				base = content::FindItem(BUF);
 				if(!base)
 				{
 					ERROR(Format("Update client: REGISTER_ITEM, missing base item %s.", BUF));
@@ -9726,7 +9731,7 @@ int Game::ReadItemAndFind(BitStream& s, const Item*& item) const
 	}
 	else
 	{
-		item = FindItem(BUF);
+		item = content::FindItem(BUF);
 		if(!item)
 		{
 			WARN(Format("Missing item '%s'.", BUF));

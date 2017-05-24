@@ -188,7 +188,7 @@ bool Game::LoadRequiredStats(uint& errors)
 				case R_ITEM:
 					{
 						ItemListResult result;
-						const Item* item = FindItem(str.c_str(), false, &result);
+						const Item* item = content::FindItem(str.c_str(), &result);
 						if(!item)
 						{
 							ERROR(Format("Missing required item '%s'.", str.c_str()));

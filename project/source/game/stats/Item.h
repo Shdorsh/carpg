@@ -471,8 +471,12 @@ extern vector<StartItem> start_items;
 const Item* GetStartItem(Skill skill, int value);
 
 //-----------------------------------------------------------------------------
+namespace content
+{
+	const Item* FindItem(cstring id, ItemListResult* lis = nullptr);
+	const Item* GetItem(cstring id, ItemListResult* lis = nullptr);
+}
 bool ItemCmp(const Item* a, const Item* b);
-const Item* FindItem(cstring id, bool report = true, ItemListResult* lis = nullptr);
 ItemListResult FindItemList(cstring id, bool report = true);
 void CreateItemCopy(Item& item, const Item* base_item);
 Item* CreateItemCopy(const Item* item);

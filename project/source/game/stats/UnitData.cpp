@@ -258,7 +258,7 @@ void AddItem(ItemScript* script, Tokenizer& t, CRC32& crc)
 	if(!t.IsSymbol('!'))
 	{
 		const string& s = t.MustGetItemKeyword();
-		const Item* item = FindItem(s.c_str(), false);
+		const Item* item = content::FindItem(s.c_str(), false);
 		if(item)
 		{
 			script->code.push_back(PS_ITEM);

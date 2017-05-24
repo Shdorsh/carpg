@@ -1373,7 +1373,7 @@ void Unit::Load(HANDLE file, bool local)
 		for(int i=0; i<SLOT_MAX; ++i)
 		{
 			ReadString1(file);
-			slots[i] = (BUF[0] ? ::FindItem(BUF) : nullptr);
+			slots[i] = (BUF[0] ? content::GetItem(BUF) : nullptr);
 		}
 	}
 	else
@@ -1400,7 +1400,7 @@ void Unit::Load(HANDLE file, bool local)
 				ReadFile(file, &equipped_as, sizeof(equipped_as), &tmp, nullptr);
 			}
 			if(BUF[0] != '$')
-				it->item = ::FindItem(BUF);
+				it->item = content::FindItem(BUF);
 			else
 			{
 				int quest_item_refid;
@@ -1544,7 +1544,19 @@ void Unit::Load(HANDLE file, bool local)
 		Game::Get().load_unit_handler.push_back(this);
 	}
 	CalculateLoad();
-	if(LOAD_VERSION < V_0_2_10)
+
+	// sort items, calculate weight
+	if(LOAD_VERSION >= V_CURRENT)
+	{
+		ReadFile(file, &weight, sizeof(weight), &tmp, nullptr);
+		if(can_sort && !LOAD_LAST_VERSION)
+		{
+			RemoveNullItems(items);
+			SortItems(items);
+			RecalculateWeight();
+		}
+	}
+	else if(LOAD_VERSION < V_0_2_10)
 	{
 		weight = 0;
 		if(can_sort)
@@ -1561,6 +1573,8 @@ void Unit::Load(HANDLE file, bool local)
 		ReadFile(file, &weight, sizeof(weight), &tmp, nullptr);
 		RecalculateWeight();
 	}
+
+	// guard target
 	if(LOAD_VERSION < V_0_2_10)
 		guard_target = nullptr;
 	else
@@ -1646,7 +1660,7 @@ void Unit::Load(HANDLE file, bool local)
 		{
 			BUF[len] = 0;
 			ReadFile(file, BUF, len, &tmp, nullptr);
-			used_item = ::FindItem(BUF);
+			used_item = content::GetItem(BUF);
 			if(LOAD_VERSION < V_0_2_10)
 				used_item_is_team = true;
 			else
@@ -1969,7 +1983,7 @@ bool Unit::HaveItem(const Item* item, uint count)
 //=================================================================================================
 bool Unit::S_HaveItem(const string& id, uint count)
 {
-	auto item = ::FindItem(id.c_str(), false);
+	auto item = content::FindItem(id.c_str(), false);
 	if(!item)
 		throw ScriptException("Missing item '%s'.", id.c_str());
 
@@ -1984,7 +1998,7 @@ bool Unit::S_HaveItem(const string& id, uint count)
 //=================================================================================================
 uint Unit::S_GiveItem(Unit* unit, const string& id, uint count)
 {
-	auto item = ::FindItem(id.c_str(), false);
+	auto item = content::FindItem(id.c_str(), false);
 	if(!item)
 		throw ScriptException("Missing item '%s'.", id.c_str());
 
