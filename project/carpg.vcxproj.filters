@@ -64,6 +64,9 @@
     <Filter Include="game\quests\hardcoded">
       <UniqueIdentifier>{6991844c-367e-4f53-9843-440a1dd8fc60}</UniqueIdentifier>
     </Filter>
+    <Filter Include="game\quests\removed">
+      <UniqueIdentifier>{39d2aeff-9b31-486d-8d78-9b3043d75c96}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\resource\PickLanguage.cpp">
@@ -600,16 +603,10 @@
     <ClCompile Include="source\game\quests\Quest_Goblins.cpp">
       <Filter>game\quests\hardcoded</Filter>
     </ClCompile>
-    <ClCompile Include="source\game\quests\Quest_KillAnimals.cpp">
-      <Filter>game\quests\hardcoded</Filter>
-    </ClCompile>
     <ClCompile Include="source\game\quests\Quest_LostArtifact.cpp">
       <Filter>game\quests\hardcoded</Filter>
     </ClCompile>
     <ClCompile Include="source\game\quests\Quest_Mages.cpp">
-      <Filter>game\quests\hardcoded</Filter>
-    </ClCompile>
-    <ClCompile Include="source\game\quests\Quest_Main.cpp">
       <Filter>game\quests\hardcoded</Filter>
     </ClCompile>
     <ClCompile Include="source\game\quests\Quest_Mine.cpp">
@@ -635,6 +632,15 @@
     </ClCompile>
     <ClCompile Include="source\game\quests\Quest_Wanted.cpp">
       <Filter>game\quests\hardcoded</Filter>
+    </ClCompile>
+    <ClCompile Include="source\game\script\AnyData.cpp">
+      <Filter>game\script</Filter>
+    </ClCompile>
+    <ClCompile Include="source\game\quests\Quest_Main.cpp">
+      <Filter>game\quests\removed</Filter>
+    </ClCompile>
+    <ClCompile Include="source\game\quests\Quest_KillAnimals.cpp">
+      <Filter>game\quests\removed</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1226,16 +1232,10 @@
     <ClInclude Include="source\game\quests\Quest_Goblins.h">
       <Filter>game\quests\hardcoded</Filter>
     </ClInclude>
-    <ClInclude Include="source\game\quests\Quest_KillAnimals.h">
-      <Filter>game\quests\hardcoded</Filter>
-    </ClInclude>
     <ClInclude Include="source\game\quests\Quest_LostArtifact.h">
       <Filter>game\quests\hardcoded</Filter>
     </ClInclude>
     <ClInclude Include="source\game\quests\Quest_Mages.h">
-      <Filter>game\quests\hardcoded</Filter>
-    </ClInclude>
-    <ClInclude Include="source\game\quests\Quest_Main.h">
       <Filter>game\quests\hardcoded</Filter>
     </ClInclude>
     <ClInclude Include="source\game\quests\Quest_Mine.h">
@@ -1264,6 +1264,18 @@
     </ClInclude>
     <ClInclude Include="source\game\GameLoader.h">
       <Filter>game</Filter>
+    </ClInclude>
+    <ClInclude Include="source\game\script\AnyData.h">
+      <Filter>game\script</Filter>
+    </ClInclude>
+    <ClInclude Include="source\game\stats\SpecialUnit.h">
+      <Filter>game\stats</Filter>
+    </ClInclude>
+    <ClInclude Include="source\game\quests\Quest_Main.h">
+      <Filter>game\quests\removed</Filter>
+    </ClInclude>
+    <ClInclude Include="source\game\quests\Quest_KillAnimals.h">
+      <Filter>game\quests\removed</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

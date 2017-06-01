@@ -173,6 +173,11 @@ unit guard_move
 // tutorial
 unit tut_goblin
 unit tut_czlowiek
+// hardcoded for GetSpecialUnit
+unit mayor
+unit soltys
+unit guard_captain
+unit traveler
 
 //------------------------------------------------------------------------------
 // Required unit groups

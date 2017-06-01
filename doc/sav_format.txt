@@ -1,0 +1,144 @@
+// HEADER
+CRSV - byte[4]
+int - VERSION
+int - SAVE_VERSION
+int - start_version (like VERSION but from time when game was started)
+byte - flags (SF_ONLINE | SF_DEBUG)
+bool - hardcore_mode                                                                   -> flags
+int - total_kills                                                                      -> game stats
+
+// WORLD STATE
+int - year                                                                              -> use standard time_t for that or something like that
+int - month
+int - day
+int - worldtime                                                                          -> merge with above
+GAME_STATE(enum) - game_state                                                            -> not world state
+// GameStats::
+int - hour                                                                               -> merge
+int - minute
+int - second
+float - tick
+
+// WORLD MAP
+WORLDMAP_STATE(enum) - world_state
+int - current_location (or -1)
+uint - locations count
+	LOCATION_TOKEN(enum byte) - location token type
+	... all location data/units/etc
+	byte - check_id
+int - empty locations counter                                                              -> refactor this empty_locations idea
+int - create_camp (days since last random camp was created, every 10 days random camp is created)
+VEC2 - world_pos (party position on map)
+float - travel_time2 (timer - every 0.25 sec checks for surrounding locations and encounter)    -> why not saved only while traveling? only used by server but set to 0 by clients too...
+float - szansa_na_spotkanie (chance for encouter, increased every 0.25 sec, depends on near locations)  -> rename, refactor this idea (it increase on enemy terrain but then return to city and get other encounter - this thing shouldn't be related)
+uint - settlements (counter)
+uint - encounter_loc (index of random encounter location)                                  -> is this needed?
+float - world_dir (angle from which direction party entered location)
+if(world_state == WS_TRAVEL)
+{
+	int - picked_location (location party is traveling to)
+	int - travel_day
+	VEC2 - travel_start
+	float - travel_time (travel timer - currently 1 sec of travel = 1 day, contains days too)
+	bool - guards_enc_reward																	-> remove when quest is scripted
+}
+uint - encounters count
+if(game_state == GS_LEVEL)
+	int - location_event_handler_quest_refid (or -1)
+else
+	... team data on worldmap
+bool - first_city
+vector<INT2> - boss_level (information about boss music [location_index, dungeon_level])        -> refactor boss music
+int - enter_from (from where party entered level - stairs up/down, portal - where to spawn new players)
+float - light_angle (light dir in outside locations)                                            -> remove when there is day & night cycle
+
+// CAMERA
+float - cam.real_rot.y
+float - cam.dist
+
+// SELLERS STOCK                                                                                -> save this for units/buildings, allow multiple sellers
+... chest_merchant
+... chest_blacksmith
+... chest_alchemist
+... chest_innkeeper
+... chest_food_seller
+
+// VARS                                                                                         -> move to render, console cmds ?
+bool - devmode
+bool - noai
+bool - dont_wander
+bool - cl_fog
+bool - cl_lighting
+bool - draw_particle_sphere
+bool - draw_unit_radius
+bool - draw_hitbox
+bool - draw_phy
+bool - draw_col
+float - game_speed
+uint - next_seed
+int - draw_flags
+uint - pc.unit.refid                                                                             -> mixed things in this section...
+int - dungeon_level                                                                              -> to worldmap
+float - portal_anim
+float - drunk_anim
+uint - ai count
+... ais
+
+// GUI
+... game messages
+... speech bubbles
+
+// RUMORS/NOTES
+vector<string2> - rumors
+vector<string2> - notes
+byte - check_id
+
+// TEAM
+... team data
+
+// QUESTS
+... quests data
+... events data
+
+// NEWS
+uint - news count
+{
+	int - add_time
+	string2 - text
+}
+byte - check_id
+
+// LEVEL DATA
+if(game_state == GS_LEVEL)
+{
+	... particles
+	... effects
+	... bullets
+	byte - check_id
+}
+
+// MP DATA
+if(IsOnline())
+{
+	string1 - server_name
+	string1 - server_pswd
+	int - players
+	int - max_players
+	int - last_id
+	uint - players not left
+	{
+		... player info
+	}
+	int - kick_id
+	int - netid_counter
+	int - item_netid_counter
+	int - chest_netid_counter
+	int - useable_netid_counter
+	int - skip_id_counter
+	int - trap_netid_counter
+	int - door_netid_counter
+	int - electro_netid_counter
+	bool - mp_use_interp
+	float - mp_interp
+	byte - check_id
+}

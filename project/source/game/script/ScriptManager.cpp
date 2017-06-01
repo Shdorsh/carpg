@@ -1,6 +1,7 @@
 #include "Pch.h"
 #include "Base.h"
 #include "QuestManager.h"
+#include "script/AnyData.h"
 #include "script/ScriptManager.h"
 #include <scriptarray/scriptarray.h>
 #include <scriptstdstring/scriptstdstring.h>
@@ -227,6 +228,7 @@ void ScriptManager::Init()
 	RegisterScriptArray(engine, true);
 	RegisterStdString(engine);
 	RegisterStdStringUtils(engine);
+	AnyData::Register(engine);
 	
 	string func_sign = "string Format(const string& in)";
 	for(int i = 1; i <= 9; ++i)
@@ -237,7 +239,7 @@ void ScriptManager::Init()
 	}
 
 	AddFunction("int rand()", asFUNCTIONPR(rand2, (), int));
-
+	
 	Game::Get().InitializeScript();
 	QuestManager::Get().InitializeScript();
 }
@@ -267,7 +269,7 @@ bool ScriptManager::RunScript(cstring code)
 	int r = tmp_module->CompileFunction("RunScript", packed_code, -1, 0, &func);
 	if(r < 0)
 	{
-		ERROR(Format("Failed to parse script (%d): %s", r, code));
+		Error("ScriptManager: Failed to parse script (%d): %s", r, code);
 		return false;
 	}
 
@@ -283,7 +285,30 @@ bool ScriptManager::RunScript(cstring code)
 		return true;
 	else
 	{
-		ERROR(Format("Failed to run script (%d): %s", r, code));
+		Error("ScriptManager: Failed to run script (%d): %s", r, code);
 		return false;
 	}
+}
+
+asIScriptObject* ScriptManager::CreateInstance(asIScriptFunction* factory)
+{
+	assert(factory);
+
+	asIScriptObject* obj = nullptr;
+
+	auto tmp_context = engine->RequestContext();
+	int r = tmp_context->Prepare(factory);
+	if(r >= 0)
+		r = tmp_context->Execute();
+	if(r >= 0)
+	{
+		obj = *(asIScriptObject**)tmp_context->GetAddressOfReturnValue();
+		obj->AddRef();
+	}
+	engine->ReturnContext(tmp_context);
+
+	if(r < 0)
+		Error("ScriptManager: Failed to create instance '%s' (%d)", factory->GetDeclaration(), r);
+	
+	return obj;
 }

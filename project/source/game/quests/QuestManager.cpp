@@ -167,6 +167,20 @@ Quest* QuestManager::StartQuest(AnyQuestInfo quest_info)
 	}
 }
 
+QuestInstance* QuestManager::StartQuest2(QuestScheme* scheme, int refid)
+{
+	assert(scheme);
+
+	if(refid == -1)
+		refid = quest_counter++;
+
+	auto instance = new QuestInstance(scheme, refid);
+	instance->script_object = ScriptManager::Get().CreateInstance(scheme->script_factory);
+
+	quest_instances.push_back(instance);
+	return instance;
+}
+
 //=================================================================================================
 void QuestManager::AddQuestItemRequest(const Item** item, cstring name, int quest_refid, vector<ItemSlot>* items, Unit* unit)
 {
@@ -343,6 +357,26 @@ void QuestManager::LoadQuests(FileReader& f)
 }
 
 //=================================================================================================
+void QuestManager::LoadQuests(HANDLE file, vector<Quest*>& quests)
+{
+	uint count;
+	ReadFile(file, &count, sizeof(count), &tmp, nullptr);
+	quests.resize(count);
+	for(uint i = 0; i<count; ++i)
+	{
+		QUEST quest_type;
+		ReadFile(file, &quest_type, sizeof(quest_type), &tmp, nullptr);
+
+		Quest* quest = CreateQuest(quest_type);
+		quest->quest_id = quest_type;
+		if(quest->Load(file))
+			quests[i] = quest;
+		else
+			delete quest;
+	}
+}
+
+//=================================================================================================
 void QuestManager::LoadQuestEntries(FileReader& f)
 {
 	uint count;
@@ -450,26 +484,6 @@ void QuestManager::LoadOldQuestsData(FileReader& f)
 	game.quest_goblins->LoadOld(f.file);
 	game.quest_evil->LoadOld(f.file);
 	game.quest_crazies->LoadOld(f.file);
-}
-
-//=================================================================================================
-void QuestManager::LoadQuests(HANDLE file, vector<Quest*>& quests)
-{
-	uint count;
-	ReadFile(file, &count, sizeof(count), &tmp, nullptr);
-	quests.resize(count);
-	for(uint i = 0; i<count; ++i)
-	{
-		QUEST quest_type;
-		ReadFile(file, &quest_type, sizeof(quest_type), &tmp, nullptr);
-
-		Quest* quest = CreateQuest(quest_type);
-		quest->quest_id = quest_type;
-		if(quest->Load(file))
-			quests[i] = quest;
-		else
-			delete quest;
-	}
 }
 
 //=================================================================================================
@@ -618,7 +632,8 @@ void QuestManager::InitializeScript()
 		.Method("int get_progress()", asMETHOD(QuestInstance, GetProgress))
 		.Method("void set_progress(int)", asMETHOD(QuestInstance, SetProgress))
 		.Member("Unit@ start_unit", asOFFSET(QuestInstance, start_unit))
-		.Member("Location@ start_location", asOFFSET(QuestInstance, start_location));
+		.Member("Location@ start_location", asOFFSET(QuestInstance, start_location))
+		.Member("int start_time", asOFFSET(QuestInstance, start_time));
 
 	manager.ForType("Location")
 		.Method("void AddEvent(QuestInstance@, EVENT)", asFUNCTION(SLocation_AddEvent))
@@ -636,6 +651,7 @@ class Quest
 	void OnStart() {}
 	void OnProgress() {}
 	void OnEvent(Event e) {}
+	string FormatString(const string& in type) { return ""; }
 }
 
 )code";
@@ -832,6 +848,19 @@ void QuestManager::BuildScripts()
 	if(r < 0)
 		throw Format("Failed to build quest scripts, check log for details (%d).", r);
 
+	// get factory
+	for(auto scheme : quest_schemes)
+	{
+		cstring name = Format("_quest_%s::%s", scheme->id.c_str(), scheme->id.c_str());
+		scheme->script_type = module->GetTypeInfoByDecl(name);
+		assert(scheme->script_type);
+		cstring decl = Format("%s@ %s()", name, scheme->id.c_str());
+		scheme->script_factory = scheme->script_type->GetFactoryByDecl(decl);
+		assert(scheme->script_factory);
+		scheme->script_upgrade_func = scheme->script_type->GetMethodByDecl("void Upgrade(int, AnyData@)");
+	}
+	CHECKED(module->SetDefaultNamespace(""));
+
 	INFO("Finished building scripts.");
 }
 
@@ -924,7 +953,6 @@ void QuestManager::AddQuestInfos()
 	quest_infos.push_back({ "bandits_collect_toll", QuestType::Captain, Q_BANDITS_COLLECT_TOLL });
 	quest_infos.push_back({ "camp_near_city", QuestType::Captain, Q_CAMP_NEAR_CITY });
 	quest_infos.push_back({ "rescue_captive", QuestType::Captain, Q_RESCUE_CAPTIVE });
-	quest_infos.push_back({ "kill_animals", QuestType::Captain, Q_KILL_ANIMALS });
 	quest_infos.push_back({ "wanted", QuestType::Captain, Q_WANTED });
 
 	quest_infos.push_back({ "deliver_letter", QuestType::Mayor, Q_DELIVER_LETTER });
@@ -1018,4 +1046,40 @@ void QuestManager::RemoveQuestEntry(QuestEntry* entry)
 {
 	assert(entry);
 	DeleteElement(quest_entries, entry);
+}
+
+QuestScheme* QuestManager::FindQuestScheme(cstring id)
+{
+	assert(id);
+
+	for(auto scheme : quest_schemes)
+	{
+		if(scheme->id == id)
+			return scheme;
+	}
+
+	return nullptr;
+}
+
+QuestInstance* QuestManager::UpgradeQuest(Quest* quest, QuestScheme* quest_scheme, SpecialUnit start_unit, AnyData* any_data)
+{
+	assert(quest && quest_scheme && quest_scheme->script_upgrade_func && any_data);
+
+	auto& game = Game::Get();
+
+	auto instance = StartQuest2(quest_scheme, quest->refid);
+	if(quest->start_loc != -1)
+	{
+		auto start_loc = game.locations[quest->start_loc];
+		instance->start_location = start_loc;
+		instance->start_unit = game.GetSpecialUnit(start_loc, start_unit);
+	}
+	instance->start_time = quest->start_time;
+
+	ScriptManager::Get()
+		.CallMethod(instance->script_object, quest_scheme->script_upgrade_func)
+		.Arg(quest->prog)
+		.Arg(any_data);
+
+	return instance;
 }

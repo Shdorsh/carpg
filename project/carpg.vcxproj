@@ -164,7 +164,9 @@
     <ClInclude Include="source\game\quests\QuestEntry.h" />
     <ClInclude Include="source\game\quests\QuestInstance.h" />
     <ClInclude Include="source\game\quests\QuestScheme.h" />
+    <ClInclude Include="source\game\script\AnyData.h" />
     <ClInclude Include="source\game\script\ScriptManager.h" />
+    <ClInclude Include="source\game\stats\SpecialUnit.h" />
     <ClInclude Include="source\game\system\Building.h" />
     <ClInclude Include="source\game\system\BuildingGroup.h" />
     <ClInclude Include="source\game\system\BuildingScript.h" />
@@ -366,6 +368,7 @@
     <ClCompile Include="source\game\GameStats.cpp" />
     <ClCompile Include="source\game\quests\QuestInstance.cpp" />
     <ClCompile Include="source\game\quests\QuestScheme.cpp" />
+    <ClCompile Include="source\game\script\AnyData.cpp" />
     <ClCompile Include="source\game\script\ScriptManager.cpp" />
     <ClCompile Include="source\game\system\Building.cpp" />
     <ClCompile Include="source\game\system\BuildingGroup.cpp" />

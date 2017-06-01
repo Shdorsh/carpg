@@ -2,6 +2,8 @@
 
 //-----------------------------------------------------------------------------
 #include "QuestConsts.h"
+#include "SpecialUnit.h"
+#include "script/AnyData.h"
 
 //-----------------------------------------------------------------------------
 struct Item;
@@ -86,6 +88,7 @@ public:
 	Quest* CreateQuest(QUEST quest_id);
 	AnyQuestInfo GetRandomQuest(QuestType type);
 	Quest* StartQuest(AnyQuestInfo quest_info);
+	QuestInstance* StartQuest2(QuestScheme* scheme, int refid = -1);
 	void AddQuestItemRequest(const Item** item, cstring name, int quest_refid, vector<ItemSlot>* items, Unit* unit = nullptr);
 	void Reset();
 	void Cleanup();
@@ -127,6 +130,8 @@ public:
 	vector<QuestEntry*>& GetQuestEntries() { return quest_entries; }
 	QuestEntry* GetQuestEntry(int quest_index);
 	AnyQuest FindQuest2(int refid);
+	QuestScheme* FindQuestScheme(cstring id);
+	QuestInstance* UpgradeQuest(Quest* quest, QuestScheme* quest_scheme, SpecialUnit start_unit, AnyData* any_data);
 
 private:
 	void AddQuestInfos();

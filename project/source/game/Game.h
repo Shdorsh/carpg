@@ -24,6 +24,7 @@
 #include "Mapa2.h"
 #include "Location.h"
 #include "Unit.h"
+#include "SpecialUnit.h"
 
 enum TRAP_TYPE;
 
@@ -1902,6 +1903,7 @@ public:
 	void GetCityEntry(VEC3& pos, float& rot);
 	void AbadonLocation(Location* loc);
 	void SetLocationVisited(Location& loc);
+	Unit* GetSpecialUnit(Location* loc, SpecialUnit special);
 	
 	vector<Location*> locations; // lokacje w grze, mo¿e byæ nullptr
 	Location* location; // wskaŸnik na aktualn¹ lokacjê [odtwarzany]

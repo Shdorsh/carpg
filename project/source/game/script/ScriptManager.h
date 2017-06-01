@@ -66,6 +66,53 @@ struct TypeBuilder
 	asIScriptEngine* engine;
 };
 
+struct CallBuilder
+{
+	CallBuilder(asIScriptEngine* engine, asIScriptFunction* func, asIScriptObject* obj) : engine(engine), func(func), index(0)
+	{
+		ctx = engine->RequestContext();
+
+		r = ctx->Prepare(func);
+		if(r >= 0)
+			r = ctx->SetObject(obj);
+	}
+	
+	CallBuilder& Arg(int value)
+	{
+		if(r >= 0)
+			r = ctx->SetArgDWord(index++, (asDWORD)value);
+		return *this;
+	}
+
+	template<typename T>
+	CallBuilder& Arg(T* value)
+	{
+		if(r >= 0)
+			r = ctx->SetArgObject(index++, value);
+		return *this;
+	}
+
+	~CallBuilder()
+	{
+		if(r < 0)
+			Error("ScriptManager: Failed to prepare function call '%s' (%d).", func->GetDeclaration(), r);
+		else
+		{
+			r = ctx->Execute();
+			if(r < 0)
+				Error("ScriptManager: Failed to execute function call '%s' (%d).", func->GetDeclaration(), r);
+		}
+
+		engine->ReturnContext(ctx);
+	}
+
+private:
+	asIScriptEngine* engine;
+	asIScriptContext* ctx;
+	asIScriptFunction* func;
+	int r, index;
+};
+
 class ScriptManager : public Singleton<ScriptManager>
 {
 public:
@@ -136,6 +183,22 @@ public:
 	asIScriptModule* GetModule() { return module; }
 
 	bool RunScript(cstring code);
+
+	asIScriptObject* CreateInstance(asIScriptFunction* factory);
+
+	CallBuilder CallFunction(asIScriptFunction* func)
+	{
+		assert(func);
+		CallBuilder builder(engine, func, nullptr);
+		return builder;
+	}
+
+	CallBuilder CallMethod(asIScriptObject* obj, asIScriptFunction* func)
+	{
+		assert(obj && func);
+		CallBuilder builder(engine, func, obj);
+		return builder;
+	}
 
 private:
 	asIScriptEngine* engine;

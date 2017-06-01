@@ -902,11 +902,11 @@ quest72 = "our city"
 quest73 = "our village"
 quest74 = "bandits attacked"
 quest75 = "orcs attacked"
-quest76 = "Kill animals"
-quest77 = "Animals from %s at %s from here concerned travelers. I have to clean this location during the month."
-quest78 = "I cleared %s."
-quest79 = "I informed about cleaning the site and I received the reward. Quest done!"
-quest80 = "I did not get time to clean the site."
+quest76 = "" // removed
+quest77 = "" // removed
+quest78 = "" // removed
+quest79 = "" // removed
+quest80 = "" // removed
 quest81 = "Find artifact"
 quest82 = "Obtained from traveler in %s at %d.%d.%d."
 quest83 = "The traveler wants me to find %s which is located in the %s to the %s from here. I have two months for that."
@@ -1093,10 +1093,10 @@ quest263 = "I got reward for killing %s. Quest done!"
 quest264 = " and "
 quest265 = "Retrieve parcel"
 quest266 = "goblins attacked"
-// 267
-// 268
-// 269
-// 270
+quest267 = "" // removed
+quest268 = "" // removed
+quest269 = "" // removed
+quest270 = "" // removed
 quest271 = "Academy is under construction, you need to wait until it is finished..."
 quest272 = "Marco Bartoli"
 quest273 = "Arto"

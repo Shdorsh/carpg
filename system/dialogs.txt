@@ -121,12 +121,6 @@ dialog alchemist
 //==============================================================================
 dialog mayor
 {
-	if special "q_main_need_talk"
-	{
-		do_once
-		do_quest "main"
-		restart
-	}
 	check_quest_timeout 0
 	if once
 	{
@@ -400,11 +394,6 @@ dialog guard_captain
 	if need_talk "road_bandits"
 	{
 		do_quest "road_bandits"
-		do_once
-	}
-	if need_talk "animals"
-	{
-		do_quest "animals"
 		do_once
 	}
 	if need_talk "camp"
@@ -3171,42 +3160,6 @@ dialog q_goblins_boss
 	talk 1
 	talk 2
 	special "attack"
-	end
-}
-
-//==============================================================================
-dialog q_kill_animals_start
-{
-	talk 0
-	talk 1
-	choice 2
-	{
-		set_quest_progress 1
-		talk2 3
-		talk2 4
-		end
-	}
-	escape choice 5
-	{
-		end
-	}
-	show_choices
-}
-
-//==============================================================================
-dialog q_kill_animals_timeout
-{
-	set_quest_progress 4
-	talk2 0
-	end
-}
-
-//==============================================================================
-dialog q_kill_animals_end
-{
-	set_quest_progress 3
-	talk 0
-	talk 1
 	end
 }
 

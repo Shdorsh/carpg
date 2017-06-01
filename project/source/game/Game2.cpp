@@ -5774,12 +5774,6 @@ void Game::UpdateGameDialog(DialogContext& ctx, float dt)
 					if(secret_state == SECRET_WIN)
 						++ctx.dialog_level;
 				}
-				else if(strcmp(msg, "q_main_need_talk") == 0)
-				{
-					Quest* q = QuestManager::Get().FindQuestById(Q_MAIN);
-					if(current_location == q->start_loc && q->prog == 0) // oh well :3
-						++ctx.dialog_level;
-				}
 				else
 				{
 					WARN(Format("DT_SPECIAL_IF: %s", msg));
@@ -21790,6 +21784,11 @@ DateTime S_get_current_date()
 	return dt;
 }
 
+int S_get_worldtime()
+{
+	return Game::Get().worldtime;
+}
+
 void Game::InitializeScript()
 {
 	auto& manager = ScriptManager::Get();
@@ -21833,4 +21832,41 @@ void Game::InitializeScript()
 		.Method("string ToString() const", asMETHOD(DateTime, DateStr));
 
 	manager.AddFunction("DateTime get_current_date()", asFUNCTION(S_get_current_date));
+	manager.AddFunction("int get_worldtime()", asFUNCTION(S_get_worldtime));
+}
+
+Unit* Game::GetSpecialUnit(Location* loc, SpecialUnit special)
+{
+	assert(loc);
+
+	if(special == SU_NONE)
+		return nullptr;
+
+	cstring unit_id = nullptr;
+	switch(special)
+	{
+	case SU_MAYOR:
+		if(loc->type == L_CITY)
+		{
+			City* city = (City*)loc;
+			if(city->IsVillage())
+				unit_id = "soltys";
+			else
+				unit_id = "mayor";
+		}
+		else
+			unit_id = "mayor";
+		break;
+	case SU_CAPTAIN:
+		unit_id = "guard_captain";
+		break;
+	case SU_TRAVELER:
+		unit_id = "traveler";
+		break;
+	}
+
+	auto unit_data = FindUnitData(unit_id);
+	int at_level;
+	auto unit = loc->FindUnit(unit_data, at_level);
+	return unit;
 }
