@@ -133,7 +133,7 @@ quest "kill_animals"
 					target_loc.ResetSpawn();
 					target_loc.AddEvent(instance, E_CLEARED_LOCATION);
 					StartQuest(Str("title"));
-					AddQuestEntry(Format(Str("start1"), current_location.name, current_date));
+					AddQuestEntry(Format(Str("start1"), current_location.name, worldtime.date));
 					AddQuestEntry(Format(Str("start2"), current_location.name, target_loc.name, GetLocationDirName(current_location, target_loc)));
 					AddQuestTimeout(30);
 				}

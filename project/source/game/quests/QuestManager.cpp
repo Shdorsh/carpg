@@ -698,6 +698,14 @@ void QuestManager::FinishQuest()
 		quest->entry->state = QuestEntry::FINISHED;
 		journal_changes = true;
 	}
+
+	/*FinishQuest(); ->
+	remove timeout
+	mark as finished
+	((City*)game->locations[start_loc])->quest_captain = CityQuestState::None;
+
+	game->game_gui->journal->NeedUpdate(Journal::Quests, quest_index);
+	game->AddGameMsg3(GMS_JOURNAL_UPDATED);*/
 }
 
 void QuestManager::FailQuest()

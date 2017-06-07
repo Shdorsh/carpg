@@ -21767,7 +21767,12 @@ const string& S_GetLocationDirName(Location* from, Location* to)
 
 struct DateTime
 {
-	int day, month, year;
+	int date, time;
+
+	DateTime(int date, int time) : date(date), time(time)
+	{
+
+	}
 
 	string DateStr() const
 	{
@@ -21778,8 +21783,7 @@ struct DateTime
 
 DateTime S_get_current_date()
 {
-	// TODO
-	assert(0);
+	Game::Get().worldtime;
 	DateTime dt = { 0 };
 	return dt;
 }
