@@ -1,7 +1,8 @@
 ﻿- missing localized text for building, mark as not required
 - savegame text is not quoted (0.2.11 for example - load error)
-- trim crash on polish letters
-- fast delegate type safety, currently i accepts different type and sometimes even works
+- opcje, otwarcie sterowania pozwala klikać na scrollbary
+- can't start game, building script has 0 variants
+- Font::SplitLine, can't use both DT_SINGLE_LINE and DT_PARSE_SPECIAL 
 
 + building script
 	+ reload
@@ -22,6 +23,12 @@ FAR FAR TODO:
 	+ change tab text
 	+ drag & drop
 	+ context menu FEATURE
++ fast delegate type safety, currently i accepts different type and sometimes even works
++ utf8
+	- trim crash on polish letters
++ refactor ResourceManager, all resources inheirt from Resource, not BaseResource, allow multiple variables/factory, fix problems with Sound/Music
++ options to select sound device (default/headphones/speakers)
++ DrawBOx texture scale towards cursor pos
 
 ZNANE BŁEDY:
 - wyszukiwanie ścieżek ai nie działa zbyt dobrze i mogą się zablokować
