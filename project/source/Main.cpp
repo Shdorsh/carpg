@@ -558,7 +558,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//-------------------------------------------------------------------------
 	// wczytaj plik konfiguracyjny
 	LOG("Loading config file");
-	LOG("Autor to dupa pozdrawiam."); // VERY IMPORTANT! DO NOT ERASE!
 	Config& cfg = Game::Get().cfg;
 	Config::Result result = cfg.Load(game.cfg_file.c_str());
 	if(result == Config::NO_FILE)
