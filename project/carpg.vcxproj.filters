@@ -58,6 +58,9 @@
     <Filter Include="2. engine\gui\dialogs">
       <UniqueIdentifier>{22378397-713d-49a2-bddf-1773b059fcbc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="3. game\script">
+      <UniqueIdentifier>{d65c6558-9bdc-4567-8591-6845fd6c2240}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\resource\PickLanguage.cpp">
@@ -630,6 +633,9 @@
     </ClCompile>
     <ClCompile Include="source\game\entity\ItemContainer.cpp">
       <Filter>3. game\entity</Filter>
+    </ClCompile>
+    <ClCompile Include="source\game\script\ScriptManager.cpp">
+      <Filter>3. game\script</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1260,6 +1266,9 @@
     </ClInclude>
     <ClInclude Include="source\game\entity\ItemContainer.h">
       <Filter>3. game\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="source\game\script\ScriptManager.h">
+      <Filter>3. game\script</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
