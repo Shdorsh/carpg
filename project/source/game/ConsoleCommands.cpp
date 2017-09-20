@@ -17,6 +17,7 @@
 #include "Team.h"
 #include "SaveState.h"
 #include "QuestManager.h"
+#include "ScriptManager.h"
 
 //-----------------------------------------------------------------------------
 extern string g_ctime;
@@ -142,6 +143,19 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 	{
 		if(!t.Next())
 			return;
+
+		if(t.IsSymbol('#'))
+		{
+			if(Net::IsClient())
+			{
+				Msg("Script can only be used by server.");
+				return;
+			}
+
+			cstring code = t.GetTextRest();
+			ScriptManager::Get().RunScript(code);
+		}
+
 		const string& token = t.MustGetItem();
 
 		for(vector<ConsoleCommand>::iterator it = cmds.begin(), end = cmds.end(); it != end; ++it)

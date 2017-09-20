@@ -957,7 +957,7 @@ void Engine::InitWindow(StartupOptions& options)
 	}
 
 	// show window
-	ShowWindow(hwnd, SW_SHOWNORMAL);
+	ShowWindow(hwnd, SW_HIDE);//  SW_SHOWNORMAL);
 
 	// reset cursor
 	replace_cursor = true;

@@ -840,6 +840,7 @@ namespace tokenizer
 			normal_seek.line = 0;
 			normal_seek.charpos = 0;
 		}
+		cstring GetTextRest();
 
 	private:
 		bool DoNext(SeekData& s, bool return_eol);

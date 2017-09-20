@@ -34,6 +34,7 @@
 /tools/text_comparer/Release
 
 /external/lib
+/external/angelscript/add_on/Output
 /external/angelscript/angelscript/Output
 /external/Bullet/build/vs2015/Output
 /external/SLikeNet/Lib/LibStatic/Output

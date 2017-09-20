@@ -64,6 +64,7 @@
 #include <functional>
 #include <queue>
 #include <DirectXMath.h>
+#include <angelscript.h>
 
 //-----------------------------------------------------------------------------
 using std::string;

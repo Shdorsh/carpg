@@ -1353,3 +1353,9 @@ void Tokenizer::ForceMoveToClosingSymbol(char start, char end)
 	if(!MoveToClosingSymbol(start, end))
 		Throw("Missing closing '%c' started at '%c' (%u:%u).", end, start, pos, charpos);
 }
+
+//=================================================================================================
+cstring Tokenizer::GetTextRest()
+{
+	return str->c_str() + normal_seek.pos;
+}

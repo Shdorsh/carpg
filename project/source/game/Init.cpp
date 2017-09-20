@@ -13,6 +13,7 @@
 #include "Trap.h"
 #include "QuestManager.h"
 #include "Action.h"
+#include "ScriptManager.h"
 
 extern void HumanPredraw(void* ptr, Matrix* mat, int n);
 extern const int ITEM_IMAGE_SIZE;
@@ -78,6 +79,16 @@ void Game::PreconfigureGame()
 	PreloadLanguage();
 	PreloadData();
 	CreatePlaceholderResources();
+	ScriptManager::Get().Init();
+
+
+	ScriptManager::Get().RunScript(R"code(
+int a = 4;
+int b = 3;
+Info(a+"+"+b+"="+(a+b));
+
+)code");
+
 	ResourceManager::Get().SetLoadScreen(load_screen);
 }
 

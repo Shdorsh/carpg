@@ -23,6 +23,7 @@
 #include "AIController.h"
 #include "Spell.h"
 #include "Team.h"
+#include "ScriptManager.h"
 
 // limit fps
 #define LIMIT_DT 0.3f
@@ -1811,6 +1812,7 @@ void Game::OnCleanup()
 	free_cave_data();
 	DeleteElements(game_players);
 	DeleteElements(old_players);
+	ScriptManager::Get().Release();
 
 	if(peer)
 		SLNet::RakPeerInterface::DestroyInstance(peer);

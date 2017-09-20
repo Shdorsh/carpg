@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="scriptarray">
+      <UniqueIdentifier>{34f4a928-1373-4abb-aaeb-b451ad0d889e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="scriptstdstring">
+      <UniqueIdentifier>{1a390090-ed46-4682-92e7-c50429dab34c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="scriptarray\scriptarray.cpp">
+      <Filter>scriptarray</Filter>
+    </ClCompile>
+    <ClCompile Include="scriptstdstring\scriptstdstring.cpp">
+      <Filter>scriptstdstring</Filter>
+    </ClCompile>
+    <ClCompile Include="scriptstdstring\scriptstdstring_utils.cpp">
+      <Filter>scriptstdstring</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="scriptarray\scriptarray.h">
+      <Filter>scriptarray</Filter>
+    </ClInclude>
+    <ClInclude Include="scriptstdstring\scriptstdstring.h">
+      <Filter>scriptstdstring</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
