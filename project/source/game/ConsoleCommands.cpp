@@ -152,8 +152,18 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 				return;
 			}
 
+			if(!devmode)
+			{
+				Msg("You can't use script command without devmode.");
+				return;
+			}
+
 			cstring code = t.GetTextRest();
-			ScriptManager::Get().RunScript(code);
+			if(!ScriptManager::Get().RunScript(code))
+			{
+				Msg("Script failed, check log for details.");
+				return;
+			}
 		}
 
 		const string& token = t.MustGetItem();

@@ -1060,6 +1060,8 @@ public:
 	void StartNextDialog(DialogContext& ctx, GameDialog* dialog, int& if_level, Quest* quest = nullptr);
 	void EndDialog(DialogContext& ctx);
 	void UpdateGameDialog(DialogContext& ctx, float dt);
+	void ExecuteGameDialogSpecial(DialogContext& ctx, cstring msg, int& if_level);
+	bool ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg);
 	void GenerateStockItems();
 	void GenerateMerchantItems(vector<ItemSlot>& items, int price_limit);
 	void ApplyLocationTexturePack(TexturePack& floor, TexturePack& wall, TexturePack& ceil, LocationTexturePack& tex);

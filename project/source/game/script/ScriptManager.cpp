@@ -87,3 +87,39 @@ bool ScriptManager::RunScript(cstring code)
 		return false;
 	}
 }
+
+bool ScriptManager::RunIfScript(cstring code)
+{
+	assert(code);
+
+	// compile
+	auto tmp_module = engine->GetModule("RunScriptModule", asGM_ALWAYS_CREATE);
+	cstring packed_code = Format("bool f() { return (%s); }", code);
+	asIScriptFunction* func;
+	int r = tmp_module->CompileFunction("RunScript", packed_code, -1, 0, &func);
+	if(r < 0)
+	{
+		Error("ScriptManager: Failed to parse script (%d): %s", r, code);
+		return false;
+	}
+
+	// run
+	bool ok = false;
+	auto tmp_context = engine->RequestContext();
+	r = tmp_context->Prepare(func);
+	if(r >= 0)
+	{
+		r = tmp_context->Execute();
+		ok = (tmp_context->GetReturnByte() != 0);
+	}
+	func->Release();
+	engine->ReturnContext(tmp_context);
+
+	if(r >= 0)
+		return ok;
+	else
+	{
+		Error("ScriptManager: Failed to run script (%d): %s", r, code);
+		return false;
+	}
+}

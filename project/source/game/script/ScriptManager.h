@@ -14,6 +14,7 @@ public:
 	void Init();
 	void Release();
 	bool RunScript(cstring code);
+	bool RunIfScript(cstring code);
 
 private:
 	asIScriptEngine* engine;
