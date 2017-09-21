@@ -1221,8 +1221,6 @@ public:
 	LevelContext& GetContext(Unit& unit);
 	LevelContext& GetContext(const Vec3& pos);
 	// dru¿yna
-	bool HaveTeamMemberNPC();
-	bool HaveTeamMemberPC();
 	bool IsLeader()
 	{
 		if(Net::IsSingleplayer())

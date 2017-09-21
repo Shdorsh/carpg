@@ -65,6 +65,13 @@ public:
 		return *this;
 	}
 
+	TypeBuilder& WithInstance(cstring decl, void* ptr)
+	{
+		assert(decl && ptr);
+		CHECKED(engine->RegisterGlobalProperty(decl, ptr));
+		return *this;
+	}
+
 private:
 	cstring name;
 	asIScriptEngine* engine;
@@ -101,6 +108,12 @@ public:
 	SpecificTypeBuilder<T>& Member(cstring decl, int offset)
 	{
 		TypeBuilder::Member(decl, offset);
+		return *this;
+	}
+
+	SpecificTypeBuilder<T>& WithInstance(cstring decl, void* ptr)
+	{
+		TypeBuilder::WithInstance(decl, ptr);
 		return *this;
 	}
 };

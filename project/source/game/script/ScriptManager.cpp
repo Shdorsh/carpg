@@ -5,6 +5,8 @@
 #include <scriptstdstring/scriptstdstring.h>
 #include "PlayerController.h"
 #include "Unit.h"
+#include "Location.h"
+#include "Team.h"
 
 ScriptManager Singleton<ScriptManager>::instance;
 void RegisterScriptHelpers();
@@ -131,17 +133,48 @@ void ScriptManager::RegisterAllTypes()
 {
 	AddType("Unit");
 	AddType("Player");
+	AddType("HeroData")
+		.Member("bool lost_pvp", offsetof(HeroData, lost_pvp));
 
 	ForType("Unit")
 		.Member("Player@ player", offsetof(Unit, player))
+		.Member("HerData@ hero", offsetof(Unit, hero))
 		.Member("int gold", offsetof(Unit, gold))
-		.Member("Vec3 pos", offsetof(Unit, pos));
+		.Member("Vec3 pos", offsetof(Unit, pos))
+		.Method("float GetHpp()", asMETHOD(Unit, GetHpp));
 
 	ForType("Player")
 		.Member("Unit@ unit", offsetof(PlayerController, unit));
 
-	AddType("ScriptContext")
-		.Member("Player@ player", offsetof(ScriptContext, player));
+	AddEnum("LOCATION_TYPE", {
+		{ L_CITY, "L_CITY" },
+		{ L_CAVE, "L_CAVE" },
+		{ L_CAMP, "L_CAMP" },
+		{ L_DUNGEON, "L_DUNGEON" },
+		{ L_CRYPT, "L_CRYPT" },
+		{ L_FOREST, "L_FOREST" },
+		{ L_MOONWELL, "L_MOONWELL" },
+		{ L_ENCOUNTER, "L_ENCOUNTER" },
+		{ L_ACADEMY, "L_ACADEMY" }
+	});
 
-	CHECKED(engine->RegisterGlobalProperty("ScriptContext C", &Ctx));
+	AddType("Location")
+		.Member("LOCATION_TYPE type", offsetof(Location, type));
+
+	AddType("ScriptContext")
+		.Member("Unit@ talker", offsetof(ScriptContext, talker))
+		.Member("Player@ player", offsetof(ScriptContext, player))
+		.Member("Player@ local_player", offsetof(ScriptContext, local_player))
+		.Member("Location@ location", offsetof(ScriptContext, location))
+		.WithInstance("ScriptContext C", &Ctx);
+
+	Team.Register();
+}
+
+void ScriptManager::AddEnum(cstring name, std::initializer_list<Enum> const& values)
+{
+	assert(name && values.size() > 0u);
+	CHECKED(engine->RegisterEnum(name));
+	for(auto& e : values)
+		CHECKED(engine->RegisterEnumValue(name, e.name, e.value));
 }

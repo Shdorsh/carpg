@@ -1,5 +1,6 @@
 ﻿FEATURE:
 ! remove SW_HIDE
++ set C
 ===============================================================================================================
 CURRENT:
 ? sort unit labels by distance
@@ -16,6 +17,8 @@ CURRENT:
 ? czy można przeszkadzać komuś w walce gadając z nim
 ===============================================================================================================
 NEW:
++ join dungeon & crypt
++ join herodata with unit, anyone can join team etc
 ===============================================================================================================
 VERIFY:
 - da się pogadać gdy leży, wtedy wstaje od razu [da się pogadać jak wstaje]

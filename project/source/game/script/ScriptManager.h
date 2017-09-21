@@ -77,6 +77,14 @@ public:
 		CHECKED(engine->RegisterGlobalFunction(decl, funcPointer, asCALL_CDECL));
 	}
 
+	struct Enum
+	{
+		int value;
+		cstring name;
+	};
+
+	void AddEnum(cstring name, std::initializer_list<Enum> const& values);
+
 	ScriptContext Ctx;
 
 	asIScriptEngine* GetEngine() { return engine; }

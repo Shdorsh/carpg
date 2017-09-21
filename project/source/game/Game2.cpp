@@ -5793,29 +5793,9 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 				return true;
 		}
 	}
-	else if(strcmp(msg, "have_team") == 0)
-	{
-		if(Team.HaveTeamMember())
-			return true;
-	}
-	else if(strcmp(msg, "have_pc_team") == 0)
-	{
-		if(HaveTeamMemberPC())
-			return true;
-	}
-	else if(strcmp(msg, "have_npc_team") == 0)
-	{
-		if(HaveTeamMemberNPC())
-			return true;
-	}
 	else if(strcmp(msg, "is_drunk") == 0)
 	{
 		if(IS_SET(ctx.talker->data->flags, F_AI_DRUNKMAN) && ctx.talker->in_building != -1)
-			return true;
-	}
-	else if(strcmp(msg, "is_team_member") == 0)
-	{
-		if(Team.IsTeamMember(*ctx.talker))
 			return true;
 	}
 	else if(strcmp(msg, "is_not_known") == 0)
@@ -5829,19 +5809,9 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 		if(local_ctx.type == LevelContext::Inside)
 			return true;
 	}
-	else if(strcmp(msg, "is_team_full") == 0)
-	{
-		if(Team.GetActiveTeamSize() >= MAX_TEAM_SIZE)
-			return true;
-	}
 	else if(strcmp(msg, "can_join") == 0)
 	{
 		if(ctx.pc->unit->gold >= ctx.talker->hero->JoinCost())
-			return true;
-	}
-	else if(strcmp(msg, "is_inside_town") == 0)
-	{
-		if(city_ctx)
 			return true;
 	}
 	else if(strcmp(msg, "is_free") == 0)
@@ -5903,30 +5873,9 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 		if(city_ctx && IS_SET(city_ctx->flags, City::HaveArena) && Vec3::Distance2d(ctx.talker->pos, city_ctx->arena_pos) < 5.f)
 			return true;
 	}
-	else if(strcmp(msg, "is_lost_pvp") == 0)
-	{
-		assert(ctx.talker->IsHero());
-		if(ctx.talker->hero->lost_pvp)
-			return true;
-	}
-	else if(strcmp(msg, "is_healthy") == 0)
-	{
-		if(ctx.talker->GetHpp() >= 0.75f)
-			return true;
-	}
 	else if(strcmp(msg, "is_arena_free") == 0)
 	{
 		if(arena_free)
-			return true;
-	}
-	else if(strcmp(msg, "is_bandit") == 0)
-	{
-		if(Team.is_bandit)
-			return true;
-	}
-	else if(strcmp(msg, "have_gold_100") == 0)
-	{
-		if(ctx.pc->unit->gold >= 100)
 			return true;
 	}
 	else if(strcmp(msg, "is_ginger") == 0)
@@ -5937,11 +5886,6 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 	else if(strcmp(msg, "is_bald") == 0)
 	{
 		if(ctx.pc->unit->human_data->hair == -1)
-			return true;
-	}
-	else if(strcmp(msg, "is_camp") == 0)
-	{
-		if(target_loc_is_camp)
 			return true;
 	}
 	else if(strcmp(msg, "taken_guards_reward") == 0)
@@ -6072,11 +6016,6 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 				&& quest_mages2->start_loc == current_location))
 			return true;
 	}
-	else if(strcmp(msg, "have_100") == 0)
-	{
-		if(ctx.pc->unit->gold >= 100)
-			return true;
-	}
 	else if(strcmp(msg, "q_gobliny_zapytaj") == 0)
 	{
 		if(quest_goblins->goblins_state >= Quest_Goblins::State::MageTalked
@@ -6111,11 +6050,6 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 		if(ctx.talker->hero->melee)
 			return true;
 	}
-	else if(strcmp(msg, "is_leader") == 0)
-	{
-		if(ctx.pc->unit == Team.leader)
-			return true;
-	}
 	else if(strncmp(msg, "have_player", 11) == 0)
 	{
 		int id = int(msg[11] - '1');
@@ -6125,11 +6059,6 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 	else if(strcmp(msg, "waiting_for_pvp") == 0)
 	{
 		if(pvp_response.ok)
-			return true;
-	}
-	else if(strcmp(msg, "in_city") == 0)
-	{
-		if(city_ctx)
 			return true;
 	}
 	else if(strcmp(msg, "ironfist_can_start") == 0)
@@ -6190,11 +6119,6 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 	else if(strcmp(msg, "q_szaleni_trzeba_pogadac") == 0)
 	{
 		if(quest_crazies->crazies_state == Quest_Crazies::State::FirstAttack)
-			return true;
-	}
-	else if(strcmp(msg, "have_1") == 0)
-	{
-		if(ctx.pc->unit->gold != 0)
 			return true;
 	}
 	else if(strcmp(msg, "secret_first_dialog") == 0)
@@ -16164,32 +16088,6 @@ void Game::SpawnOutsideBariers()
 		obj->setWorldTransform(tr);
 		phy_world->addCollisionObject(obj, CG_BARRIER);
 	}
-}
-
-bool Game::HaveTeamMemberNPC()
-{
-	if(Team.GetActiveTeamSize() < 2)
-		return false;
-	for(Unit* unit : Team.active_members)
-	{
-		if(!unit->IsPlayer())
-			return true;
-	}
-	return false;
-}
-
-bool Game::HaveTeamMemberPC()
-{
-	if(Net::IsSingleplayer())
-		return false;
-	if(Team.GetActiveTeamSize() < 2)
-		return false;
-	for(Unit* unit : Team.active_members)
-	{
-		if(unit->IsPlayer() && unit != pc->unit)
-			return true;
-	}
-	return false;
 }
 
 Vec2 Game::GetMapPosition(Unit& unit)

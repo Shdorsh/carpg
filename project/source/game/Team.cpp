@@ -2,6 +2,7 @@
 #include "Core.h"
 #include "Team.h"
 #include "Unit.h"
+#include "ScriptManager.h"
 
 TeamSingleton Team;
 
@@ -52,6 +53,28 @@ Unit* TeamSingleton::FindTeamMember(cstring id)
 
 	assert(0);
 	return nullptr;
+}
+
+uint TeamSingleton::GetActiveNpcCount()
+{
+	uint count = 0;
+	for(Unit* unit : active_members)
+	{
+		if(!unit->player)
+			++count;
+	}
+	return count;
+}
+
+uint TeamSingleton::GetNpcCount()
+{
+	uint count = 0;
+	for(Unit* unit : members)
+	{
+		if(!unit->player)
+			++count;
+	}
+	return count;
 }
 
 int TeamSingleton::GetPCShare()
@@ -129,6 +152,52 @@ void TeamSingleton::GetTeamInfo(TeamInfo& info)
 	}
 }
 
+uint TeamSingleton::GetPlayersCount()
+{
+	uint count = 0;
+	for(Unit* unit : active_members)
+	{
+		if(unit->player)
+			++count;
+	}
+	return count;
+}
+
+bool TeamSingleton::HaveActiveNpc()
+{
+	for(Unit* unit : active_members)
+	{
+		if(!unit->player)
+			return true;
+	}
+	return false;
+}
+
+bool TeamSingleton::HaveNpc()
+{
+	for(Unit* unit : members)
+	{
+		if(!unit->player)
+			return true;
+	}
+	return false;
+}
+
+bool TeamSingleton::HaveOtherPlayer()
+{
+	bool first = true;
+	for(Unit* unit : active_members)
+	{
+		if(unit->player)
+		{
+			if(!first)
+				return true;
+			first = false;
+		}
+	}
+	return false;
+}
+
 bool TeamSingleton::IsAnyoneAlive()
 {
 	for(Unit* unit : members)
@@ -187,6 +256,28 @@ void TeamSingleton::Load(HANDLE file)
 	ReadFile(file, &crazies_attack, sizeof(crazies_attack), &tmp, nullptr);
 	ReadFile(file, &is_bandit, sizeof(is_bandit), &tmp, nullptr);
 	ReadFile(file, &free_recruit, sizeof(free_recruit), &tmp, nullptr);
+}
+
+void TeamSingleton::Register()
+{
+	auto& sm = ScriptManager::Get();
+
+	sm.AddType("TeamSingleton")
+		.Member("bool is_bandit", offsetof(TeamSingleton, is_bandit))
+		.Method("uint GetActiveNpcCount()", asMETHOD(TeamSingleton, GetActiveNpcCount))
+		.Method("uint GetActiveTeamSize()", asMETHOD(TeamSingleton, GetActiveTeamSize))
+		.Method("Unit@ GetLeader()", asMETHOD(TeamSingleton, GetLeader))
+		.Method("uint GetMaxSize()", asMETHOD(TeamSingleton, GetMaxSize))
+		.Method("uint GetNpcCount()", asMETHOD(TeamSingleton, GetNpcCount))
+		.Method("uint GetTeamSize()", asMETHOD(TeamSingleton, GetTeamSize))
+		.Method("bool HaveActiveNpc()", asMETHOD(TeamSingleton, HaveActiveNpc))
+		.Method("bool HaveNpc()", asMETHOD(TeamSingleton, HaveNpc))
+		.Method("bool HaveOtherActiveTeamMember()", asMETHOD(TeamSingleton, HaveOtherActiveTeamMember))
+		.Method("bool HaveOtherPlayer()", asMETHOD(TeamSingleton, HaveOtherPlayer))
+		.Method("bool IsAnyoneAlive()", asMETHOD(TeamSingleton, IsAnyoneAlive))
+		.Method("bool IsLeader(Unit@ unit)", asMETHODPR(TeamSingleton, IsLeader, (const Unit&), bool))
+		.Method("bool IsTeamMember(Unit@ unit)", asMETHOD(TeamSingleton, IsTeamMember))
+		.WithInstance("TeamSingleton Team", &Team);
 }
 
 void TeamSingleton::Reset()
