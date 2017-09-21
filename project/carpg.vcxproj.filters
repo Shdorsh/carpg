@@ -637,6 +637,9 @@
     <ClCompile Include="source\game\script\ScriptManager.cpp">
       <Filter>3. game\script</Filter>
     </ClCompile>
+    <ClCompile Include="source\game\script\ScriptHelpers.cpp">
+      <Filter>3. game\script</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\resource\resource1.h">
@@ -1268,6 +1271,12 @@
       <Filter>3. game\entity</Filter>
     </ClInclude>
     <ClInclude Include="source\game\script\ScriptManager.h">
+      <Filter>3. game\script</Filter>
+    </ClInclude>
+    <ClInclude Include="source\game\script\ScriptContext.h">
+      <Filter>3. game\script</Filter>
+    </ClInclude>
+    <ClInclude Include="source\game\script\Builder.h">
       <Filter>3. game\script</Filter>
     </ClInclude>
   </ItemGroup>

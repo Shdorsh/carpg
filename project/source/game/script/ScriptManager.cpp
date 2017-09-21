@@ -3,8 +3,11 @@
 #include "ScriptManager.h"
 #include <scriptarray/scriptarray.h>
 #include <scriptstdstring/scriptstdstring.h>
+#include "PlayerController.h"
+#include "Unit.h"
 
-ScriptManager ScriptManager::instance;
+ScriptManager Singleton<ScriptManager>::instance;
+void RegisterScriptHelpers();
 
 void MessageCallback(const asSMessageInfo* msg, void* param)
 {
@@ -46,8 +49,8 @@ void ScriptManager::Init()
 	RegisterScriptArray(engine, true);
 	RegisterStdString(engine);
 	RegisterStdStringUtils(engine);
-
-	CHECKED(engine->RegisterGlobalFunction("void Info(const string& in)", asFUNCTION(f_info), asCALL_CDECL));
+	RegisterScriptHelpers();
+	RegisterAllTypes();
 }
 
 void ScriptManager::Release()
@@ -122,4 +125,23 @@ bool ScriptManager::RunIfScript(cstring code)
 		Error("ScriptManager: Failed to run script (%d): %s", r, code);
 		return false;
 	}
+}
+
+void ScriptManager::RegisterAllTypes()
+{
+	AddType("Unit");
+	AddType("Player");
+
+	ForType("Unit")
+		.Member("Player@ player", offsetof(Unit, player))
+		.Member("int gold", offsetof(Unit, gold))
+		.Member("Vec3 pos", offsetof(Unit, pos));
+
+	ForType("Player")
+		.Member("Unit@ unit", offsetof(PlayerController, unit));
+
+	AddType("ScriptContext")
+		.Member("Player@ player", offsetof(ScriptContext, player));
+
+	CHECKED(engine->RegisterGlobalProperty("ScriptContext C", &Ctx));
 }

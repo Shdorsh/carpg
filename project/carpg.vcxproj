@@ -207,6 +207,8 @@
     <ClInclude Include="source\game\panels\BookPanel.h" />
     <ClInclude Include="source\game\panels\GameDialogBox.h" />
     <ClInclude Include="source\game\quests\QuestConsts.h" />
+    <ClInclude Include="source\game\script\Builder.h" />
+    <ClInclude Include="source\game\script\ScriptContext.h" />
     <ClInclude Include="source\game\script\ScriptManager.h" />
     <ClInclude Include="source\game\stats\Action.h" />
     <ClInclude Include="source\game\stats\BaseObject.h" />
@@ -404,6 +406,7 @@
     <ClCompile Include="source\game\GameStats.cpp" />
     <ClCompile Include="source\game\panels\ActionPanel.cpp" />
     <ClCompile Include="source\game\panels\BookPanel.cpp" />
+    <ClCompile Include="source\game\script\ScriptHelpers.cpp" />
     <ClCompile Include="source\game\script\ScriptManager.cpp" />
     <ClCompile Include="source\game\stats\Action.cpp" />
     <ClCompile Include="source\game\stats\BaseObject.cpp" />

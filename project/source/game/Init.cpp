@@ -81,11 +81,14 @@ void Game::PreconfigureGame()
 	CreatePlaceholderResources();
 	ScriptManager::Get().Init();
 
+	auto& sm = ScriptManager::Get();
+	sm.Ctx.player = new PlayerController;
+	sm.Ctx.player->unit = new Unit;
+	sm.Ctx.player->unit->gold = 123;
+	sm.Ctx.player->unit->pos = Vec3(1, 2.5f, 5.68f);
 
 	ScriptManager::Get().RunScript(R"code(
-int a = 4;
-int b = 3;
-Info(a+"+"+b+"="+(a+b));
+Info(Format("{0}: {1},{2},{3}", C.player.unit.gold, C.player.unit.pos.x, C.player.unit.pos.y, C.player.unit.pos.z));
 
 )code");
 
