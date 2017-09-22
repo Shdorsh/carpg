@@ -388,7 +388,7 @@ void Game::NewGameCommon(Class clas, cstring name, HumanData& hd, CreatedCharact
 		Unit* npc = CreateUnit(GetHero(ClassInfo::GetRandom()), 2, nullptr, nullptr, false);
 		npc->ai = new AIController;
 		npc->ai->Init(npc);
-		npc->hero->know_name = true;
+		npc->hero->SetKnowNameDirect(true);
 		AddTeamMember(npc, false);
 		Team.free_recruit = false;
 		if(IS_SET(npc->data->flags2, F2_MELEE))
@@ -1703,10 +1703,7 @@ void Game::UpdateServerTransfer(float dt)
 					c.unit = unit;
 
 					AddMultiMsg(Format(txMpNPCLeft, unit->hero->name.c_str()));
-					if(city_ctx)
-						unit->hero->mode = HeroData::Wander;
-					else
-						unit->hero->mode = HeroData::Leave;
+					unit->hero->SetMode(city_ctx ? HeroData::Wander : HeroData::Leave);
 					unit->hero->team_member = false;
 					unit->hero->credit = 0;
 					unit->ai->city_wander = false;
@@ -1724,7 +1721,7 @@ void Game::UpdateServerTransfer(float dt)
 			Unit* npc = CreateUnit(GetHero(ClassInfo::GetRandom()), 2 * leader_perk, nullptr, nullptr, false);
 			npc->ai = new AIController;
 			npc->ai->Init(npc);
-			npc->hero->know_name = true;
+			npc->hero->SetKnowNameDirect(true);
 			AddTeamMember(npc, false);
 			if(IS_SET(npc->data->flags2, F2_MELEE))
 				npc->hero->melee = true;

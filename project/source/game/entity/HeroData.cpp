@@ -3,6 +3,9 @@
 #include "Core.h"
 #include "Game.h"
 #include "SaveState.h"
+#include "AIController.h"
+#include "ScriptManager.h"
+#include "Net.h"
 
 //=================================================================================================
 void HeroData::Init(Unit& _unit)
@@ -189,4 +192,67 @@ void HeroData::LevelUp()
 	unit->data->GetStatProfile().Set(unit->level, unit->stats.attrib, unit->stats.skill);
 	unit->CalculateStats();
 	unit->RecalculateHp();
+}
+
+//=================================================================================================
+void HeroData::SetKnowName(bool new_know_name)
+{
+	if(!new_know_name)
+		return;
+	know_name = true;
+	if(Net::IsOnline())
+	{
+		NetChange& c = Add1(Net::changes);
+		c.type = NetChange::TELL_NAME;
+		c.unit = unit;
+	}
+}
+
+//=================================================================================================
+void HeroData::SetMode(Mode new_mode)
+{
+	if(mode == new_mode)
+		return;
+	mode = new_mode;
+	switch(mode)
+	{
+	case Mode::Follow:
+	case Mode::Wander:
+	case Mode::Wait:
+		assert(unit->IsFollower());
+		unit->ai->city_wander = false;
+		if(mode == Wander)
+			unit->ai->loc_timer = Random(5.f, 10.f);
+		break;
+	}
+}
+
+//=================================================================================================
+void HeroData::Register()
+{
+	auto& sm = ScriptManager::Get();
+
+	sm.AddEnum("HERO_MODE", {
+		{ HeroData::Wander, "HM_WANDER" },
+		{ HeroData::Wait, "HM_WAIT" },
+		{ HeroData::Follow, "HM_FALLOW" },
+		{ HeroData::Leave, "HM_LEAVE" }
+	});
+
+	sm.ForType("HeroData")
+		// members
+		.Member("const CLASS clas", offsetof(HeroData, clas))
+		.Member("const int credit", offsetof(HeroData, credit))
+		.Member("const bool free", offsetof(HeroData, free))
+		.Member("const bool know_name", offsetof(HeroData, know_name))
+		.Member("bool lost_pvp", offsetof(HeroData, lost_pvp))
+		.Member("bool melee", offsetof(HeroData, melee))
+		.Member("const string name", offsetof(HeroData, name))
+		.Member("const bool team_member", offsetof(HeroData, team_member))
+		.Member("const Unit@ unit", offsetof(HeroData, unit))
+		// properties
+		.Method("HERO_MODE get_mode()", asMETHOD(HeroData, GetMode))
+		.Method("void set_mode(HERO_MODE)", asMETHOD(HeroData, SetMode))
+		// methods
+		.Method("int JoinCost()", asMETHOD(HeroData, JoinCost));
 }

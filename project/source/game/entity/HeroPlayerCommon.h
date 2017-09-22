@@ -14,5 +14,5 @@ struct HeroPlayerCommon
 	Unit* unit;
 	string name;
 	int credit;
-	bool on_credit;
+	bool on_credit; // temporary
 };

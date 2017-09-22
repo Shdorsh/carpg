@@ -258,7 +258,7 @@ void Quest_Bandits::SetProgress(int prog2)
 		// porazmawiano z agentem, powiedzia³ gdzie jest skrytka i idzie sobie
 		{
 			bandits_state = State::AgentTalked;
-			game->current_dialog->talker->hero->mode = HeroData::Leave;
+			game->current_dialog->talker->hero->SetMode(HeroData::Leave);
 			game->current_dialog->talker->event_handler = this;
 			target_loc = game->CreateLocation(L_DUNGEON, GetStartLocation().pos, 64.f, THRONE_VAULT, SG_BANDYCI, false);
 			Location& target = *game->locations[target_loc];

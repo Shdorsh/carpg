@@ -1,6 +1,9 @@
 ﻿FEATURE:
 ! remove SW_HIDE
 + set C
++ verify dialog scripts, try compile
+- hero go wander, don't make them wander, SetMode sets city_wander to false
+? test recruiting gorush/jozan in 0.5, if they don't tell name in clients write as fixed
 ===============================================================================================================
 CURRENT:
 - innkeeper - stands still, no animations/actions
@@ -17,6 +20,8 @@ CURRENT:
 NEW:
 + join dungeon & crypt
 + join herodata with unit, anyone can join team etc
++ JoinCost use skill check
++ order ai to fallow other unit, protect it
 ===============================================================================================================
 VERIFY:
 - da się pogadać gdy leży, wtedy wstaje od razu [da się pogadać jak wstaje]

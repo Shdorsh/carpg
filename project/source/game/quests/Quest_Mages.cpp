@@ -414,7 +414,7 @@ void Quest_Mages2::SetProgress(int prog2)
 			else
 			{
 				// idŸ do startowej lokacji do karczmy
-				u->hero->mode = HeroData::Leave;
+				u->hero->SetMode(HeroData::Leave);
 				u->event_handler = this;
 			}
 
@@ -487,7 +487,7 @@ void Quest_Mages2::SetProgress(int prog2)
 			// idŸ sobie
 			Unit* u = game->current_dialog->talker;
 			game->RemoveTeamMember(u);
-			u->hero->mode = HeroData::Leave;
+			u->hero->SetMode(HeroData::Leave);
 			scholar = nullptr;
 
 			if(Net::IsOnline())

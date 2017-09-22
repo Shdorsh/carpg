@@ -131,20 +131,37 @@ bool ScriptManager::RunIfScript(cstring code)
 
 void ScriptManager::RegisterAllTypes()
 {
+	// declare types
 	AddType("Unit");
 	AddType("Player");
-	AddType("HeroData")
-		.Member("bool lost_pvp", offsetof(HeroData, lost_pvp));
+	AddType("HeroData");
+
+	AddEnum<Class>("CLASS", {
+		{ Class::BARBARIAN, "BARBARIAN" },
+		{ Class::BARD, "BARD" },
+		{ Class::CLERIC, "CLERIC" },
+		{ Class::DRUID, "DRUID" },
+		{ Class::HUNTER, "HUNTER" },
+		{ Class::MAGE, "MAGE" },
+		{ Class::MONK, "MONK" },
+		{ Class::PALADIN, "PALADIN" },
+		{ Class::ROGUE, "ROGUE" },
+		{ Class::WARRIOR, "WARRIOR" }
+	});
 
 	ForType("Unit")
-		.Member("Player@ player", offsetof(Unit, player))
-		.Member("HerData@ hero", offsetof(Unit, hero))
-		.Member("int gold", offsetof(Unit, gold))
-		.Member("Vec3 pos", offsetof(Unit, pos))
+		.Member("const int gold", offsetof(Unit, gold))
+		.Member("const HeroData@ hero", offsetof(Unit, hero))
+		.Member("const int level", offsetof(Unit, level))
+		.Member("const Player@ player", offsetof(Unit, player))
+		.Member("const Vec3 pos", offsetof(Unit, pos))
 		.Method("float GetHpp()", asMETHOD(Unit, GetHpp));
 
 	ForType("Player")
-		.Member("Unit@ unit", offsetof(PlayerController, unit));
+		.Member("const CLASS clas", offsetof(PlayerController, clas))
+		.Member("const int credit", offsetof(PlayerController, credit))
+		.Member("const string name", offsetof(PlayerController, name))
+		.Member("const Unit@ unit", offsetof(PlayerController, unit));
 
 	AddEnum("LOCATION_TYPE", {
 		{ L_CITY, "L_CITY" },
@@ -159,15 +176,16 @@ void ScriptManager::RegisterAllTypes()
 	});
 
 	AddType("Location")
-		.Member("LOCATION_TYPE type", offsetof(Location, type));
+		.Member("const LOCATION_TYPE type", offsetof(Location, type));
 
 	AddType("ScriptContext")
-		.Member("Unit@ talker", offsetof(ScriptContext, talker))
-		.Member("Player@ player", offsetof(ScriptContext, player))
-		.Member("Player@ local_player", offsetof(ScriptContext, local_player))
-		.Member("Location@ location", offsetof(ScriptContext, location))
+		.Member("const Unit@ talker", offsetof(ScriptContext, talker))
+		.Member("const Player@ player", offsetof(ScriptContext, player))
+		.Member("const Player@ local_player", offsetof(ScriptContext, local_player))
+		.Member("const Location@ location", offsetof(ScriptContext, location))
 		.WithInstance("ScriptContext C", &Ctx);
 
+	HeroData::Register();
 	Team.Register();
 }
 

@@ -15,19 +15,31 @@ struct HeroData : public HeroPlayerCommon
 		Leave
 	};
 
-	bool know_name, team_member, lost_pvp, melee, phase;
-	bool free; // don't get shares
-	Mode mode;
-	Unit* following; // pod¹¿a za t¹ postaci¹ w czasie warpowania, nieu¿ywane?
-	int expe;
+	Unit* following; // unit to fallow when warping
+	int expe; // experience gain
 	float phase_timer;
-	// phase = antyblokowanie sojuszników
-	bool gained_gold;
+	bool team_member, // is team member
+		lost_pvp, // lost pvp recently
+		melee, // prefer melee combat
+		phase, // trying to get unstuck
+		free, // don't get shares
+		gained_gold; // temporary, used in spliting shares
 
+	bool GetKnowName() const { return know_name; }
+	Mode GetMode() const { return mode; }
 	void Init(Unit& unit);
 	int JoinCost() const;
-	void Save(HANDLE file);
+	void LevelUp();
 	void Load(HANDLE file);
 	void PassTime(int days = 1, bool travel = false);
-	void LevelUp();
+	void Save(HANDLE file);
+	void SetKnowName(bool know_name);
+	void SetKnowNameDirect(bool new_know_name) { know_name = know_name; }
+	void SetMode(Mode mode);
+
+	static void Register();
+
+private:
+	Mode mode;
+	bool know_name; // player know hero name
 };

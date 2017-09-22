@@ -570,7 +570,7 @@ void Game::WriteUnit(BitStream& stream, Unit& unit)
 		WriteString1(stream, unit.hero->name);
 		stream.WriteCasted<byte>(unit.hero->clas);
 		b = 0;
-		if(unit.hero->know_name)
+		if(unit.hero->GetKnowName())
 			b |= 0x01;
 		if(unit.hero->team_member)
 			b |= 0x02;
@@ -1549,7 +1549,7 @@ bool Game::ReadUnit(BitStream& stream, Unit& unit)
 			Error("Invalid hero class %d.", unit.hero->clas);
 			return false;
 		}
-		unit.hero->know_name = IS_SET(flags, 0x01);
+		unit.hero->SetKnowNameDirect(IS_SET(flags, 0x01));
 		unit.hero->team_member = IS_SET(flags, 0x02);
 	}
 	else if(type == 2)
@@ -6632,7 +6632,7 @@ bool Game::ProcessControlMessageClient(BitStream& stream, bool& exit_from_server
 						StreamError();
 					}
 					else
-						unit->hero->know_name = true;
+						unit->hero->SetKnowNameDirect(true);
 				}
 			}
 			break;

@@ -83,7 +83,20 @@ public:
 		cstring name;
 	};
 
+	template<typename T>
+	struct EnumClass
+	{
+		T value;
+		cstring name;
+	};
+
 	void AddEnum(cstring name, std::initializer_list<Enum> const& values);
+
+	template<typename T>
+	void AddEnum(cstring name, std::initializer_list<EnumClass<T>> const& values)
+	{
+		AddEnum(name, (std::initializer_list<Enum> const&)values);
+	}
 
 	ScriptContext Ctx;
 

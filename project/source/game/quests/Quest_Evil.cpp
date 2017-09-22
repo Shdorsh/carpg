@@ -350,7 +350,7 @@ void Quest_Evil::SetProgress(int prog2)
 			// usuñ jozana z dru¿yny
 			Unit& u = *game->current_dialog->talker;
 			game->RemoveTeamMember(&u);
-			u.hero->mode = HeroData::Leave;
+			u.hero->SetMode(HeroData::Leave);
 		}
 		break;
 	}

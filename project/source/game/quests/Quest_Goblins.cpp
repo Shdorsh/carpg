@@ -113,7 +113,7 @@ void DodajStraznikow()
 
 	// ustaw szlachcica
 	u->hero->name = game.txQuest[215];
-	u->hero->know_name = true;
+	u->hero->SetKnowName(true);
 	u->ApplyHumanData(game.quest_goblins->hd_nobleman);
 }
 

@@ -502,7 +502,7 @@ struct Unit
 	}
 	bool IsFollowingTeamMember() const
 	{
-		return IsFollower() && hero->mode == HeroData::Follow;
+		return IsFollower() && hero->GetMode() == HeroData::Follow;
 	}
 	Class GetClass() const
 	{
@@ -518,7 +518,7 @@ struct Unit
 	}
 	bool CanFollow() const
 	{
-		return IsHero() && hero->mode == HeroData::Follow && in_arena == -1 && frozen == FROZEN::NO;
+		return IsHero() && hero->GetMode() == HeroData::Follow && in_arena == -1 && frozen == FROZEN::NO;
 	}
 	bool IsTeamMember() const
 	{
@@ -557,7 +557,7 @@ struct Unit
 	{
 		if(IsPlayer())
 			return player->name.c_str();
-		else if(IsHero() && hero->know_name)
+		else if(IsHero() && hero->GetKnowName())
 			return hero->name.c_str();
 		else
 			return data->name.c_str();

@@ -263,7 +263,8 @@ void TeamSingleton::Register()
 	auto& sm = ScriptManager::Get();
 
 	sm.AddType("TeamSingleton")
-		.Member("bool is_bandit", offsetof(TeamSingleton, is_bandit))
+		.Member("bool allow_free_recruit", offsetof(TeamSingleton, free_recruit))
+		.Member("const bool is_bandit", offsetof(TeamSingleton, is_bandit))
 		.Method("uint GetActiveNpcCount()", asMETHOD(TeamSingleton, GetActiveNpcCount))
 		.Method("uint GetActiveTeamSize()", asMETHOD(TeamSingleton, GetActiveTeamSize))
 		.Method("Unit@ GetLeader()", asMETHOD(TeamSingleton, GetLeader))

@@ -433,7 +433,7 @@ void Game::UpdateAi(float dt)
 						wander = false;
 						u.timer = Random(1.f, 2.f);
 					}
-					else if(u.IsHero() && u.hero->mode == HeroData::Leave)
+					else if(u.IsHero() && u.hero->GetMode() == HeroData::Leave)
 					{
 						// bohater chce opuœciæ t¹ lokacjê
 						if(u.usable)
@@ -507,7 +507,8 @@ void Game::UpdateAi(float dt)
 								}
 							}
 						}
-						else if(((u.IsFollower() && u.hero->mode == HeroData::Follow) || u.assist) && Team.leader->in_arena == -1 && u.busy != Unit::Busy_Tournament)
+						else if(((u.IsFollower() && u.hero->GetMode() == HeroData::Follow) || u.assist)
+							&& Team.leader->in_arena == -1 && u.busy != Unit::Busy_Tournament)
 						{
 							Unit* leader = Team.GetLeader();
 							dist = Vec3::Distance(u.pos, leader->pos);
@@ -1461,7 +1462,7 @@ void Game::UpdateAi(float dt)
 										UnitWarpData& warp = Add1(unit_warp_data);
 										warp.unit = &u;
 										warp.where = ai.idle_data.area.id;
-										if(ai.idle_data.area.id == -1 || (u.IsFollower() && u.hero->mode == HeroData::Follow))
+										if(ai.idle_data.area.id == -1 || (u.IsFollower() && u.hero->GetMode() == HeroData::Follow))
 										{
 											ai.loc_timer = -1.f;
 											ai.timer = -1.f;

@@ -943,30 +943,30 @@ dialog hero
 		{
 			if script "C.location.type == L_CITY"
 			{
-				if special "is_not_free"
+				if script "C.talker.hero.mode != HM_WANDER"
 				{
 					choice 6
 					{
-						special "go_free"
+						script "C.talker.hero.mode = HM_WANDER"
 						talk 7
 						end
 					}
 				}
 			}
-			if special "is_not_follow"
+			if script "C.talker.hero.mode != HM_FALLOW"
 			{
 				choice 8
 				{
-					special "follow_me"
+					script "C.talker.hero.mode = HM_FALLOW"
 					talk 9
 					end
 				}
 			}
-			if special "is_not_waiting"
+			if script "C.talker.hero.mode != HM_WAIT"
 			{
 				choice 10
 				{
-					special "wait"
+					script "C.talker.hero.mode = HM_WAIT"
 					talk 11
 					end
 				}
@@ -986,13 +986,13 @@ dialog hero
 		}
 		if script "Team.IsLeader(C.player.unit)"
 		{
-			if special "is_not_mage"
+			if script "C.talker.hero.class != MAGE"
 			{
-				if special "prefer_melee"
+				if script "C.talker.hero.melee"
 				{
 					choice 16
 					{
-						special "go_ranged"
+						script "C.talker.hero.melee = false;"
 						talk 17
 						restart
 					}
@@ -1001,7 +1001,7 @@ dialog hero
 				{
 					choice 18
 					{
-						special "go_melee"
+						script "C.talker.hero.melee = true;"
 						talk 19
 						restart
 					}
@@ -1038,10 +1038,10 @@ dialog hero
 	}
 	else
 	{
-		if special "is_not_known"
+		if script "!C.unit.hero.know_name"
 		{
 			do_once
-			special "tell_name"
+			script "C.unit.hero_know_name = true;"
 			talk2 28
 		}
 		if once
@@ -1064,7 +1064,7 @@ dialog hero
 			}
 			else
 			{
-				if special "is_free_recruit"
+				if script "C.talker.level < 6 && Team.allow_free_recruit"
 				{
 					talk 34
 					talk 35
@@ -1081,7 +1081,7 @@ dialog hero
 				talk2 39
 				choice 40
 				{
-					if special "can_join"
+					if script "C.player.unit.gold >= C.talker.hero.JoinCost()"
 					{
 						special "recruit"
 						talk 41
@@ -1203,30 +1203,30 @@ dialog crazy
 		{
 			if script "C.location.type == L_CITY"
 			{
-				if special "is_not_free"
+				if script "C.talker.hero.mode != HM_WANDER"
 				{
 					choice 6
 					{
-						special "go_free"
+						script "C.talker.hero.mode = HM_WANDER"
 						talk 7
 						end
 					}
 				}
 			}
-			if special "is_not_follow"
+			if script "C.talker.hero.mode != HM_FALLOW"
 			{
 				choice 8
 				{
-					special "follow_me"
+					script "C.talker.hero.mode = HM_FALLOW"
 					talk 9
 					end
 				}
 			}
-			if special "is_not_waiting"
+			if script "C.talker.hero.mode != HM_WAIT"
 			{
 				choice 10
 				{
-					special "wait"
+					script "C.talker.hero.mode = HM_WAIT"
 					talk 11
 					end
 				}
@@ -1246,13 +1246,13 @@ dialog crazy
 		}
 		if script "Team.IsLeader(C.player.unit)"
 		{
-			if special "is_not_mage"
+			if script "C.talker.hero.class != MAGE"
 			{
-				if special "prefer_melee"
+				if script "C.talker.hero.melee"
 				{
 					choice 16
 					{
-						special "go_ranged"
+						script "C.talker.hero.melee = false;"
 						talk 17
 						restart
 					}
@@ -1261,7 +1261,7 @@ dialog crazy
 				{
 					choice 18
 					{
-						special "go_melee"
+						script "C.talker.hero.melee = true;"
 						talk 19
 						restart
 					}
@@ -1304,10 +1304,10 @@ dialog crazy
 	}
 	else
 	{
-		if special "is_not_known"
+		if script "!C.unit.hero.know_name"
 		{
 			do_once
-			special "tell_name"
+			script "C.unit.hero_know_name = true;"
 			talk2 29
 		}
 		if once
@@ -1340,7 +1340,7 @@ dialog crazy
 				talk2 37
 				choice 38
 				{
-					if special "can_join"
+					if script "C.player.unit.gold >= C.talker.hero.JoinCost()"
 					{
 						special "recruit"
 						talk 39
@@ -1584,20 +1584,20 @@ dialog captive
 	if script "Team.IsTeamMember(C.talker)"
 	{
 		talk 0
-		if special "is_not_follow"
+		if script "C.talker.hero.mode != HM_FALLOW"
 		{
 			choice 1
 			{
-				special "follow_me"
+				script "C.talker.hero.mode = HM_FALLOW"
 				talk 2
 				end
 			}
 		}
-		if special "is_not_waiting"
+		if script "C.talker.hero.mode != HM_WAIT"
 		{
 			choice 3
 			{
-				special "wait"
+				script "C.talker.hero.mode = HM_WAIT"
 				talk 4
 				end
 			}
@@ -2056,7 +2056,7 @@ dialog q_bandits_master
 {
 	if quest_progress 0
 	{
-		special "tell_name"
+		script "C.unit.hero_know_name = true;"
 		talk 0
 		talk 1
 		talk 2
@@ -2612,7 +2612,7 @@ dialog q_evil_cleric
 		set_quest_progress 3
 		talk2 16
 		talk 17
-		special "tell_name"
+		script "C.unit.hero_know_name = true;"
 		talk 18
 		end
 	}
@@ -2785,7 +2785,8 @@ dialog q_goblins_nobleman
 	if quest_progress 0
 	{
 		talk 0
-		special "tell_name"
+		
+		script "C.unit.hero_know_name = true;"
 		talk 1
 		talk 2
 		talk 3
@@ -3306,9 +3307,9 @@ dialog q_mages2_mage
 	}
 	if once
 	{
-		if special "is_not_known"
+		if script "!C.unit.hero.know_name"
 		{
-			special "tell_name"
+			script "C.unit.hero_know_name = true;"
 			talk2 34
 		}
 		else
@@ -3405,10 +3406,10 @@ dialog q_mine_investor
 {
 	if quest_progress 0
 	{
-		if special "is_not_known"
+		if script "!C.unit.hero.know_name"
 		{
 			do_once
-			special "tell_name"
+			script "C.unit.hero_know_name = true;"
 			talk 0
 			talk 1
 		}
@@ -4044,7 +4045,7 @@ dialog q_sawmill_talk
 {
 	if quest_progress 0
 	{
-		special "tell_name"
+		script "C.unit.hero_know_name = true;"
 		talk 0
 		talk 1
 		talk 2

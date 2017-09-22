@@ -5305,17 +5305,6 @@ void Game::ExecuteGameDialogSpecial(DialogContext& ctx, cstring msg, int& if_lev
 		++ctx.dialog_pos;
 		return;
 	}
-	else if(strcmp(msg, "tell_name") == 0)
-	{
-		assert(ctx.talker->IsHero());
-		ctx.talker->hero->know_name = true;
-		if(Net::IsOnline())
-		{
-			NetChange& c = Add1(Net::changes);
-			c.type = NetChange::TELL_NAME;
-			c.unit = ctx.talker;
-		}
-	}
 	else if(strcmp(msg, "hero_about") == 0)
 	{
 		assert(ctx.talker->IsHero());
@@ -5347,25 +5336,6 @@ void Game::ExecuteGameDialogSpecial(DialogContext& ctx, cstring msg, int& if_lev
 			ctx.talker->hero->melee = true;
 		else if(IS_SET(ctx.talker->data->flags2, F2_MELEE_50) && Rand() % 2 == 0)
 			ctx.talker->hero->melee = true;
-	}
-	else if(strcmp(msg, "follow_me") == 0)
-	{
-		assert(ctx.talker->IsFollower());
-		ctx.talker->hero->mode = HeroData::Follow;
-		ctx.talker->ai->city_wander = false;
-	}
-	else if(strcmp(msg, "go_free") == 0)
-	{
-		assert(ctx.talker->IsFollower());
-		ctx.talker->hero->mode = HeroData::Wander;
-		ctx.talker->ai->city_wander = false;
-		ctx.talker->ai->loc_timer = Random(5.f, 10.f);
-	}
-	else if(strcmp(msg, "wait") == 0)
-	{
-		assert(ctx.talker->IsFollower());
-		ctx.talker->hero->mode = HeroData::Wait;
-		ctx.talker->ai->city_wander = false;
 	}
 	else if(strcmp(msg, "give_item") == 0)
 	{
@@ -5408,10 +5378,7 @@ void Game::ExecuteGameDialogSpecial(DialogContext& ctx, cstring msg, int& if_lev
 	else if(strcmp(msg, "kick_npc") == 0)
 	{
 		RemoveTeamMember(ctx.talker);
-		if(city_ctx)
-			ctx.talker->hero->mode = HeroData::Wander;
-		else
-			ctx.talker->hero->mode = HeroData::Leave;
+		ctx.talker->hero->SetMode(city_ctx ? HeroData::Wander : HeroData::Leave);
 		ctx.talker->hero->credit = 0;
 		ctx.talker->ai->city_wander = true;
 		ctx.talker->ai->loc_timer = Random(5.f, 10.f);
@@ -5519,7 +5486,7 @@ void Game::ExecuteGameDialogSpecial(DialogContext& ctx, cstring msg, int& if_lev
 	{
 		if(ctx.talker->hero->team_member)
 			RemoveTeamMember(ctx.talker);
-		ctx.talker->hero->mode = HeroData::Leave;
+		ctx.talker->hero->SetMode(HeroData::Leave);
 		ctx.talker->dont_attack = false;
 	}
 	else if(strcmp(msg, "use_arena") == 0)
@@ -5570,16 +5537,6 @@ void Game::ExecuteGameDialogSpecial(DialogContext& ctx, cstring msg, int& if_lev
 		DialogTalk(ctx, news->text.c_str());
 		++ctx.dialog_pos;
 		return;
-	}
-	else if(strcmp(msg, "go_melee") == 0)
-	{
-		assert(ctx.talker->IsHero());
-		ctx.talker->hero->melee = true;
-	}
-	else if(strcmp(msg, "go_ranged") == 0)
-	{
-		assert(ctx.talker->IsHero());
-		ctx.talker->hero->melee = false;
 	}
 	else if(strcmp(msg, "pvp_gather") == 0)
 	{
@@ -5800,44 +5757,9 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 		if(IS_SET(ctx.talker->data->flags, F_AI_DRUNKMAN) && ctx.talker->in_building != -1)
 			return true;
 	}
-	else if(strcmp(msg, "is_not_known") == 0)
-	{
-		assert(ctx.talker->IsHero());
-		if(!ctx.talker->hero->know_name)
-			return true;
-	}
 	else if(strcmp(msg, "is_inside_dungeon") == 0)
 	{
 		if(local_ctx.type == LevelContext::Inside)
-			return true;
-	}
-	else if(strcmp(msg, "can_join") == 0)
-	{
-		if(ctx.pc->unit->gold >= ctx.talker->hero->JoinCost())
-			return true;
-	}
-	else if(strcmp(msg, "is_free") == 0)
-	{
-		assert(ctx.talker->IsHero());
-		if(ctx.talker->hero->mode == HeroData::Wander)
-			return true;
-	}
-	else if(strcmp(msg, "is_not_free") == 0)
-	{
-		assert(ctx.talker->IsHero());
-		if(ctx.talker->hero->mode != HeroData::Wander)
-			return true;
-	}
-	else if(strcmp(msg, "is_not_follow") == 0)
-	{
-		assert(ctx.talker->IsHero());
-		if(ctx.talker->hero->mode != HeroData::Follow)
-			return true;
-	}
-	else if(strcmp(msg, "is_not_waiting") == 0)
-	{
-		assert(ctx.talker->IsHero());
-		if(ctx.talker->hero->mode != HeroData::Wait)
 			return true;
 	}
 	else if(strcmp(msg, "is_safe_location") == 0)
@@ -6040,16 +5962,6 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 			&& quest_evil->evil_state >= Quest_Evil::State::GeneratedMage
 			&& quest_evil->evil_state < Quest_Evil::State::ClosingPortals
 			&& quest_evil->prog == Quest_Evil::Progress::TalkedWithCaptain)
-			return true;
-	}
-	else if(strcmp(msg, "is_not_mage") == 0)
-	{
-		if(ctx.talker->hero->clas != Class::MAGE)
-			return true;
-	}
-	else if(strcmp(msg, "prefer_melee") == 0)
-	{
-		if(ctx.talker->hero->melee)
 			return true;
 	}
 	else if(strncmp(msg, "have_player", 11) == 0)
@@ -14543,7 +14455,7 @@ void Game::LeaveLevel(LevelContext& ctx, bool clear)
 						(*it)->hp = 1.f;
 						(*it)->live_state = Unit::ALIVE;
 					}
-					(*it)->hero->mode = HeroData::Follow;
+					(*it)->hero->SetMode(HeroData::Follow);
 					(*it)->talking = false;
 					(*it)->mesh_inst->need_update = true;
 					(*it)->ai->Reset();
@@ -16514,7 +16426,7 @@ bool Game::CanWander(Unit& u)
 			return false;
 		if(u.IsHero())
 		{
-			if(u.hero->team_member && u.hero->mode != HeroData::Wander)
+			if(u.hero->team_member && u.hero->GetMode() != HeroData::Wander)
 				return false;
 			else if(tournament_generated)
 				return false;
@@ -17563,7 +17475,7 @@ void Game::GenerateQuestUnits()
 			if(u)
 			{
 				quest_mages2->scholar = u;
-				u->hero->know_name = true;
+				u->hero->SetKnowNameDirect(true);
 				u->hero->name = quest_mages2->good_mage_name;
 				u->ApplyHumanData(quest_mages2->hd_mage);
 				quest_mages2->mages_state = Quest_Mages2::State::MageGeneratedInCity;
@@ -18068,7 +17980,7 @@ void Game::GenerateSawmill(bool in_progress)
 		assert(u);
 		u->rot = Random(MAX_ANGLE);
 		u->hero->name = txArthur;
-		u->hero->know_name = true;
+		u->hero->SetKnowNameDirect(true);
 		u->ApplyHumanData(quest_sawmill->hd_lumberjack);
 
 		// generuj obiekty
@@ -18102,7 +18014,7 @@ void Game::GenerateSawmill(bool in_progress)
 		assert(u);
 		u->rot = rot;
 		u->hero->name = txArthur;
-		u->hero->know_name = true;
+		u->hero->SetKnowNameDirect(true);
 		u->ApplyHumanData(quest_sawmill->hd_lumberjack);
 
 		// obiekty
@@ -19390,7 +19302,7 @@ void Game::UpdateGame2(float dt)
 						u->ai->idle_action = AIController::Idle_Move;
 						u->ai->idle_data.pos = loc.pos;
 						u->ai->timer = 1.f;
-						u->hero->mode = HeroData::Wait;
+						u->hero->SetMode(HeroData::Wait);
 
 						// zamknij
 						if(dist < 2.f)
@@ -19399,7 +19311,7 @@ void Game::UpdateGame2(float dt)
 							if(quest_evil->timer <= 0.f)
 							{
 								loc.state = Quest_Evil::Loc::State::PortalClosed;
-								u->hero->mode = HeroData::Follow;
+								u->hero->SetMode(HeroData::Follow);
 								u->ai->idle_action = AIController::Idle_None;
 								quest_evil->msgs.push_back(Format(txPortalClosed, location->name.c_str()));
 								game_gui->journal->NeedUpdate(Journal::Quests, quest_evil->quest_index);
@@ -19421,7 +19333,7 @@ void Game::UpdateGame2(float dt)
 							quest_evil->timer = 1.5f;
 					}
 					else
-						u->hero->mode = HeroData::Follow;
+						u->hero->SetMode(HeroData::Follow);
 				}
 			}
 		}
@@ -21626,7 +21538,7 @@ void Game::AddTeamMember(Unit* unit, bool free)
 	// set as team member
 	unit->hero->team_member = true;
 	unit->hero->free = free;
-	unit->hero->mode = HeroData::Follow;
+	unit->hero->SetMode(HeroData::Follow);
 
 	// add to team list
 	if(!free)
