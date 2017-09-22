@@ -6728,6 +6728,7 @@ bool Game::ProcessControlMessageClient(BitStream& stream, bool& exit_from_server
 							pc->unit->mesh_inst->Play("wstaje2", PLAY_ONCE | PLAY_PRIO3, 0);
 							pc->unit->mesh_inst->groups[0].speed = 1.f;
 							pc->unit->action = A_ANIMATION;
+							pc->unit->animation = ANI_STAND;
 						}
 					}
 					Net::PushChange(NetChange::WARP);
@@ -7657,6 +7658,7 @@ bool Game::ProcessControlMessageClient(BitStream& stream, bool& exit_from_server
 				Object& obj = local_ctx.objects->at(index);
 				obj.base = BaseObject::Get("altar");
 				obj.mesh = obj.base->mesh;
+				ResourceManager::Get<Mesh>().Load(obj.mesh);
 
 				// remove particles
 				float best_dist = 999.f;

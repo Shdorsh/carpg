@@ -658,15 +658,24 @@ void Game::OnReload()
 {
 	GUI.OnReload();
 
-	V(eMesh->OnResetDevice());
-	V(eParticle->OnResetDevice());
-	V(eTerrain->OnResetDevice());
-	V(eSkybox->OnResetDevice());
-	V(eArea->OnResetDevice());
-	V(eGui->OnResetDevice());
-	V(ePostFx->OnResetDevice());
-	V(eGlow->OnResetDevice());
-	V(eGrass->OnResetDevice());
+	if(eMesh)
+		V(eMesh->OnResetDevice());
+	if(eParticle)
+		V(eParticle->OnResetDevice());
+	if(eTerrain)
+		V(eTerrain->OnResetDevice());
+	if(eSkybox)
+		V(eSkybox->OnResetDevice());
+	if(eArea)
+		V(eArea->OnResetDevice());
+	if(eGui)
+		V(eGui->OnResetDevice());
+	if(ePostFx)
+		V(ePostFx->OnResetDevice());
+	if(eGlow)
+		V(eGlow->OnResetDevice());
+	if(eGrass)
+		V(eGrass->OnResetDevice());
 
 	for(vector<SuperShader>::iterator it = sshaders.begin(), end = sshaders.end(); it != end; ++it)
 		V(it->e->OnResetDevice());
@@ -682,20 +691,30 @@ void Game::OnReset()
 {
 	GUI.OnReset();
 
-	V(eMesh->OnLostDevice());
-	V(eParticle->OnLostDevice());
-	V(eTerrain->OnLostDevice());
-	V(eSkybox->OnLostDevice());
-	V(eArea->OnLostDevice());
-	V(eGui->OnLostDevice());
-	V(ePostFx->OnLostDevice());
-	V(eGlow->OnLostDevice());
-	V(eGrass->OnLostDevice());
+	if(eMesh)
+		V(eMesh->OnLostDevice());
+	if(eParticle)
+		V(eParticle->OnLostDevice());
+	if(eTerrain)
+		V(eTerrain->OnLostDevice());
+	if(eSkybox)
+		V(eSkybox->OnLostDevice());
+	if(eArea)
+		V(eArea->OnLostDevice());
+	if(eGui)
+		V(eGui->OnLostDevice());
+	if(ePostFx)
+		V(ePostFx->OnLostDevice());
+	if(eGlow)
+		V(eGlow->OnLostDevice());
+	if(eGrass)
+		V(eGrass->OnLostDevice());
 
 	for(vector<SuperShader>::iterator it = sshaders.begin(), end = sshaders.end(); it != end; ++it)
 		V(it->e->OnLostDevice());
 
 	SafeRelease(tItemRegion);
+	SafeRelease(tItemRegionRot);
 	SafeRelease(tMinimap);
 	SafeRelease(tChar);
 	SafeRelease(tSave);
@@ -1678,8 +1697,13 @@ void Game::ClearPointers()
 
 	// tekstury render target, powierzchnie
 	tItemRegion = nullptr;
+	tItemRegionRot = nullptr;
 	tMinimap = nullptr;
 	tChar = nullptr;
+	sItemRegion = nullptr;
+	sItemRegionRot = nullptr;
+	sChar = nullptr;
+	sSave = nullptr;
 	for(int i = 0; i < 3; ++i)
 	{
 		sPostEffect[i] = nullptr;
@@ -1741,6 +1765,7 @@ void Game::OnCleanup()
 
 	// tekstury render target, powierzchnie
 	SafeRelease(tItemRegion);
+	SafeRelease(sItemRegionRot);
 	SafeRelease(tMinimap);
 	SafeRelease(tChar);
 	SafeRelease(tSave);
@@ -2651,6 +2676,7 @@ void Game::UnitStandup(Unit& u)
 		u.mesh_inst->Play("wstaje2", PLAY_ONCE | PLAY_PRIO3, 0);
 		u.mesh_inst->groups[0].speed = 1.f;
 		u.action = A_ANIMATION;
+		u.animation = ANI_STAND;
 	}
 	else
 		u.action = A_NONE;
