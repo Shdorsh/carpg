@@ -847,6 +847,7 @@ struct Unit
 	void CreateMesh(CREATE_MESH mode);
 
 	void ApplyStun(float length);
+	uint GiveGold(Unit* unit, uint count);
 };
 
 //-----------------------------------------------------------------------------

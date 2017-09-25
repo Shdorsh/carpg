@@ -5651,27 +5651,6 @@ void Game::ExecuteGameDialogSpecial(DialogContext& ctx, cstring msg, int& if_lev
 		else
 			AddGameMsg(Format(txGoldPlus, 10), 3.f);
 	}
-	else if(strcmp(msg, "give_1") == 0)
-	{
-		ctx.pc->unit->gold += 1;
-		if(!ctx.is_local)
-		{
-			NetChangePlayer& c = Add1(Net::player_changes);
-			c.type = NetChangePlayer::GOLD_MSG;
-			c.pc = ctx.pc;
-			c.ile = 1;
-			c.id = 1;
-			GetPlayerInfo(ctx.pc).UpdateGold();
-		}
-		else
-			AddGameMsg(Format(txGoldPlus, 1), 3.f);
-	}
-	else if(strcmp(msg, "take_1") == 0)
-	{
-		ctx.pc->unit->gold -= 1;
-		if(!ctx.is_local)
-			GetPlayerInfo(ctx.pc).UpdateGold();
-	}
 	else if(strcmp(msg, "crazy_give_item") == 0)
 	{
 		crazy_give_item = GetRandomItem(100);
@@ -5757,11 +5736,6 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 		if(IS_SET(ctx.talker->data->flags, F_AI_DRUNKMAN) && ctx.talker->in_building != -1)
 			return true;
 	}
-	else if(strcmp(msg, "is_inside_dungeon") == 0)
-	{
-		if(local_ctx.type == LevelContext::Inside)
-			return true;
-	}
 	else if(strcmp(msg, "is_safe_location") == 0)
 	{
 		if(city_ctx)
@@ -5805,11 +5779,6 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 	else if(strcmp(msg, "is_ginger") == 0)
 	{
 		if(ctx.pc->unit->human_data->hair_color.Equal(g_hair_colors[8]))
-			return true;
-	}
-	else if(strcmp(msg, "is_bald") == 0)
-	{
-		if(ctx.pc->unit->human_data->hair == -1)
 			return true;
 	}
 	else if(strcmp(msg, "taken_guards_reward") == 0)
@@ -5924,11 +5893,6 @@ bool Game::ExecuteGameDialogIfSpecial(DialogContext& ctx, cstring msg)
 	else if(strcmp(msg, "q_orkowie_nie_ukonczono") == 0)
 	{
 		if(quest_orcs2->orcs_state < Quest_Orcs2::State::Completed)
-			return true;
-	}
-	else if(strcmp(msg, "is_free_recruit") == 0)
-	{
-		if(ctx.talker->level < 6 && Team.free_recruit)
 			return true;
 	}
 	else if(strcmp(msg, "have_unique_quest") == 0)

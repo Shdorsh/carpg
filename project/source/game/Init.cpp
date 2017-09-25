@@ -88,7 +88,7 @@ void Game::PreconfigureGame()
 	sm.Ctx.player->unit->pos = Vec3(1, 2.5f, 5.68f);
 
 	ScriptManager::Get().RunScript(R"code(
-	C.player.clas = BARBARIAN;
+	Items.Get("doopa");
 Info(Format("{0}: {1},{2},{3}", C.player.unit.gold, C.player.unit.pos.x, C.player.unit.pos.y, C.player.unit.pos.z));
 
 )code");

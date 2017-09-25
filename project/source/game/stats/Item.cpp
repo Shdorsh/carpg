@@ -4,6 +4,7 @@
 #include "Item.h"
 #include "Crc.h"
 #include "ResourceManager.h"
+#include "ScriptManager.h"
 
 extern string g_system_dir;
 ItemsMap g_items;
@@ -1904,4 +1905,44 @@ redo_set:
 		in_set = true;
 		goto redo_set;
 	}
+}
+
+static const Item* S_Items_Get(void*, const string& id)
+{
+	ItemListResult lis;
+	auto item = FindItem(id.c_str(), false, &lis);
+	if(lis.lis || !item)
+		throw ScriptException("Missing item '%s'.", id.c_str());
+	else
+		return item;
+}
+
+static const Item* S_Items_TryGet(void*, const string& id)
+{
+	ItemListResult lis;
+	auto item = FindItem(id.c_str(), false, &lis);
+	if(lis.lis || !item)
+		return nullptr;
+	else
+		return item;
+}
+
+//=================================================================================================
+void Item::Register()
+{
+	ScriptManager& sm = ScriptManager::Get();
+
+	sm.ForType("Item")
+		// members
+		.Member("const string desc", offsetof(Item, desc))
+		.Member("const string id", offsetof(Item, id))
+		.Member("const string name", offsetof(Item, name))
+		.Member("const int value", offsetof(Item, value))
+		// properties
+		.Method("float get_weight()", asMETHOD(Item, GetWeight));
+
+	sm.AddType("ItemsSingleton")
+		.Method("Item@ Get(const string& in)", asFUNCTION(S_Items_Get))
+		.Method("Item@ TryGet(const string& in)", asFUNCTION(S_Items_TryGet))
+		.WithSingleton("ItemsSingleton Items");
 }

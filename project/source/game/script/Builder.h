@@ -72,6 +72,14 @@ public:
 		return *this;
 	}
 
+	TypeBuilder& WithSingleton(cstring decl)
+	{
+		assert(decl);
+		const void* ptr = 0xC0DEFAB0;
+		CHECKED(engine->RegisterGlobalProperty(decl, ptr));
+		return *this;
+	}
+
 private:
 	cstring name;
 	asIScriptEngine* engine;

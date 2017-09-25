@@ -11,20 +11,15 @@
 
 struct ScriptException
 {
-	ScriptException(cstring msg) : msg(msg)
-	{
-	}
+	ScriptException(cstring msg);
 
 	template<typename... Args>
-	ScriptException(cstring msg, const Args&... args) : msg(Format(msg, args...))
-	{
-	}
-
-	cstring msg;
+	ScriptException(cstring msg, const Args&... args) : ScriptException(Format(msg, args...)) {}
 };
 
 class ScriptManager : public Singleton<ScriptManager>
 {
+	friend ScriptException;
 public:
 	ScriptManager();
 
@@ -107,4 +102,5 @@ private:
 
 	asIScriptEngine* engine;
 	asIScriptModule* module;
+	cstring last_exception;
 };

@@ -263,12 +263,16 @@ void TeamSingleton::Register()
 	auto& sm = ScriptManager::Get();
 
 	sm.AddType("TeamSingleton")
+		// members
 		.Member("bool allow_free_recruit", offsetof(TeamSingleton, free_recruit))
 		.Member("const bool is_bandit", offsetof(TeamSingleton, is_bandit))
+		// methods
+		.Method("Unit@ GetActiveMember(uint)", asMETHOD(TeamSingleton, S_GetActiveMember))
 		.Method("uint GetActiveNpcCount()", asMETHOD(TeamSingleton, GetActiveNpcCount))
 		.Method("uint GetActiveTeamSize()", asMETHOD(TeamSingleton, GetActiveTeamSize))
 		.Method("Unit@ GetLeader()", asMETHOD(TeamSingleton, GetLeader))
 		.Method("uint GetMaxSize()", asMETHOD(TeamSingleton, GetMaxSize))
+		.Method("Unit@ GetMember(uint)", asMETHOD(TeamSingleton, S_GetMember))
 		.Method("uint GetNpcCount()", asMETHOD(TeamSingleton, GetNpcCount))
 		.Method("uint GetTeamSize()", asMETHOD(TeamSingleton, GetTeamSize))
 		.Method("bool HaveActiveNpc()", asMETHOD(TeamSingleton, HaveActiveNpc))
@@ -320,4 +324,20 @@ void TeamSingleton::SaveOnWorldmap(HANDLE file)
 		unit->refid = (int)Unit::refid_table.size();
 		Unit::refid_table.push_back(unit);
 	}
+}
+
+Unit* TeamSingleton::S_GetActiveMember(uint index)
+{
+	if(index >= active_members.size())
+		return nullptr;
+	else
+		return active_members[index];
+}
+
+Unit* TeamSingleton::S_GetMember(uint index)
+{
+	if(index >= members.size())
+		return nullptr;
+	else
+		return members[index];
 }

@@ -1542,7 +1542,7 @@ dialog crazy_mage_encounter
 	choice 1
 	{
 		talk 2
-		if special "is_bald"
+		if script "C.player.unit.human.hair == -1"
 		{
 			talk 3
 			end
@@ -1861,13 +1861,13 @@ dialog crazies_encounter
 				{
 					if script "C.player.unit.gold >= 1"
 					{
-						special "take_1"
+						special "C.player.unit.GiveGold(C.talker, 1);"
 						talk 5
 					}
 					else
 					{
 						talk 6
-						special "give_1"
+						script "C.talker.GiveGold(C.player.unit, 1);"
 						talk 7
 					}
 					end

@@ -3215,3 +3215,44 @@ void Unit::ApplyStun(float length)
 		c.f[0] = length;
 	}
 }
+
+//=================================================================================================
+uint Unit::GiveGold(Unit* unit, uint count)
+{
+	count = min(count, (uint)gold);
+	if(count == 0u)
+		return 0u;
+	gold -= count;
+	unit->gold += count;
+	if(IsPlayer())
+	{
+		if(player->is_local)
+		{
+			if(sound_volume)
+				PlaySound2d(sCoins);
+		}
+		else
+			player->player_info->UpdateGold();
+	}
+	if(unit->IsPlayer())
+	{
+		if(player->is_local)
+		{
+			AddGameMsg(Format(txGoldPlus, 1), 3.f);
+			if(sound_volume)
+				PlaySound2d(sCoins);
+		}
+		else
+		{
+			NetChangePlayer& c = Add1(Net::player_changes);
+			c.type = NetChangePlayer::GOLD_MSG;
+			c.pc = player;
+			c.ile = count;
+			c.id = 1;
+			player->player_info->NeedUpdateAndGold();
+
+			// sound info
+		}
+	}
+	return count;
+}

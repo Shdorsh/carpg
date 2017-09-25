@@ -180,6 +180,7 @@ struct Item
 	}
 
 	static void Validate(uint& err);
+	static void Register();
 
 	string id, mesh_id, name, desc;
 	int weight, value, flags, refid;

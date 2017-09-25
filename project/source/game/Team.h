@@ -54,6 +54,10 @@ public:
 	bool crazies_attack, // team attacked by crazies on current level
 		free_recruit, // first hero joins for free if playing alone
 		is_bandit; // attacked npc, now npc's are aggresive
+
+private:
+	Unit* S_GetActiveMember(uint index);
+	Unit* S_GetMember(uint index);
 };
 
 extern TeamSingleton Team;

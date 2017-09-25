@@ -30,6 +30,11 @@ void MessageCallback(const asSMessageInfo* msg, void* param)
 	Logger::global->Log(level, Format("(%d:%d) %s", msg->row, msg->col, msg->message));
 }
 
+ScriptException::ScriptException(cstring msg)
+{
+	ScriptManager::Get().last_exception = msg;
+}
+
 ScriptManager::ScriptManager() : engine(nullptr), module(nullptr)
 {
 }
@@ -72,7 +77,7 @@ bool ScriptManager::RunScript(cstring code)
 	int r = tmp_module->CompileFunction("RunScript", packed_code, -1, 0, &func);
 	if(r < 0)
 	{
-		Error("ScriptManager: Failed to parse script (%d): %s", r, code);
+		Error("ScriptManager: Failed to parse script (%d): %.100s", r, code);
 		return false;
 	}
 
@@ -80,17 +85,31 @@ bool ScriptManager::RunScript(cstring code)
 	auto tmp_context = engine->RequestContext();
 	r = tmp_context->Prepare(func);
 	if(r >= 0)
+	{
+		last_exception = nullptr;
 		r = tmp_context->Execute();
+	}
+
+	bool finished = (r == asEXECUTION_FINISHED);
+	if(!finished)
+	{
+		if(r == asEXECUTION_EXCEPTION)
+		{
+			if(!last_exception)
+				Error("ScriptManager: Failed to run script, exception thrown \"%s\" at %s(%d): %.100s", tmp_context->GetExceptionString(),
+					tmp_context->GetExceptionFunction()->GetName(), tmp_context->GetExceptionLineNumber(), code);
+			else
+				Error("ScriptManager: Failed to run script, script exception thrown \"%s\" at %s(%d): %.100s", last_exception,
+					tmp_context->GetExceptionFunction()->GetName(), tmp_context->GetExceptionLineNumber(), code);
+		}
+		else
+			Error("ScriptManager: Failed to run script (%d): %.100s", r, code);
+	}
+
 	func->Release();
 	engine->ReturnContext(tmp_context);
 
-	if(r >= 0)
-		return true;
-	else
-	{
-		Error("ScriptManager: Failed to run script (%d): %s", r, code);
-		return false;
-	}
+	return finished;
 }
 
 bool ScriptManager::RunIfScript(cstring code)
@@ -104,29 +123,42 @@ bool ScriptManager::RunIfScript(cstring code)
 	int r = tmp_module->CompileFunction("RunScript", packed_code, -1, 0, &func);
 	if(r < 0)
 	{
-		Error("ScriptManager: Failed to parse script (%d): %s", r, code);
+		Error("ScriptManager: Failed to parse if script (%d): %.100s", r, code);
 		return false;
 	}
 
 	// run
-	bool ok = false;
 	auto tmp_context = engine->RequestContext();
 	r = tmp_context->Prepare(func);
 	if(r >= 0)
 	{
+		last_exception = nullptr;
 		r = tmp_context->Execute();
-		ok = (tmp_context->GetReturnByte() != 0);
 	}
+
+	bool ok;
+	if(r != asEXECUTION_FINISHED)
+	{
+		ok = false;
+		if(r == asEXECUTION_EXCEPTION)
+		{
+			if(!last_exception)
+				Error("ScriptManager: Failed to run if script, exception thrown \"%s\" at %s(%d): %.100s", tmp_context->GetExceptionString(),
+					tmp_context->GetExceptionFunction()->GetName(), tmp_context->GetExceptionLineNumber(), code);
+			else
+				Error("ScriptManager: Failed to run if script, script exception thrown \"%s\" at %s(%d): %.100s", last_exception,
+					tmp_context->GetExceptionFunction()->GetName(), tmp_context->GetExceptionLineNumber(), code);
+		}
+		else
+			Error("ScriptManager: Failed to run if script (%d): %.100s", r, code);
+	}
+	else
+		ok = (tmp_context->GetReturnByte() != 0);
+
 	func->Release();
 	engine->ReturnContext(tmp_context);
 
-	if(r >= 0)
-		return ok;
-	else
-	{
-		Error("ScriptManager: Failed to run script (%d): %s", r, code);
-		return false;
-	}
+	return ok;
 }
 
 void ScriptManager::RegisterAllTypes()
@@ -135,6 +167,8 @@ void ScriptManager::RegisterAllTypes()
 	AddType("Unit");
 	AddType("Player");
 	AddType("HeroData");
+	AddType("HumanData");
+	AddType("Item");
 
 	AddEnum<Class>("CLASS", {
 		{ Class::BARBARIAN, "BARBARIAN" },
@@ -152,10 +186,19 @@ void ScriptManager::RegisterAllTypes()
 	ForType("Unit")
 		.Member("const int gold", offsetof(Unit, gold))
 		.Member("const HeroData@ hero", offsetof(Unit, hero))
+		.Member("const HumanData@ human", offsetof(Unit, human_data))
 		.Member("const int level", offsetof(Unit, level))
 		.Member("const Player@ player", offsetof(Unit, player))
 		.Member("const Vec3 pos", offsetof(Unit, pos))
-		.Method("float GetHpp()", asMETHOD(Unit, GetHpp));
+		.Method("float GetHpp()", asMETHOD(Unit, GetHpp))
+		.Method("uint GiveGold(Unit@, uint)", asMETHOD(Unit, GiveGold));
+
+	ForType("HumanData")
+		.Member("const int beard", offsetof(HumanData, beard))
+		.Member("const float height", offsetof(HumanData, height))
+		.Member("const int hair", offsetof(HumanData, hair))
+		.Member("const Vec4 hair_color", offsetof(HumanData, hair_color))
+		.Member("const int mustache", offsetof(HumanData, mustache));
 
 	ForType("Player")
 		.Member("const CLASS clas", offsetof(PlayerController, clas))
@@ -176,6 +219,7 @@ void ScriptManager::RegisterAllTypes()
 	});
 
 	AddType("Location")
+		.Member("const string name", offsetof(Location, name))
 		.Member("const LOCATION_TYPE type", offsetof(Location, type));
 
 	AddType("ScriptContext")
