@@ -3217,42 +3217,46 @@ void Unit::ApplyStun(float length)
 }
 
 //=================================================================================================
+void Unit::ModGold(int count, bool notify)
+{
+	assert(count != 0 && (count > 0 || gold >= abs(count)));
+	gold += count;
+	if(IsPlayer())
+	{
+		if(player->is_local)
+		{
+			if(notify)
+			{
+				Game& game = Game::Get();
+				game.AddGameMsg(Format(game.txGoldPlus, 1), 3.f);
+				if(game.sound_volume)
+					game.PlaySound2d(game.sCoins);
+			}
+		}
+		else
+		{
+			if(notify)
+			{
+				NetChangePlayer& c = Add1(Net::player_changes);
+				c.type = NetChangePlayer::GOLD_MSG;
+				c.pc = player;
+				c.ile = count;
+				c.id = 1;
+				player->player_info->NeedUpdateAndGold();
+			}
+			else
+				player->player_info->UpdateGold();
+		}
+	}
+}
+
+//=================================================================================================
 uint Unit::GiveGold(Unit* unit, uint count)
 {
 	count = min(count, (uint)gold);
 	if(count == 0u)
 		return 0u;
-	gold -= count;
-	unit->gold += count;
-	if(IsPlayer())
-	{
-		if(player->is_local)
-		{
-			if(sound_volume)
-				PlaySound2d(sCoins);
-		}
-		else
-			player->player_info->UpdateGold();
-	}
-	if(unit->IsPlayer())
-	{
-		if(player->is_local)
-		{
-			AddGameMsg(Format(txGoldPlus, 1), 3.f);
-			if(sound_volume)
-				PlaySound2d(sCoins);
-		}
-		else
-		{
-			NetChangePlayer& c = Add1(Net::player_changes);
-			c.type = NetChangePlayer::GOLD_MSG;
-			c.pc = player;
-			c.ile = count;
-			c.id = 1;
-			player->player_info->NeedUpdateAndGold();
-
-			// sound info
-		}
-	}
+	ModGold(-(int)count, true);
+	unit->ModGold(count, true);
 	return count;
 }

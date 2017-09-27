@@ -191,7 +191,10 @@ void ScriptManager::RegisterAllTypes()
 		.Member("const Player@ player", offsetof(Unit, player))
 		.Member("const Vec3 pos", offsetof(Unit, pos))
 		.Method("float GetHpp()", asMETHOD(Unit, GetHpp))
-		.Method("uint GiveGold(Unit@, uint)", asMETHOD(Unit, GiveGold));
+		.Method("uint GiveGold(Unit@, uint)", asMETHOD(Unit, GiveGold))
+		.Method("bool HaveItem(Item@)", asMETHOD(Unit, HaveItem))
+		.Method("void ModGold(int, bool = true)", asMETHOD(Unit, ModGold))
+		.Method("void RemoveItem(Item@)", asMETHOD(Unit, RemoveItem));
 
 	ForType("HumanData")
 		.Member("const int beard", offsetof(HumanData, beard))
@@ -231,6 +234,7 @@ void ScriptManager::RegisterAllTypes()
 
 	HeroData::Register();
 	Team.Register();
+	Item::Register();
 }
 
 void ScriptManager::AddEnum(cstring name, std::initializer_list<Enum> const& values)
