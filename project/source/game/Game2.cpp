@@ -86,7 +86,7 @@ PlayerController::Action InventoryModeToActionRequired(InventoryMode imode)
 }
 
 //=================================================================================================
-void Game::BreakUnitAction(Unit& unit, BREAK_ACTION_MODE mode, bool notify)
+void Game::BreakUnitAction(Unit& unit, BREAK_ACTION_MODE mode, bool notify, bool allow_animation)
 {
 	if(notify && Net::IsServer())
 	{
@@ -208,7 +208,10 @@ void Game::BreakUnitAction(Unit& unit, BREAK_ACTION_MODE mode, bool notify)
 		}
 	}
 	else
-		unit.action = A_NONE;
+	{
+		if(unit.action != A_ANIMATION || !allow_animation)
+			unit.action = A_NONE;
+	}
 
 	unit.mesh_inst->frame_end_info = false;
 	unit.mesh_inst->frame_end_info2 = false;
@@ -1808,7 +1811,7 @@ void Game::UpdatePlayer(LevelContext& ctx, float dt)
 					u.animation = ANI_WALK;
 
 				u.speed = run ? u.GetRunSpeed() : u.GetWalkSpeed();
-				u.prev_speed = (u.prev_speed + (u.speed - u.prev_speed)*dt * 3);
+				u.prev_speed = Clamp((u.prev_speed + (u.speed - u.prev_speed)*dt * 3), 0.f, u.speed);
 				float speed = u.prev_speed * dt;
 
 				u.prev_pos = u.pos;
@@ -3114,14 +3117,17 @@ void Game::UseAction(PlayerController* p, bool from_server, const Vec3* pos)
 				spawn_pos = *pos;
 			}
 			auto unit = SpawnUnitNearLocation(GetContext(*p->unit), spawn_pos, *FindUnitData("white_wolf_sum"), nullptr, p->unit->level);
-			unit->summoner = p->unit;
-			unit->in_arena = p->unit->in_arena;
-			if(unit->in_arena != -1)
-				at_arena.push_back(unit);
-			if(Net::IsServer())
-				Net_SpawnUnit(unit);
-			AddTeamMember(unit, true);
-			SpawnUnitEffect(*unit);
+			if(unit)
+			{
+				unit->summoner = p->unit;
+				unit->in_arena = p->unit->in_arena;
+				if(unit->in_arena != -1)
+					at_arena.push_back(unit);
+				if(Net::IsServer())
+					Net_SpawnUnit(unit);
+				AddTeamMember(unit, true);
+				SpawnUnitEffect(*unit);
+			}
 		}
 		else if(!from_server)
 			action_point = pc_data.action_point;
@@ -6891,7 +6897,7 @@ void GiveItem(Unit& unit, const int*& ps, int count)
 		const LeveledItemList& lis = *(const LeveledItemList*)(*ps);
 		int level = max(0, unit.level - 4);
 		for(int i = 0; i < count; ++i)
-			unit.AddItemAndEquipIfNone(lis.Get(Random(Random(level, unit.level))));
+			unit.AddItemAndEquipIfNone(lis.Get(Random(level, unit.level)));
 	}
 	else if(type == PS_LEVELED_LIST_MOD)
 	{
@@ -7849,8 +7855,8 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 						{
 								int flags = obj->getCollisionFlags();
 								if(IS_SET(flags, CG_TERRAIN | CG_UNIT))
-									return false;
-								return true;
+									return LT_IGNORE;
+								return LT_COLLIDE;
 						}, t);
 						if(t == 1.f)
 						{
@@ -7929,6 +7935,9 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 			u.current_animation = u.animation;
 		}
 
+		// aktualizuj animacjê
+		u.mesh_inst->Update(dt);
+
 		// koniec animacji idle
 		if(u.animation == ANI_IDLE && u.mesh_inst->frame_end_info)
 		{
@@ -7936,9 +7945,6 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 			u.mesh_inst->groups[0].speed = 1.f;
 			u.animation = ANI_STAND;
 		}
-
-		// aktualizuj animacjê
-		u.mesh_inst->Update(dt);
 
 		// zmieñ stan z umiera na umar³ i stwórz krew (chyba ¿e tylko upad³)
 		if(!u.IsStanding())
@@ -8786,6 +8792,7 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 				const float eps = 0.05f;
 				float len = u.speed * dt_left;
 				Vec3 dir(sin(u.use_rot)*(len + eps), 0, cos(u.use_rot)*(len + eps));
+				Vec3 dir_normal = dir.Normalized();
 				bool ok = true;
 
 				if(u.animation_state == 0)
@@ -8795,10 +8802,10 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 					{
 						int flags = obj->getCollisionFlags();
 						if(IS_SET(flags, CG_TERRAIN))
-							return false;
+							return LT_IGNORE;
 						if(IS_SET(flags, CG_UNIT) && obj->getUserPointer() == &u)
-							return false;
-						return true;
+							return LT_IGNORE;
+						return LT_COLLIDE;
 					}, t);
 				}
 				else
@@ -8812,9 +8819,9 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 						if(!second)
 						{
 							if(IS_SET(flags, CG_TERRAIN))
-								return false;
+								return LT_IGNORE;
 							if(IS_SET(flags, CG_UNIT) && obj->getUserPointer() == &u)
-								return false;
+								return LT_IGNORE;
 						}
 						else
 						{
@@ -8822,10 +8829,10 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 							{
 								Unit* unit = (Unit*)obj->getUserPointer();
 								targets.push_back(unit);
-								return false;
+								return LT_IGNORE;
 							}
 						}
-						return true;
+						return LT_COLLIDE;
 					}, t, nullptr, true);
 
 					// check all hitted
@@ -8857,8 +8864,8 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 							{
 								int flags = obj->getCollisionFlags();
 								if(IS_SET(flags, CG_TERRAIN | CG_UNIT))
-									return false;
-								return true;
+									return LT_IGNORE;
+								return LT_COLLIDE;
 							};
 
 							// try to push forward
@@ -8866,6 +8873,8 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 							{
 								Vec3 move_dir = unit->pos - u.pos;
 								move_dir.y = 0;
+								move_dir.Normalize();
+								move_dir += dir_normal;
 								move_dir.Normalize();
 								move_dir *= len;
 								float t;
@@ -12726,38 +12735,54 @@ bool Game::RayTest(const Vec3& from, const Vec3& to, Unit* ignore, Vec3& hitpoin
 
 struct ConvexCallback : public btCollisionWorld::ConvexResultCallback
 {
-	delegate<bool(btCollisionObject*, bool)> clbk;
+	delegate<Game::LINE_TEST_RESULT(btCollisionObject*, bool)> clbk;
 	vector<float>* t_list;
-	bool use_clbk2;
+	float end_t, closest;
+	bool use_clbk2, end = false;
 
-	ConvexCallback(delegate<bool(btCollisionObject*, bool)> clbk, vector<float>* t_list, bool use_clbk2) : clbk(clbk), t_list(t_list), use_clbk2(use_clbk2)
+	ConvexCallback(delegate<Game::LINE_TEST_RESULT(btCollisionObject*, bool)> clbk, vector<float>* t_list, bool use_clbk2) : clbk(clbk), t_list(t_list), use_clbk2(use_clbk2),
+		end(false), end_t(1.f), closest(1.1f)
 	{
 	}
 
 	bool needsCollision(btBroadphaseProxy* proxy0) const override
 	{
-		return clbk((btCollisionObject*)proxy0->m_clientObject, false);
+		return clbk((btCollisionObject*)proxy0->m_clientObject, false) == Game::LT_COLLIDE;
 	}
 
 	float addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace)
 	{
 		if(use_clbk2)
 		{
-			if(!clbk((btCollisionObject*)convexResult.m_hitCollisionObject, true))
+			auto result = clbk((btCollisionObject*)convexResult.m_hitCollisionObject, true);
+			if(result == Game::LT_IGNORE)
 				return m_closestHitFraction;
+			else if(result == Game::LT_END)
+			{
+				if(end_t > convexResult.m_hitFraction)
+				{
+					closest = min(closest, convexResult.m_hitFraction);
+					m_closestHitFraction = convexResult.m_hitFraction;
+					end_t = convexResult.m_hitFraction;
+				}
+				end = true;
+				return 1.f;
+			}
+			else if(end && convexResult.m_hitFraction > end_t)
+				return 1.f;
 		}
-		m_closestHitFraction = convexResult.m_hitFraction;
+		closest = min(closest, convexResult.m_hitFraction);
 		if(t_list)
-			t_list->push_back(m_closestHitFraction);
-		return convexResult.m_hitFraction;
+			t_list->push_back(convexResult.m_hitFraction);
+		// return value is unused
+		return 1.f;
 	}
 };
 
-bool Game::LineTest(btCollisionShape* shape, const Vec3& from, const Vec3& dir, delegate<bool(btCollisionObject*, bool)> clbk, float& t, vector<float>* t_list,
-	bool use_clbk2)
+bool Game::LineTest(btCollisionShape* shape, const Vec3& from, const Vec3& dir, delegate<LINE_TEST_RESULT(btCollisionObject*, bool)> clbk, float& t,
+	vector<float>* t_list, bool use_clbk2, float* end_t)
 {
 	assert(shape->isConvex());
-	assert(!((t_list != nullptr) && use_clbk2)); // todo
 
 	btTransform t_from, t_to;
 	t_from.setIdentity();
@@ -12771,8 +12796,16 @@ bool Game::LineTest(btCollisionShape* shape, const Vec3& from, const Vec3& dir, 
 
 	phy_world->convexSweepTest((btConvexShape*)shape, t_from, t_to, callback);
 
-	t = callback.m_closestHitFraction;
-	return callback.hasHit();
+	bool has_hit = (callback.closest <= 1.f);
+	t = min(callback.closest, 1.f);
+	if(end_t)
+	{
+		if(callback.end)
+			*end_t = callback.end_t;
+		else
+			*end_t = 1.f;
+	}
+	return has_hit;
 }
 
 struct ContactTestCallback : public btCollisionWorld::ContactResultCallback
@@ -14571,7 +14604,7 @@ void Game::WarpUnit(Unit& unit, const Vec3& pos)
 {
 	const float unit_radius = unit.GetUnitRadius();
 
-	BreakUnitAction(unit, BREAK_ACTION_MODE::INSTANT);
+	BreakUnitAction(unit, BREAK_ACTION_MODE::INSTANT, false, true);
 
 	global_col.clear();
 	LevelContext& ctx = GetContext(unit);
@@ -15541,7 +15574,7 @@ void Game::StartArenaCombat(int level)
 		{
 			if(unit->frozen == FROZEN::NO)
 			{
-				BreakUnitAction(*unit, BREAK_ACTION_MODE::NORMAL, true);
+				BreakUnitAction(*unit, BREAK_ACTION_MODE::NORMAL, true, true);
 
 				unit->frozen = FROZEN::YES;
 				unit->in_arena = 0;
@@ -15816,7 +15849,7 @@ void Game::DialogTalk(DialogContext& ctx, cstring msg)
 	ctx.dialog_wait = 1.f + float(strlen(ctx.dialog_text)) / 20;
 
 	int ani;
-	if(!ctx.talker->usable && ctx.talker->data->type == UNIT_TYPE::HUMAN && Rand() % 3 != 0)
+	if(!ctx.talker->usable && ctx.talker->data->type == UNIT_TYPE::HUMAN && ctx.talker->action == A_NONE && Rand() % 3 != 0)
 	{
 		ani = Rand() % 2 + 1;
 		ctx.talker->mesh_inst->Play(ani == 1 ? "i_co" : "pokazuje", PLAY_ONCE | PLAY_PRIO2, 0);
@@ -19102,7 +19135,7 @@ void Game::UpdateGame2(float dt)
 							unit->mesh_inst->Play("wstaje2", PLAY_ONCE | PLAY_PRIO3, 0);
 							unit->mesh_inst->groups[0].speed = 1.f;
 							unit->action = A_ANIMATION;
-							unit->animation = ANI_STAND;
+							unit->animation = ANI_PLAY;
 							if(unit->IsAI())
 								unit->ai->Reset();
 							if(Net::IsOnline())
@@ -19138,7 +19171,7 @@ void Game::UpdateGame2(float dt)
 							unit->mesh_inst->Play("wstaje2", PLAY_ONCE | PLAY_PRIO3, 0);
 							unit->mesh_inst->groups[0].speed = 1.f;
 							unit->action = A_ANIMATION;
-							unit->animation = ANI_STAND;
+							unit->animation = ANI_PLAY;
 							if(unit->IsAI())
 								unit->ai->Reset();
 							if(Net::IsOnline())
@@ -19330,7 +19363,7 @@ void Game::UpdateGame2(float dt)
 					unit->mesh_inst->Play("wstaje2", PLAY_ONCE | PLAY_PRIO3, 0);
 					unit->mesh_inst->groups[0].speed = 1.f;
 					unit->action = A_ANIMATION;
-					unit->animation = ANI_STAND;
+					unit->animation = ANI_PLAY;
 					if(unit->IsAI())
 						unit->ai->Reset();
 					if(Net::IsOnline())
@@ -20113,15 +20146,13 @@ bool Game::Cheat_KillAll(int typ, Unit& unit, Unit* ignore)
 		return true;
 	}
 
-	LevelContext& ctx = GetContext(unit);
-
 	switch(typ)
 	{
 	case 0:
-		for(vector<Unit*>::iterator it = ctx.units->begin(), end = ctx.units->end(); it != end; ++it)
+		for(vector<Unit*>::iterator it = local_ctx.units->begin(), end = local_ctx.units->end(); it != end; ++it)
 		{
 			if((*it)->IsAlive() && IsEnemy(**it, unit) && *it != ignore)
-				GiveDmg(ctx, nullptr, (*it)->hp, **it, nullptr);
+				GiveDmg(local_ctx, nullptr, (*it)->hp, **it, nullptr);
 		}
 		if(city_ctx)
 		{
@@ -20136,10 +20167,10 @@ bool Game::Cheat_KillAll(int typ, Unit& unit, Unit* ignore)
 		}
 		break;
 	case 1:
-		for(vector<Unit*>::iterator it = ctx.units->begin(), end = ctx.units->end(); it != end; ++it)
+		for(vector<Unit*>::iterator it = local_ctx.units->begin(), end = local_ctx.units->end(); it != end; ++it)
 		{
 			if((*it)->IsAlive() && !(*it)->IsPlayer() && *it != ignore)
-				GiveDmg(ctx, nullptr, (*it)->hp, **it, nullptr);
+				GiveDmg(local_ctx, nullptr, (*it)->hp, **it, nullptr);
 		}
 		if(city_ctx)
 		{
@@ -20758,7 +20789,7 @@ void Game::UnitTalk(Unit& u, cstring text)
 	game_gui->AddSpeechBubble(&u, text);
 
 	int ani = 0;
-	if(u.data->type == UNIT_TYPE::HUMAN && Rand() % 3 != 0)
+	if(u.data->type == UNIT_TYPE::HUMAN && u.action == A_NONE && Rand() % 3 != 0)
 	{
 		ani = Rand() % 2 + 1;
 		u.mesh_inst->Play(ani == 1 ? "i_co" : "pokazuje", PLAY_ONCE | PLAY_PRIO2, 0);
