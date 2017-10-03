@@ -1352,6 +1352,33 @@ armor al_clothes3b {
 }
 
 //------------------------------------------------------------------------------
+// AMULETS
+//------------------------------------------------------------------------------
+amulet a_silver {
+	weight 0.1
+	value 75
+	mesh "silver_amulet.qmsh"
+}
+
+amulet a_gold {
+	weight 0.1
+	value 150
+	mesh "gold_amulet.qmsh"
+}
+
+amulet a_ruby {
+	weight 0.1
+	value 300
+	mesh "ruby_amulet.qmsh"
+}
+
+amulet a_diamond {
+	weight 0.1
+	value 600
+	mesh "diamond_amulet.qmsh"
+}
+
+//------------------------------------------------------------------------------
 // CONSUMABLES
 //------------------------------------------------------------------------------
 consumable p_nreg {
@@ -2600,8 +2627,6 @@ better_items {
 //------------------------------------------------------------------------------
 // ALIASES (new id, old id)
 //------------------------------------------------------------------------------
-// typo fixed in 0.2.10
-alias emerald vs_emerals
 // renamed armors in 0.4
 alias al_leather armor_leather
 alias al_studded armor_studded

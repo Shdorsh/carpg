@@ -3998,12 +3998,12 @@ void Game::StartNextDialog(DialogContext& ctx, GameDialog* dialog, int& if_level
 	if_level = 0;
 }
 
-//							WEAPON	BOW		SHIELD	ARMOR	LETTER	POTION	OTHER	BOOK	GOLD
-bool merchant_buy[] = {    true,	true,	true,	true,	true,	true,	true,	true,	false };
-bool blacksmith_buy[] = {  true,	true,	true,	true,	false,	false,	false,	false,	false };
-bool alchemist_buy[] = {   false,	false,	false,	false,	false,	true,	false,	false,	false };
-bool innkeeper_buy[] = {   false,	false,	false,	false,	false,	true,	false,	false,	false };
-bool foodseller_buy[] = {  false,	false,	false,	false,	false,	true,	false,	false,	false };
+//							WEAPON	BOW		SHIELD	ARMOR	AMULET	LETTER	POTION	OTHER	BOOK	GOLD
+bool merchant_buy[] = {    true,	true,	true,	true,	true,	true,	true,	true,	true,	false };
+bool blacksmith_buy[] = {  true,	true,	true,	true,	false,	false,	false,	false,	false,	false };
+bool alchemist_buy[] = {   false,	false,	false,	false,	false,	false,	true,	false,	false,	false };
+bool innkeeper_buy[] = {   false,	false,	false,	false,	false,	false,	true,	false,	false,	false };
+bool foodseller_buy[] = {  false,	false,	false,	false,	false,	false,	true,	false,	false,	false };
 
 //=================================================================================================
 void Game::UpdateGameDialog(DialogContext& ctx, float dt)
@@ -9142,6 +9142,19 @@ void Game::UpdateUnitInventory(Unit& u, bool notify)
 				changes = true;
 			}
 			break;
+		case IT_AMULET:
+			if(!u.HaveAmulet())
+			{
+				u.slots[SLOT_AMULET] = it->item;
+				it->item = nullptr;
+				changes = true;
+			}
+			else if(u.GetAmulet().value < it->item->value)
+			{
+				std::swap(u.slots[SLOT_AMULET], it->item);
+				changes = true;
+			}
+			break;
 		default:
 			break;
 		}
@@ -10535,16 +10548,20 @@ void Game::GenerateTreasure(int level, int _count, vector<ItemSlot>& items, int&
 			item = Weapon::weapons[Rand() % Weapon::weapons.size()];
 			count = 1;
 			break;
-		case IT_ARMOR:
-			item = Armor::armors[Rand() % Armor::armors.size()];
-			count = 1;
-			break;
 		case IT_BOW:
 			item = Bow::bows[Rand() % Bow::bows.size()];
 			count = 1;
 			break;
 		case IT_SHIELD:
 			item = Shield::shields[Rand() % Shield::shields.size()];
+			count = 1;
+			break;
+		case IT_ARMOR:
+			item = Armor::armors[Rand() % Armor::armors.size()];
+			count = 1;
+			break;
+		case IT_AMULET:
+			item = Item::amulets[Rand() % Item::amulets.size()];
 			count = 1;
 			break;
 		case IT_CONSUMABLE:
@@ -16406,6 +16423,24 @@ bool Game::IsBetterItem(Unit& unit, const Item* item, int* value)
 		else
 		{
 			if(unit.GetShield().value < item->value)
+			{
+				if(value)
+					*value = item->value;
+				return true;
+			}
+			else
+				return false;
+		}
+	case IT_AMULET:
+		if(!unit.HaveAmulet())
+		{
+			if(value)
+				*value = item->value;
+			return true;
+		}
+		else
+		{
+			if(unit.GetAmulet().value < item->value)
 			{
 				if(value)
 					*value = item->value;

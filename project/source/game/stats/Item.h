@@ -188,6 +188,8 @@ struct Item
 	TexturePtr tex;
 	TEX icon;
 	ResourceState state;
+
+	static vector<Item*> amulets;
 };
 
 //-----------------------------------------------------------------------------

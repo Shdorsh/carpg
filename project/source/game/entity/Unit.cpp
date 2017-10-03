@@ -1030,6 +1030,13 @@ void Unit::AddItemAndEquipIfNone(const Item* item, uint count)
 				--count;
 			}
 			break;
+		case IT_AMULET:
+			if(!HaveAmulet())
+			{
+				slots[SLOT_AMULET] = item;
+				--count;
+			}
+			break;
 		}
 
 		if(count)
@@ -2290,6 +2297,11 @@ bool Unit::IsBetterItem(const Item* item) const
 	case IT_BOW:
 		if(HaveBow())
 			return item->value > GetBow().value;
+		else
+			return true;
+	case IT_AMULET:
+		if(HaveAmulet())
+			return item->value > GetAmulet().value;
 		else
 			return true;
 	default:

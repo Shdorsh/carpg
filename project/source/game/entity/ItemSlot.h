@@ -14,6 +14,7 @@ enum ITEM_SLOT
 	SLOT_BOW,
 	SLOT_SHIELD,
 	SLOT_ARMOR,
+	SLOT_AMULET,
 	SLOT_MAX,
 	SLOT_INVALID
 };
@@ -43,6 +44,8 @@ inline ITEM_SLOT ItemTypeToSlot(ITEM_TYPE type)
 		return SLOT_SHIELD;
 	case IT_ARMOR:
 		return SLOT_ARMOR;
+	case IT_AMULET:
+		return SLOT_AMULET;
 	default:
 		return SLOT_INVALID;
 	}

@@ -14,11 +14,12 @@
 // powinno sortowaæ w takiej kolejnoœci:
 // najlepsza broñ, gorsza broñ, najgorsza broñ, najlepszy ³uk, œreni ³uk, najgorszy ³uk, najlepszy pancerz, œredni pancerz, najgorszy pancerz, najlepsza tarcza,
 //	œrednia tarcza, najgorsza tarcza
-const int item_type_prio[4] = {
+const int item_type_prio[5] = {
 	0, // IT_WEAPON
 	1, // IT_BOW
 	3, // IT_SHIELD
-	2  // IT_ARMOR
+	2, // IT_ARMOR
+	4  // IT_AMULET
 };
 
 //-----------------------------------------------------------------------------

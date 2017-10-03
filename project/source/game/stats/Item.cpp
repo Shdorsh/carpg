@@ -14,6 +14,7 @@ vector<Weapon*> Weapon::weapons;
 vector<Bow*> Bow::bows;
 vector<Shield*> Shield::shields;
 vector<Armor*> Armor::armors;
+vector<Item*> Item::amulets;
 vector<Consumable*> Consumable::consumables;
 vector<OtherItem*> OtherItem::others;
 vector<OtherItem*> OtherItem::artifacts;
@@ -692,6 +693,9 @@ bool LoadItem(Tokenizer& t, Crc& crc)
 					crc.Update(t.id);
 			}
 			break;
+		case IT_AMULET:
+			Item::amulets.push_back(item);
+			break;
 		case IT_CONSUMABLE:
 			{
 				Consumable& c = item->ToConsumable();
@@ -724,6 +728,9 @@ bool LoadItem(Tokenizer& t, Crc& crc)
 			}
 			break;
 		case IT_GOLD:
+			break;
+		default:
+			assert(0);
 			break;
 		}
 
@@ -1460,6 +1467,7 @@ uint LoadItems(uint& out_crc, uint& errors)
 		{ "bow", IT_BOW },
 		{ "shield", IT_SHIELD },
 		{ "armor", IT_ARMOR },
+		{ "amulet", IT_AMULET },
 		{ "other", IT_OTHER },
 		{ "consumable", IT_CONSUMABLE },
 		{ "book", IT_BOOK },
