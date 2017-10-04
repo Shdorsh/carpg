@@ -1,0 +1,14 @@
+strong back
+	60 str, +25% kg
+	80 str, +50% kg
+	
+hp reg
+stamina reg
+max hp
+max stamina
+defense
+attack
+block power
+backstab damage +%
+move/attack speed
+critical chance/damage
