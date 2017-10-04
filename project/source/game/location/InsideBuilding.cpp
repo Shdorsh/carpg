@@ -6,10 +6,12 @@
 #include "SaveState.h"
 #include "Content.h"
 #include "Door.h"
+#include "BuildingGroup.h"
 
 //=================================================================================================
 InsideBuilding::~InsideBuilding()
 {
+	DeleteElements(objects);
 	DeleteElements(units);
 	DeleteElements(doors);
 	DeleteElements(items);
@@ -67,8 +69,8 @@ void InsideBuilding::Save(HANDLE file, bool local)
 
 	ile = objects.size();
 	WriteFile(file, &ile, sizeof(ile), &tmp, nullptr);
-	for(vector<Object>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
-		it->Save(file);
+	for(vector<Object*>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
+		(*it)->Save(file);
 
 	ile = items.size();
 	WriteFile(file, &ile, sizeof(ile), &tmp, nullptr);
@@ -140,13 +142,13 @@ void InsideBuilding::Load(HANDLE file, bool local)
 	if(LOAD_VERSION >= V_0_5)
 	{
 		ReadString1(file);
-		type = content::FindBuilding(BUF);
+		type = Building::Get(BUF);
 	}
 	else
 	{
 		OLD_BUILDING old_type;
 		ReadFile(file, &old_type, sizeof(old_type), &tmp, nullptr);
-		type = content::FindOldBuilding(old_type);
+		type = Building::GetOld(old_type);
 	}
 	assert(type != nullptr);
 	ReadFile(file, &level_shift, sizeof(level_shift), &tmp, nullptr);
@@ -177,8 +179,11 @@ void InsideBuilding::Load(HANDLE file, bool local)
 
 	ReadFile(file, &ile, sizeof(ile), &tmp, nullptr);
 	objects.resize(ile);
-	for(vector<Object>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
-		it->Load(file);
+	for(vector<Object*>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
+	{
+		*it = new Object;
+		(*it)->Load(file);
+	}
 
 	ReadFile(file, &ile, sizeof(ile), &tmp, nullptr);
 	items.resize(ile);
@@ -258,13 +263,15 @@ void InsideBuilding::Load(HANDLE file, bool local)
 	}
 
 	// konwersja krzese³ w sto³ki
-	if(LOAD_VERSION < V_0_2_12 && type->group == content::BG_INN)
+	if(LOAD_VERSION < V_0_2_12 && type->group == BuildingGroup::BG_INN)
 	{
+		auto chair = BaseUsable::Get("chair"),
+			stool = BaseUsable::Get("stool");
 		for(vector<Usable*>::iterator it = usables.begin(), end = usables.end(); it != end; ++it)
 		{
 			Usable& u = **it;
-			if(u.type == U_CHAIR)
-				u.type = U_STOOL;
+			if(u.base == chair)
+				u.base = stool;
 		}
 	}
 }

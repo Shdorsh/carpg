@@ -42,9 +42,9 @@
 #include "ItemContainer.h"
 #include "ScriptManager.h"
 
-const int SAVE_VERSION = V_CURRENT;
+const int SAVE_VERSION = V_FEATURE;
 int LOAD_VERSION;
-const int MIN_SUPPORT_LOAD_VERSION = V_0_2_5;
+const int MIN_SUPPORT_LOAD_VERSION = V_0_2_10;
 
 const Vec2 ALERT_RANGE(20.f, 30.f);
 const float PICKUP_RANGE = 2.f;
@@ -772,14 +772,8 @@ void Game::SetupCamera(float dt)
 		GetWindowAspect() * (1.f + sin(drunk_anim) / 10 * drunk_mod), 0.1f, cam.draw_range);
 	cam.matViewProj = matView * matProj;
 	cam.matViewInv = matView.Inverse();
-
-	Matrix matProj2 = Matrix::CreatePerspectiveFieldOfView(PI / 4 + sin(drunk_anim)*(PI / 16)*drunk_mod,
-		GetWindowAspect() * (1.f + sin(drunk_anim) / 10 * drunk_mod), 0.1f, grass_range > 0.1f ? grass_range : 0.2f);
-
 	cam.center = cam.from;
-
 	cam.frustum.Set(cam.matViewProj);
-	cam.frustum2.Set(matView * matProj2);
 
 	// centrum dŸwiêku 3d
 	Vec3 listener_pos = target->GetHeadSoundPos();
@@ -3207,8 +3201,8 @@ void Game::PlayerCheckObjectDistance(Unit& u, const Vec3& pos, void* ptr, float&
 			else if(type == BP_USABLE)
 			{
 				Usable* use = (Usable*)ptr;
-				auto& bu = *use->GetBase();
-				if(IS_SET(bu.flags, BaseUsable::CONTAINER))
+				auto& bu = *use->base;
+				if(IS_SET(bu.use_flags, BaseUsable::CONTAINER))
 				{
 					float allowed_dif;
 					switch(bu.limit_rot)
@@ -6067,14 +6061,14 @@ void Game::MoveUnit(Unit& unit, bool warped, bool dash)
 								{
 									if(Net::IsLocal())
 									{
-										int w = CanLeaveLocation(unit);
-										if(w == 0)
+										auto result = CanLeaveLocation(unit);
+										if(result == CanLeaveLocationResult::Yes)
 										{
 											allow_exit = true;
 											SetExitWorldDir();
 										}
 										else
-											AddGameMsg3(w == 1 ? GMS_GATHER_TEAM : GMS_NOT_IN_COMBAT);
+											AddGameMsg3(result == CanLeaveLocationResult::TeamTooFar ? GMS_GATHER_TEAM : GMS_NOT_IN_COMBAT);
 									}
 									else
 										Net_LeaveLocation(WHERE_OUTSIDE);
@@ -6089,8 +6083,8 @@ void Game::MoveUnit(Unit& unit, bool warped, bool dash)
 						{
 							if(Net::IsLocal())
 							{
-								int w = CanLeaveLocation(unit);
-								if(w == 0)
+								auto result = CanLeaveLocation(unit);
+								if(result == CanLeaveLocationResult::Yes)
 								{
 									allow_exit = true;
 									// opuszczanie otwartego terenu (las/droga/obóz)
@@ -6109,7 +6103,7 @@ void Game::MoveUnit(Unit& unit, bool warped, bool dash)
 										world_dir = Lerp(1.f / 4 * PI, 3.f / 4 * PI, 1.f - (unit.pos.x - 33.f) / (256.f - 66.f));
 								}
 								else
-									AddGameMsg3(w == 1 ? GMS_GATHER_TEAM : GMS_NOT_IN_COMBAT);
+									AddGameMsg3(result == CanLeaveLocationResult::TeamTooFar ? GMS_GATHER_TEAM : GMS_NOT_IN_COMBAT);
 							}
 							else
 								Net_LeaveLocation(WHERE_OUTSIDE);
@@ -6234,8 +6228,8 @@ void Game::MoveUnit(Unit& unit, bool warped, bool dash)
 				{
 					if(Net::IsLocal())
 					{
-						int w = CanLeaveLocation(unit);
-						if(w == 0)
+						auto result = CanLeaveLocation(unit);
+						if(result == CanLeaveLocationResult::Yes)
 						{
 							fallback_co = FALLBACK::CHANGE_LEVEL;
 							fallback_t = -1.f;
@@ -6246,7 +6240,7 @@ void Game::MoveUnit(Unit& unit, bool warped, bool dash)
 								Net::PushChange(NetChange::LEAVE_LOCATION);
 						}
 						else
-							AddGameMsg3(w == 1 ? GMS_GATHER_TEAM : GMS_NOT_IN_COMBAT);
+							AddGameMsg3(result == CanLeaveLocationResult::TeamTooFar ? GMS_GATHER_TEAM : GMS_NOT_IN_COMBAT);
 					}
 					else
 						Net_LeaveLocation(WHERE_LEVEL_UP);
@@ -6287,8 +6281,8 @@ void Game::MoveUnit(Unit& unit, bool warped, bool dash)
 				{
 					if(Net::IsLocal())
 					{
-						int w = CanLeaveLocation(unit);
-						if(w == 0)
+						auto result = CanLeaveLocation(unit);
+						if(result == CanLeaveLocationResult::Yes)
 						{
 							fallback_co = FALLBACK::CHANGE_LEVEL;
 							fallback_t = -1.f;
@@ -6299,7 +6293,7 @@ void Game::MoveUnit(Unit& unit, bool warped, bool dash)
 								Net::PushChange(NetChange::LEAVE_LOCATION);
 						}
 						else
-							AddGameMsg3(w == 1 ? GMS_GATHER_TEAM : GMS_NOT_IN_COMBAT);
+							AddGameMsg3(result == CanLeaveLocationResult::TeamTooFar ? GMS_GATHER_TEAM : GMS_NOT_IN_COMBAT);
 					}
 					else
 						Net_LeaveLocation(WHERE_LEVEL_DOWN);
@@ -6330,8 +6324,8 @@ void Game::MoveUnit(Unit& unit, bool warped, bool dash)
 					{
 						if(Net::IsLocal())
 						{
-							int w = CanLeaveLocation(unit);
-							if(w == 0)
+							auto result = CanLeaveLocation(unit);
+							if(result == CanLeaveLocationResult::Yes)
 							{
 								fallback_co = FALLBACK::USE_PORTAL;
 								fallback_t = -1.f;
@@ -6342,7 +6336,7 @@ void Game::MoveUnit(Unit& unit, bool warped, bool dash)
 									Net::PushChange(NetChange::LEAVE_LOCATION);
 							}
 							else
-								AddGameMsg3(w == 1 ? GMS_GATHER_TEAM : GMS_NOT_IN_COMBAT);
+								AddGameMsg3(result == CanLeaveLocationResult::TeamTooFar ? GMS_GATHER_TEAM : GMS_NOT_IN_COMBAT);
 						}
 						else
 							Net_LeaveLocation(WHERE_PORTAL + index);
@@ -8567,18 +8561,15 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 		case A_ANIMATION2:
 			{
 				bool allow_move = true;
-				if(Net::IsOnline())
+				if(Net::IsServer())
 				{
-					if(Net::IsServer())
-					{
-						if(u.IsPlayer() && &u != pc->unit)
-							allow_move = false;
-					}
-					else
-					{
-						if(!u.IsPlayer() || &u != pc->unit)
-							allow_move = false;
-					}
+					if(u.IsPlayer() && &u != pc->unit)
+						allow_move = false;
+				}
+				else if(Net::IsClient())
+				{
+					if(!u.IsPlayer() || &u != pc->unit)
+						allow_move = false;
 				}
 				if(u.animation_state == AS_ANIMATION2_MOVE_TO_ENDPOINT)
 				{
@@ -8597,6 +8588,7 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 						}
 						u.usable = nullptr;
 						u.action = A_NONE;
+						u.changed = true;
 						break;
 					}
 
@@ -8618,11 +8610,13 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 							else
 								u.rot = Clip(u.rot + Sign(arc) * rot_speed);
 						}
+
+						u.changed = true;
 					}
 				}
 				else
 				{
-					BaseUsable& bu = BaseUsable::base_usables[u.usable->type];
+					BaseUsable& bu = *u.usable->base;
 
 					if(u.animation_state > AS_ANIMATION2_MOVE_TO_OBJECT)
 					{
@@ -8713,6 +8707,7 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 							if(allow_move)
 							{
 								u.visual_pos = u.pos = Vec3::Lerp(u.target_pos, u.target_pos2, u.timer * 2);
+								u.changed = true;
 								global_col.clear();
 								float my_radius = u.GetUnitRadius();
 								bool ok = true;
@@ -8737,6 +8732,8 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 			}
 			break;
 		case A_POSITION:
+			if(Net::IsClient() && u.player != pc)
+				break;
 			u.timer += dt;
 			if(u.animation_state == 1)
 			{
@@ -8774,6 +8771,7 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 			}
 			else
 				u.visual_pos = u.pos = Vec3::Lerp(u.target_pos2, u.target_pos, u.timer * 2);
+			u.changed = true;
 			break;
 		case A_PICKUP:
 			if(u.mesh_inst->frame_end_info)
@@ -8949,7 +8947,7 @@ void Game::UpdateUnits(LevelContext& ctx, float dt)
 }
 
 // dzia³a tylko dla cz³onków dru¿yny!
-void Game::UpdateUnitInventory(Unit& u)
+void Game::UpdateUnitInventory(Unit& u, bool notify)
 {
 	bool changes = false;
 	int index = 0;
@@ -9080,7 +9078,7 @@ void Game::UpdateUnitInventory(Unit& u)
 		RemoveNullItems(u.items);
 		SortItems(u.items);
 
-		if(Net::IsOnline() && players > 1)
+		if(Net::IsOnline() && players > 1 && notify)
 		{
 			for(int i = 0; i < SLOT_MAX; ++i)
 			{
@@ -10393,7 +10391,7 @@ void Game::GenerateDungeonObjects()
 				if(Net::IsOnline())
 					chest->netid = chest_netid_counter++;
 
-				SpawnObjectExtras(local_ctx, obj, pos, rot, nullptr, nullptr, 1.f, flags);
+				SpawnObjectExtras(local_ctx, obj, pos, rot, nullptr, 1.f, flags);
 				GenerateDungeonTreasure(*local_ctx.chests, chest_lvl);
 
 				break;
@@ -11047,16 +11045,17 @@ void Game::RespawnObjectColliders(LevelContext& ctx, bool spawn_pes)
 			flags |= SOE_MAGIC_LIGHT;
 	}
 
-	for(vector<Object>::iterator it = ctx.objects->begin(), end = ctx.objects->end(); it != end; ++it)
+	for(vector<Object*>::iterator it = ctx.objects->begin(), end = ctx.objects->end(); it != end; ++it)
 	{
-		if(!it->base)
+		Object& obj = **it;
+		BaseObject* base_obj = obj.base;
+
+		if(!base_obj)
 			continue;
 
-		BaseObject* obj = it->base;
-
-		if(IS_SET(obj->flags, OBJ_BUILDING))
+		if(IS_SET(base_obj->flags, OBJ_BUILDING))
 		{
-			float rot = it->rot.y;
+			float rot = obj.rot.y;
 			int roti;
 			if(Equal(rot, 0))
 				roti = 0;
@@ -11073,21 +11072,21 @@ void Game::RespawnObjectColliders(LevelContext& ctx, bool spawn_pes)
 				rot = 0.f;
 			}
 
-			ProcessBuildingObjects(ctx, nullptr, nullptr, obj->mesh, nullptr, rot, roti, it->pos, nullptr, nullptr, true);
+			ProcessBuildingObjects(ctx, nullptr, nullptr, base_obj->mesh, nullptr, rot, roti, obj.pos, nullptr, nullptr, true);
 		}
 		else
-			SpawnObjectExtras(ctx, obj, it->pos, it->rot.y, &*it, (btCollisionObject**)&it->ptr, it->scale, flags);
+			SpawnObjectExtras(ctx, base_obj, obj.pos, obj.rot.y, &obj, obj.scale, flags);
 	}
 
 	if(ctx.chests)
 	{
 		BaseObject* chest = BaseObject::Get("chest");
 		for(vector<Chest*>::iterator it = ctx.chests->begin(), end = ctx.chests->end(); it != end; ++it)
-			SpawnObjectExtras(ctx, chest, (*it)->pos, (*it)->rot, nullptr, nullptr, 1.f, flags);
+			SpawnObjectExtras(ctx, chest, (*it)->pos, (*it)->rot, nullptr, 1.f, flags);
 	}
 
 	for(vector<Usable*>::iterator it = ctx.usables->begin(), end = ctx.usables->end(); it != end; ++it)
-		SpawnObjectExtras(ctx, BaseUsable::base_usables[(*it)->type].obj, (*it)->pos, (*it)->rot, *it, nullptr, 1.f, flags);
+		SpawnObjectExtras(ctx, (*it)->base, (*it)->pos, (*it)->rot, *it, 1.f, flags);
 }
 
 void Game::SetRoomPointers()
@@ -11447,7 +11446,7 @@ void Game::GenerateCaveObjects()
 	}
 
 	// stalaktyty
-	BaseObject* obj = BaseObject::Get("stalactite");
+	BaseObject* base_obj = BaseObject::Get("stalactite");
 	static vector<Int2> sta;
 	for(int count = 0, tries = 200; count < 50 && tries>0; --tries)
 	{
@@ -11469,53 +11468,55 @@ void Game::GenerateCaveObjects()
 		{
 			++count;
 
-			Object& o = Add1(local_ctx.objects);
-			o.base = obj;
-			o.mesh = obj->mesh;
-			o.scale = Random(1.f, 2.f);
-			o.rot = Vec3(0, Random(MAX_ANGLE), 0);
-			o.pos = Vec3(2.f*pt.x + 1.f, 4.f, 2.f*pt.y + 1.f);
-
+			Object* o = new Object;
+			o->base = base_obj;
+			o->mesh = base_obj->mesh;
+			o->scale = Random(1.f, 2.f);
+			o->rot = Vec3(0, Random(MAX_ANGLE), 0);
+			o->pos = Vec3(2.f*pt.x + 1.f, 4.f, 2.f*pt.y + 1.f);
+			local_ctx.objects->push_back(o);
 			sta.push_back(pt);
 		}
 	}
 
 	// krzaki
-	obj = BaseObject::Get("plant2");
+	base_obj = BaseObject::Get("plant2");
 	for(int i = 0; i < 150; ++i)
 	{
 		Int2 pt = cave->GetRandomTile();
 
 		if(lvl.map[pt.x + pt.y*lvl.w].type == PUSTE)
 		{
-			Object& o = Add1(local_ctx.objects);
-			o.base = obj;
-			o.mesh = obj->mesh;
-			o.scale = 1.f;
-			o.rot = Vec3(0, Random(MAX_ANGLE), 0);
-			o.pos = Vec3(2.f*pt.x + Random(0.1f, 1.9f), 0.f, 2.f*pt.y + Random(0.1f, 1.9f));
+			Object* o = new Object;
+			o->base = base_obj;
+			o->mesh = base_obj->mesh;
+			o->scale = 1.f;
+			o->rot = Vec3(0, Random(MAX_ANGLE), 0);
+			o->pos = Vec3(2.f*pt.x + Random(0.1f, 1.9f), 0.f, 2.f*pt.y + Random(0.1f, 1.9f));
+			local_ctx.objects->push_back(o);
 		}
 	}
 
 	// grzyby
-	obj = BaseObject::Get("mushrooms");
+	base_obj = BaseObject::Get("mushrooms");
 	for(int i = 0; i < 100; ++i)
 	{
 		Int2 pt = cave->GetRandomTile();
 
 		if(lvl.map[pt.x + pt.y*lvl.w].type == PUSTE)
 		{
-			Object& o = Add1(local_ctx.objects);
-			o.base = obj;
-			o.mesh = obj->mesh;
-			o.scale = 1.f;
-			o.rot = Vec3(0, Random(MAX_ANGLE), 0);
-			o.pos = Vec3(2.f*pt.x + Random(0.1f, 1.9f), 0.f, 2.f*pt.y + Random(0.1f, 1.9f));
+			Object* o = new Object;
+			o->base = base_obj;
+			o->mesh = base_obj->mesh;
+			o->scale = 1.f;
+			o->rot = Vec3(0, Random(MAX_ANGLE), 0);
+			o->pos = Vec3(2.f*pt.x + Random(0.1f, 1.9f), 0.f, 2.f*pt.y + Random(0.1f, 1.9f));
+			local_ctx.objects->push_back(o);
 		}
 	}
 
 	// kamienie
-	obj = BaseObject::Get("rock");
+	base_obj = BaseObject::Get("rock");
 	sta.clear();
 	for(int i = 0; i < 80; ++i)
 	{
@@ -11536,43 +11537,44 @@ void Game::GenerateCaveObjects()
 
 			if(ok)
 			{
-				Object& o = Add1(local_ctx.objects);
-				o.base = obj;
-				o.mesh = obj->mesh;
-				o.scale = 1.f;
-				o.rot = Vec3(0, Random(MAX_ANGLE), 0);
-				o.pos = Vec3(2.f*pt.x + Random(0.1f, 1.9f), 0.f, 2.f*pt.y + Random(0.1f, 1.9f));
+				Object* o = new Object;
+				o->base = base_obj;
+				o->mesh = base_obj->mesh;
+				o->scale = 1.f;
+				o->rot = Vec3(0, Random(MAX_ANGLE), 0);
+				o->pos = Vec3(2.f*pt.x + Random(0.1f, 1.9f), 0.f, 2.f*pt.y + Random(0.1f, 1.9f));
+				local_ctx.objects->push_back(o);
 
-				if(obj->shape)
+				if(base_obj->shape)
 				{
 					CollisionObject& c = Add1(local_ctx.colliders);
 
 					btCollisionObject* cobj = new btCollisionObject;
-					cobj->setCollisionShape(obj->shape);
+					cobj->setCollisionShape(base_obj->shape);
 					cobj->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT | CG_OBJECT);
 
-					if(obj->type == OBJ_CYLINDER)
+					if(base_obj->type == OBJ_CYLINDER)
 					{
-						cobj->getWorldTransform().setOrigin(btVector3(o.pos.x, o.pos.y + obj->h / 2, o.pos.z));
+						cobj->getWorldTransform().setOrigin(btVector3(o->pos.x, o->pos.y + base_obj->h / 2, o->pos.z));
 						c.type = CollisionObject::SPHERE;
-						c.pt = Vec2(o.pos.x, o.pos.z);
-						c.radius = obj->r;
+						c.pt = Vec2(o->pos.x, o->pos.z);
+						c.radius = base_obj->r;
 					}
 					else
 					{
 						btTransform& tr = cobj->getWorldTransform();
-						Vec3 pos2 = Vec3::TransformZero(*obj->matrix);
-						pos2 += o.pos;
+						Vec3 pos2 = Vec3::TransformZero(*base_obj->matrix);
+						pos2 += o->pos;
 						tr.setOrigin(ToVector3(pos2));
-						tr.setRotation(btQuaternion(o.rot.y, 0, 0));
+						tr.setRotation(btQuaternion(o->rot.y, 0, 0));
 
 						c.pt = Vec2(pos2.x, pos2.z);
-						c.w = obj->size.x;
-						c.h = obj->size.y;
-						if(NotZero(o.rot.y))
+						c.w = base_obj->size.x;
+						c.h = base_obj->size.y;
+						if(NotZero(o->rot.y))
 						{
 							c.type = CollisionObject::RECTANGLE_ROT;
-							c.rot = o.rot.y;
+							c.rot = o->rot.y;
 							c.radius = max(c.w, c.h) * SQRT_2;
 						}
 						else
@@ -13434,7 +13436,6 @@ void Game::AddGameMsg(cstring msg, float time)
 
 void Game::AddGameMsg2(cstring msg, float time, int id)
 {
-	assert(id > 0);
 	game_gui->game_messages->AddMessageIfNotExists(msg, time, id);
 }
 
@@ -13738,6 +13739,9 @@ void Game::Unit_StopUsingUsable(LevelContext& ctx, Unit& u, bool send)
 	u.timer = 0.f;
 	u.used_item = nullptr;
 
+	if(Net::IsClient())
+		return;
+
 	const float unit_radius = u.GetUnitRadius();
 
 	global_col.clear();
@@ -13988,12 +13992,13 @@ void Game::EnterLevel(bool first, bool reenter, bool from_lower, int from_portal
 
 			// jaskinia
 			// schody w górê
-			Object& o = Add1(local_ctx.objects);
-			o.mesh = aStairsUp;
-			o.pos = pt_to_pos(lvl.staircase_up);
-			o.rot = Vec3(0, dir_to_rot(lvl.staircase_up_dir), 0);
-			o.scale = 1;
-			o.base = nullptr;
+			Object* o = new Object;
+			o->mesh = aStairsUp;
+			o->pos = pt_to_pos(lvl.staircase_up);
+			o->rot = Vec3(0, dir_to_rot(lvl.staircase_up_dir), 0);
+			o->scale = 1;
+			o->base = nullptr;
+			local_ctx.objects->push_back(o);
 
 			GenerateCaveObjects();
 			if(current_location == quest_mine->target_loc)
@@ -14016,7 +14021,6 @@ void Game::EnterLevel(bool first, bool reenter, bool from_lower, int from_portal
 				LoadingStep(txGeneratingUnits);
 				GenerateDungeonUnits();
 				GenerateDungeonFood();
-				ResetCollisionPointers();
 			}
 			else
 			{
@@ -14024,24 +14028,25 @@ void Game::EnterLevel(bool first, bool reenter, bool from_lower, int from_portal
 
 				// pochodnia przy œcianie
 				{
-					Object& o = Add1(lvl.objects);
-					o.base = obj;
-					o.rot = Vec3(0, Random(MAX_ANGLE), 0);
-					o.scale = 1.f;
-					o.mesh = obj->mesh;
+					Object* o = new Object;
+					o->base = obj;
+					o->rot = Vec3(0, Random(MAX_ANGLE), 0);
+					o->scale = 1.f;
+					o->mesh = obj->mesh;
+					lvl.objects.push_back(o);
 
 					Int2 pt = lvl.GetUpStairsFrontTile();
 					if(czy_blokuje2(lvl.map[pt.x - 1 + pt.y*lvl.w].type))
-						o.pos = Vec3(2.f*pt.x + obj->size.x + 0.1f, 0.f, 2.f*pt.y + 1.f);
+						o->pos = Vec3(2.f*pt.x + obj->size.x + 0.1f, 0.f, 2.f*pt.y + 1.f);
 					else if(czy_blokuje2(lvl.map[pt.x + 1 + pt.y*lvl.w].type))
-						o.pos = Vec3(2.f*(pt.x + 1) - obj->size.x - 0.1f, 0.f, 2.f*pt.y + 1.f);
+						o->pos = Vec3(2.f*(pt.x + 1) - obj->size.x - 0.1f, 0.f, 2.f*pt.y + 1.f);
 					else if(czy_blokuje2(lvl.map[pt.x + (pt.y - 1)*lvl.w].type))
-						o.pos = Vec3(2.f*pt.x + 1.f, 0.f, 2.f*pt.y + obj->size.y + 0.1f);
+						o->pos = Vec3(2.f*pt.x + 1.f, 0.f, 2.f*pt.y + obj->size.y + 0.1f);
 					else if(czy_blokuje2(lvl.map[pt.x + (pt.y + 1)*lvl.w].type))
-						o.pos = Vec3(2.f*pt.x + 1.f, 0.f, 2.f*(pt.y + 1) + obj->size.y - 0.1f);
+						o->pos = Vec3(2.f*pt.x + 1.f, 0.f, 2.f*(pt.y + 1) + obj->size.y - 0.1f);
 
 					Light& s = Add1(lvl.lights);
-					s.pos = o.pos;
+					s.pos = o->pos;
 					s.pos.y += obj->centery;
 					s.range = 5;
 					s.color = Vec3(1.f, 0.9f, 0.9f);
@@ -14059,7 +14064,7 @@ void Game::EnterLevel(bool first, bool reenter, bool from_lower, int from_portal
 					pe->pos = s.pos;
 					pe->pos_min = Vec3(0, 0, 0);
 					pe->pos_max = Vec3(0, 0, 0);
-					pe->size = IS_SET(obj->flags, OBJ_CAMPFIRE) ? .7f : .5f;
+					pe->size = IS_SET(obj->flags, OBJ_CAMPFIRE_EFFECT) ? .7f : .5f;
 					pe->spawn_min = 1;
 					pe->spawn_max = 3;
 					pe->speed_min = Vec3(-1, 3, -1);
@@ -14071,15 +14076,16 @@ void Game::EnterLevel(bool first, bool reenter, bool from_lower, int from_portal
 
 				// pochodnia w skarbie
 				{
-					Object& o = Add1(lvl.objects);
-					o.base = obj;
-					o.rot = Vec3(0, Random(MAX_ANGLE), 0);
-					o.scale = 1.f;
-					o.mesh = obj->mesh;
-					o.pos = lvl.rooms[0].Center();
+					Object* o = new Object;
+					o->base = obj;
+					o->rot = Vec3(0, Random(MAX_ANGLE), 0);
+					o->scale = 1.f;
+					o->mesh = obj->mesh;
+					o->pos = lvl.rooms[0].Center();
+					lvl.objects.push_back(o);
 
 					Light& s = Add1(lvl.lights);
-					s.pos = o.pos;
+					s.pos = o->pos;
 					s.pos.y += obj->centery;
 					s.range = 5;
 					s.color = Vec3(1.f, 0.9f, 0.9f);
@@ -14097,7 +14103,7 @@ void Game::EnterLevel(bool first, bool reenter, bool from_lower, int from_portal
 					pe->pos = s.pos;
 					pe->pos_min = Vec3(0, 0, 0);
 					pe->pos_max = Vec3(0, 0, 0);
-					pe->size = IS_SET(obj->flags, OBJ_CAMPFIRE) ? .7f : .5f;
+					pe->size = IS_SET(obj->flags, OBJ_CAMPFIRE_EFFECT) ? .7f : .5f;
 					pe->spawn_min = 1;
 					pe->spawn_max = 3;
 					pe->speed_min = Vec3(-1, 3, -1);
@@ -15184,8 +15190,8 @@ void Game::PreloadResources(bool worldmap)
 				LoadMusic(GetLocationMusic(), false, true);
 
 			// load objects
-			for(auto& obj : *local_ctx.objects)
-				mesh_mgr.AddLoadTask(obj.mesh);
+			for(auto obj : *local_ctx.objects)
+				mesh_mgr.AddLoadTask(obj->mesh);
 
 			// load usables
 			PreloadUsables(*local_ctx.usables);
@@ -15209,8 +15215,8 @@ void Game::PreloadResources(bool worldmap)
 				for(auto ib : city_ctx->inside_buildings)
 				{
 					// load building objects
-					for(auto& obj : ib->objects)
-						mesh_mgr.AddLoadTask(obj.mesh);
+					for(auto obj : ib->objects)
+						mesh_mgr.AddLoadTask(obj->mesh);
 
 					// load building usables
 					PreloadUsables(ib->usables);
@@ -15233,16 +15239,16 @@ void Game::PreloadUsables(vector<Usable*>& usables)
 
 	for(auto u : usables)
 	{
-		auto base = u->GetBase();
+		auto base = u->base;
 		if(base->state == ResourceState::NotLoaded)
 		{
-			if(base->obj->variant)
+			if(base->variants)
 			{
-				for(uint i = 0; i < base->obj->variant->count; ++i)
-					mesh_mgr.AddLoadTask(base->obj->variant->entries[i].mesh);
+				for(uint i = 0; i < base->variants->entries.size(); ++i)
+					mesh_mgr.AddLoadTask(base->variants->entries[i].mesh);
 			}
 			else
-				mesh_mgr.AddLoadTask(base->obj->mesh);
+				mesh_mgr.AddLoadTask(base->mesh);
 			if(base->sound)
 				sound_mgr.AddLoadTask(base->sound);
 			base->state = ResourceState::Loaded;
@@ -15381,13 +15387,13 @@ void Game::VerifyResources()
 {
 	for(auto item : *local_ctx.items)
 		VerifyItemResources(item->item);
-	for(auto& obj : *local_ctx.objects)
-		assert(obj.mesh->state == ResourceState::Loaded);
+	for(auto obj : *local_ctx.objects)
+		assert(obj->mesh->state == ResourceState::Loaded);
 	for(auto unit : *local_ctx.units)
 		VerifyUnitResources(unit);
 	for(auto u : *local_ctx.usables)
 	{
-		auto base = u->GetBase();
+		auto base = u->base;
 		assert(base->state == ResourceState::Loaded);
 		if(base->sound)
 			assert(base->sound->IsLoaded());
@@ -15415,13 +15421,13 @@ void Game::VerifyResources()
 		{
 			for(auto item : ib->items)
 				VerifyItemResources(item->item);
-			for(auto& obj : ib->objects)
-				assert(obj.mesh->state == ResourceState::Loaded);
+			for(auto obj : ib->objects)
+				assert(obj->mesh->state == ResourceState::Loaded);
 			for(auto unit : ib->units)
 				VerifyUnitResources(unit);
 			for(auto u : ib->usables)
 			{
-				auto base = u->GetBase();
+				auto base = u->base;
 				assert(base->state == ResourceState::Loaded);
 				if(base->sound)
 					assert(base->sound->IsLoaded());
@@ -16605,10 +16611,10 @@ void Game::AttackReaction(Unit& attacked, Unit& attacker)
 	}
 }
 
-int Game::CanLeaveLocation(Unit& unit)
+Game::CanLeaveLocationResult Game::CanLeaveLocation(Unit& unit)
 {
 	if(secret_state == SECRET_FIGHT)
-		return false;
+		return CanLeaveLocationResult::InCombat;
 
 	if(city_ctx)
 	{
@@ -16619,19 +16625,19 @@ int Game::CanLeaveLocation(Unit& unit)
 				continue;
 
 			if(u.busy != Unit::Busy_No && u.busy != Unit::Busy_Tournament)
-				return 1;
+				return CanLeaveLocationResult::TeamTooFar;
 
 			if(u.IsPlayer())
 			{
 				if(u.in_building != -1 || Vec3::Distance2d(unit.pos, u.pos) > 8.f)
-					return 1;
+					return CanLeaveLocationResult::TeamTooFar;
 			}
 
 			for(vector<Unit*>::iterator it2 = local_ctx.units->begin(), end2 = local_ctx.units->end(); it2 != end2; ++it2)
 			{
 				Unit& u2 = **it2;
 				if(&u != &u2 && u2.IsStanding() && IsEnemy(u, u2) && u2.IsAI() && u2.ai->in_combat && Vec3::Distance2d(u.pos, u2.pos) < ALERT_RANGE.x && CanSee(u, u2))
-					return 2;
+					return CanLeaveLocationResult::InCombat;
 			}
 		}
 	}
@@ -16644,18 +16650,18 @@ int Game::CanLeaveLocation(Unit& unit)
 				continue;
 
 			if(u.busy != Unit::Busy_No || Vec3::Distance2d(unit.pos, u.pos) > 8.f)
-				return 1;
+				return CanLeaveLocationResult::TeamTooFar;
 
 			for(vector<Unit*>::iterator it2 = local_ctx.units->begin(), end2 = local_ctx.units->end(); it2 != end2; ++it2)
 			{
 				Unit& u2 = **it2;
 				if(&u != &u2 && u2.IsStanding() && IsEnemy(u, u2) && u2.IsAI() && u2.ai->in_combat && Vec3::Distance2d(u.pos, u2.pos) < ALERT_RANGE.x && CanSee(u, u2))
-					return 2;
+					return CanLeaveLocationResult::InCombat;
 			}
 		}
 	}
 
-	return 0;
+	return CanLeaveLocationResult::Yes;
 }
 
 void Game::GenerateTraps()
@@ -17513,7 +17519,7 @@ void Game::GenerateQuestUnits()
 
 	if(current_location == quest_evil->start_loc && quest_evil->evil_state == Quest_Evil::State::None)
 	{
-		CityBuilding* b = city_ctx->FindBuilding(content::BG_INN);
+		CityBuilding* b = city_ctx->FindBuilding(BuildingGroup::BG_INN);
 		Unit* u = SpawnUnitNearLocation(local_ctx, b->walk_pt, *FindUnitData("q_zlo_kaplan"), nullptr, 10);
 		assert(u);
 		if(u)
@@ -17941,25 +17947,15 @@ void Game::GenerateSawmill(bool in_progress)
 	terrain->Rebuild(true);
 
 	// usuñ obiekty
-	for(vector<Object>::iterator it = local_ctx.objects->begin(), end = local_ctx.objects->end(); it != end;)
+	LoopAndRemove(*local_ctx.objects, [](const Object* obj)
 	{
-		if(Vec3::Distance2d(it->pos, Vec3(128, 0, 128)) < 16.f)
+		if(Vec3::Distance2d(obj->pos, Vec3(128, 0, 128)) < 16.f)
 		{
-			if(it + 1 == end)
-			{
-				local_ctx.objects->pop_back();
-				break;
-			}
-			else
-			{
-				it->Swap(*(end - 1));
-				local_ctx.objects->pop_back();
-				end = local_ctx.objects->end();
-			}
+			delete obj;
+			return true;
 		}
-		else
-			++it;
-	}
+		return false;
+	});
 
 	if(!tartak_objs_ptrs[0])
 	{
@@ -18033,37 +18029,6 @@ void Game::GenerateSawmill(bool in_progress)
 
 		quest_sawmill->build_state = Quest_Sawmill::BuildState::Finished;
 	}
-}
-
-void Object::Swap(Object& o)
-{
-	Vec3 tv;
-
-	tv = pos;
-	pos = o.pos;
-	o.pos = tv;
-
-	tv = rot;
-	rot = o.rot;
-	o.rot = tv;
-
-	tv.x = scale;
-	scale = o.scale;
-	o.scale = tv.x;
-
-	void* p;
-
-	p = mesh;
-	mesh = o.mesh;
-	o.mesh = (Mesh*)p;
-
-	p = base;
-	base = o.base;
-	o.base = (BaseObject*)p;
-
-	// 	p = ptr;
-	// 	ptr = o.ptr;
-	// 	o.ptr = p;
 }
 
 bool Game::GenerateMine()
@@ -18410,11 +18375,12 @@ bool Game::GenerateMine()
 
 		// drzwi
 		{
-			Object& o = Add1(local_ctx.objects);
-			o.mesh = aDoorWall;
-			o.pos = Vec3(float(end_pt.x * 2) + 1, 0, float(end_pt.y * 2) + 1);
-			o.scale = 1;
-			o.base = nullptr;
+			Object* o = new Object;
+			o->mesh = aDoorWall;
+			o->pos = Vec3(float(end_pt.x * 2) + 1, 0, float(end_pt.y * 2) + 1);
+			o->scale = 1;
+			o->base = nullptr;
+			local_ctx.objects->push_back(o);
 
 			// hack :3
 			Room& r2 = Add1(lvl.rooms);
@@ -18422,29 +18388,29 @@ bool Game::GenerateMine()
 
 			if(czy_blokuje2(lvl.map[end_pt.x - 1 + end_pt.y*lvl.w].type))
 			{
-				o.rot = Vec3(0, 0, 0);
+				o->rot = Vec3(0, 0, 0);
 				if(end_pt.y > center.y)
 				{
-					o.pos.z -= 0.8229f;
+					o->pos.z -= 0.8229f;
 					lvl.At(end_pt + Int2(0, 1)).room = 1;
 				}
 				else
 				{
-					o.pos.z += 0.8229f;
+					o->pos.z += 0.8229f;
 					lvl.At(end_pt + Int2(0, -1)).room = 1;
 				}
 			}
 			else
 			{
-				o.rot = Vec3(0, PI / 2, 0);
+				o->rot = Vec3(0, PI / 2, 0);
 				if(end_pt.x > center.x)
 				{
-					o.pos.x -= 0.8229f;
+					o->pos.x -= 0.8229f;
 					lvl.At(end_pt + Int2(1, 0)).room = 1;
 				}
 				else
 				{
-					o.pos.x += 0.8229f;
+					o->pos.x += 0.8229f;
 					lvl.At(end_pt + Int2(-1, 0)).room = 1;
 				}
 			}
@@ -18452,8 +18418,8 @@ bool Game::GenerateMine()
 			Door* door = new Door;
 			local_ctx.doors->push_back(door);
 			door->pt = end_pt;
-			door->pos = o.pos;
-			door->rot = o.rot.y;
+			door->pos = o->pos;
+			door->rot = o->rot.y;
 			door->state = Door::Closed;
 			door->mesh_inst = new MeshInstance(aDoor);
 			door->mesh_inst->groups[0].speed = 2.f;
@@ -18562,7 +18528,8 @@ bool Game::GenerateMine()
 	// generuj rudê
 	if(generuj_rude)
 	{
-		BaseObject* iron_ore = BaseObject::Get("iron_ore");
+		auto iron_vein = BaseUsable::Get("iron_vein"),
+			gold_vein = BaseUsable::Get("gold_vein");
 
 		// usuñ star¹ rudê
 		if(quest_mine->mine_state3 != Quest_Mine::State3::None)
@@ -18639,39 +18606,39 @@ bool Game::GenerateMine()
 						}
 
 						float rot = Clip(dir_to_rot(dir) + PI);
-						static float radius = max(iron_ore->size.x, iron_ore->size.y) * SQRT_2;
+						static float radius = max(iron_vein->size.x, iron_vein->size.y) * SQRT_2;
 
 						IgnoreObjects ignore = { 0 };
 						ignore.ignore_blocks = true;
 						global_col.clear();
 						GatherCollisionObjects(local_ctx, global_col, pos, radius, &ignore);
 
-						Box2d box(pos.x - iron_ore->size.x, pos.z - iron_ore->size.y, pos.x + iron_ore->size.x, pos.z + iron_ore->size.y);
+						Box2d box(pos.x - iron_vein->size.x, pos.z - iron_vein->size.y, pos.x + iron_vein->size.x, pos.z + iron_vein->size.y);
 
 						if(!Collide(global_col, box, 0.f, rot))
 						{
 							Usable* u = new Usable;
 							u->pos = pos;
 							u->rot = rot;
-							u->type = (Rand() % 10 < zloto_szansa ? U_GOLD_VEIN : U_IRON_VEIN);
+							u->base = (Rand() % 10 < zloto_szansa ? gold_vein : iron_vein);
 							u->user = nullptr;
 							u->netid = usable_netid_counter++;
 							local_ctx.usables->push_back(u);
 
 							CollisionObject& c = Add1(local_ctx.colliders);
 							btCollisionObject* cobj = new btCollisionObject;
-							cobj->setCollisionShape(iron_ore->shape);
+							cobj->setCollisionShape(iron_vein->shape);
 							cobj->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT | CG_OBJECT);
 
 							btTransform& tr = cobj->getWorldTransform();
-							Vec3 pos2 = Vec3::TransformZero(*iron_ore->matrix);
+							Vec3 pos2 = Vec3::TransformZero(*iron_vein->matrix);
 							pos2 += pos;
 							tr.setOrigin(ToVector3(pos2));
 							tr.setRotation(btQuaternion(rot, 0, 0));
 
 							c.pt = Vec2(pos2.x, pos2.z);
-							c.w = iron_ore->size.x;
-							c.h = iron_ore->size.y;
+							c.w = iron_vein->size.x;
+							c.h = iron_vein->size.y;
 							if(NotZero(rot))
 							{
 								c.type = CollisionObject::RECTANGLE_ROT;
@@ -20618,7 +20585,7 @@ InsideBuilding* Game::GetArena()
 	assert(city_ctx);
 	for(InsideBuilding* b : city_ctx->inside_buildings)
 	{
-		if(b->type->group == content::BG_ARENA)
+		if(b->type->group == BuildingGroup::BG_ARENA)
 			return b;
 	}
 	assert(0);
@@ -20669,21 +20636,14 @@ void Game::PlayerUseUsable(Usable* usable, bool after_action)
 {
 	Unit& u = *pc->unit;
 	Usable& use = *usable;
-	BaseUsable& bu = BaseUsable::base_usables[use.type];
+	BaseUsable& bu = *use.base;
 
 	bool ok = true;
 	if(bu.item)
 	{
 		if(!u.HaveItem(bu.item) && u.slots[SLOT_WEAPON] != bu.item)
 		{
-			if(use.type == U_CAULDRON)
-				AddGameMsg2(txNeedLadle, 2.f, GMS_NEED_LADLE);
-			else if(use.type == U_ANVIL)
-				AddGameMsg2(txNeedHammer, 2.f, GMS_NEED_HAMMER);
-			else if(use.type == U_IRON_VEIN || use.type == U_GOLD_VEIN)
-				AddGameMsg2(txNeedPickaxe, 2.f, GMS_NEED_PICKAXE);
-			else
-				AddGameMsg2(txNeedUnk, 2.f, GMS_NEED_PICKAXE);
+			AddGameMsg2(Format(txNeedItem, bu.item->name.c_str()), 2.f);
 			ok = false;
 		}
 		else if(pc->unit->weapon_state != WS_HIDDEN && (bu.item != &pc->unit->GetWeapon() || pc->unit->HaveShield()))
@@ -20707,7 +20667,7 @@ void Game::PlayerUseUsable(Usable* usable, bool after_action)
 			u.usable->user = &u;
 			pc_data.before_player = BP_NONE;
 
-			if(IS_SET(bu.flags, BaseUsable::CONTAINER))
+			if(IS_SET(bu.use_flags, BaseUsable::CONTAINER))
 			{
 				// loot container
 				pc->action = PlayerController::Action_LootContainer;
@@ -20721,7 +20681,7 @@ void Game::PlayerUseUsable(Usable* usable, bool after_action)
 				game_gui->inv_trade_other->unit = nullptr;
 				game_gui->inv_trade_other->items = &pc->action_container->container->items;
 				game_gui->inv_trade_other->slots = nullptr;
-				game_gui->inv_trade_other->title = Format("%s - %s", Inventory::txLooting, use.GetBase()->name);
+				game_gui->inv_trade_other->title = Format("%s - %s", Inventory::txLooting, use.base->name.c_str());
 				game_gui->inv_trade_other->mode = Inventory::LOOT_OTHER;
 				game_gui->gp_trade->Show();
 			}
@@ -20729,11 +20689,11 @@ void Game::PlayerUseUsable(Usable* usable, bool after_action)
 			{
 				u.action = A_ANIMATION2;
 				u.animation = ANI_PLAY;
-				u.mesh_inst->Play(bu.anim, PLAY_PRIO1, 0);
+				u.mesh_inst->Play(bu.anim.c_str(), PLAY_PRIO1, 0);
 				u.mesh_inst->groups[0].speed = 1.f;
 				u.target_pos = u.pos;
 				u.target_pos2 = use.pos;
-				if(BaseUsable::base_usables[use.type].limit_rot == 4)
+				if(use.base->limit_rot == 4)
 					u.target_pos2 -= Vec3(sin(use.rot)*1.5f, 0, cos(use.rot)*1.5f);
 				u.timer = 0.f;
 				u.animation_state = AS_ANIMATION2_MOVE_TO_OBJECT;
@@ -20756,7 +20716,7 @@ void Game::PlayerUseUsable(Usable* usable, bool after_action)
 			c.id = pc_data.before_player_ptr.usable->netid;
 			c.ile = 1;
 
-			if(IS_SET(bu.flags, BaseUsable::CONTAINER))
+			if(IS_SET(bu.use_flags, BaseUsable::CONTAINER))
 			{
 				pc->action = PlayerController::Action_LootContainer;
 				pc->action_container = pc_data.before_player_ptr.usable;
@@ -22093,6 +22053,13 @@ void Game::OnEnterLevelOrLocation()
 	ClearGui(false);
 	lights_dt = 1.f;
 	pc_data.autowalk = false;
+	fallback_t = -0.5f;
+	fallback_co = FALLBACK::NONE;
+	if(Net::IsLocal())
+	{
+		for(auto unit : Team.members)
+			unit->frozen = FROZEN::NO;
+	}
 }
 
 void Game::StartTrade(InventoryMode mode, Unit& unit)
@@ -22171,7 +22138,7 @@ void Game::StartTrade(InventoryMode mode, vector<ItemSlot>& items, Unit* unit)
 		my.mode = Inventory::LOOT_MY;
 		other.mode = Inventory::LOOT_OTHER;
 		other.unit = nullptr;
-		other.title = Format("%s - %s", Inventory::txLooting, pc->action_container->GetBase()->name);
+		other.title = Format("%s - %s", Inventory::txLooting, pc->action_container->base->name.c_str());
 		break;
 	default:
 		assert(0);
@@ -22331,13 +22298,13 @@ void Game::VerifyObjects()
 		throw Format("Veryify objects failed with %d errors. Check log for details.", errors);
 }
 
-void Game::VerifyObjects(vector<Object>& objects, int& errors)
+void Game::VerifyObjects(vector<Object*>& objects, int& errors)
 {
-	for(Object& o : objects)
+	for(Object* o : objects)
 	{
-		if(!o.mesh && !o.base)
+		if(!o->mesh && !o->base)
 		{
-			Error("Broken object at (%g,%g,%g).", o.pos.x, o.pos.y, o.pos.z);
+			Error("Broken object at (%g,%g,%g).", o->pos.x, o->pos.y, o->pos.z);
 			++errors;
 		}
 	}

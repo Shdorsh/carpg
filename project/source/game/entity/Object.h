@@ -12,7 +12,6 @@ struct Object
 	float scale;
 	Mesh* mesh;
 	BaseObject* base;
-	void* ptr;
 	bool require_split;
 
 	static const int MIN_SIZE = 29;
@@ -39,7 +38,6 @@ struct Object
 	}
 	void Save(HANDLE file);
 	void Load(HANDLE file);
-	void Swap(Object& o);
 	void Write(BitStream& stream) const;
 	bool Read(BitStream& stream);
 };

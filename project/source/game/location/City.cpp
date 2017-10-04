@@ -86,7 +86,7 @@ void City::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 			buildings.resize(count);
 			for(CityBuilding& b : buildings)
 			{
-				b.type = content::FindBuilding(f.ReadString1C());
+				b.type = Building::Get(f.ReadString1C());
 				assert(b.type != nullptr);
 			}
 		}
@@ -100,7 +100,7 @@ void City::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 			buildings.resize(count);
 			for(CityBuilding& b : buildings)
 			{
-				b.type = content::FindBuilding(f.ReadString1C());
+				b.type = Building::Get(f.ReadString1C());
 				f >> b.pt;
 				f >> b.unit_pt;
 				f >> b.rot;
@@ -179,7 +179,7 @@ void City::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 				f >> b.unit_pt;
 				f >> b.rot;
 				f >> b.walk_pt;
-				b.type = content::FindOldBuilding(type);
+				b.type = Building::GetOld(type);
 				assert(b.type != nullptr);
 			}
 
@@ -313,14 +313,15 @@ void City::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 
 				// delete old walls
 				BaseObject* to_remove = BaseObject::Get("to_remove");
-				vector<Object>::iterator it = objects.begin();
-				while(it != objects.end())
+				LoopAndRemove(objects, [to_remove](const Object* obj)
 				{
-					if(it->base == to_remove)
-						it = objects.erase(it);
-					else
-						++it;
-				}
+					if(obj->base == to_remove)
+					{
+						delete obj;
+						return true;
+					}
+					return false;
+				});
 
 				// add new buildings
 				BaseObject* oWall = BaseObject::Get("wall"),
@@ -334,119 +335,129 @@ void City::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 					// top
 					if(side != 2 || i < mid - 1 || i > mid)
 					{
-						Object& o = Add1(objects);
-						o.pos = Vec3(float(i) * 2 + 1.f, 1.f, int(0.15f*size) * 2 + 1.f);
-						o.rot = Vec3(0, PI, 0);
-						o.scale = 1.f;
-						o.base = oWall;
-						o.mesh = oWall->mesh;
+						Object* o = new Object;
+						o->pos = Vec3(float(i) * 2 + 1.f, 1.f, int(0.15f*size) * 2 + 1.f);
+						o->rot = Vec3(0, PI, 0);
+						o->scale = 1.f;
+						o->base = oWall;
+						o->mesh = oWall->mesh;
+						objects.push_back(o);
 					}
 
 					// bottom
 					if(side != 0 || i < mid - 1 || i > mid)
 					{
-						Object& o = Add1(objects);
-						o.pos = Vec3(float(i) * 2 + 1.f, 1.f, int(0.85f*size) * 2 + 1.f);
-						o.rot = Vec3(0, 0, 0);
-						o.scale = 1.f;
-						o.base = oWall;
-						o.mesh = oWall->mesh;
+						Object* o = new Object;
+						o->pos = Vec3(float(i) * 2 + 1.f, 1.f, int(0.85f*size) * 2 + 1.f);
+						o->rot = Vec3(0, 0, 0);
+						o->scale = 1.f;
+						o->base = oWall;
+						o->mesh = oWall->mesh;
+						objects.push_back(o);
 					}
 
 					// left
 					if(side != 1 || i < mid - 1 || i > mid)
 					{
-						Object& o = Add1(objects);
-						o.pos = Vec3(int(0.15f*size) * 2 + 1.f, 1.f, float(i) * 2 + 1.f);
-						o.rot = Vec3(0, PI * 3 / 2, 0);
-						o.scale = 1.f;
-						o.base = oWall;
-						o.mesh = oWall->mesh;
+						Object* o = new Object;
+						o->pos = Vec3(int(0.15f*size) * 2 + 1.f, 1.f, float(i) * 2 + 1.f);
+						o->rot = Vec3(0, PI * 3 / 2, 0);
+						o->scale = 1.f;
+						o->base = oWall;
+						o->mesh = oWall->mesh;
+						objects.push_back(o);
 					}
 
 					// right
 					if(side != 3 || i < mid - 1 || i > mid)
 					{
-						Object& o = Add1(objects);
-						o.pos = Vec3(int(0.85f*size) * 2 + 1.f, 1.f, float(i) * 2 + 1.f);
-						o.rot = Vec3(0, PI / 2, 0);
-						o.scale = 1.f;
-						o.base = oWall;
-						o.mesh = oWall->mesh;
+						Object* o = new Object;
+						o->pos = Vec3(int(0.85f*size) * 2 + 1.f, 1.f, float(i) * 2 + 1.f);
+						o->rot = Vec3(0, PI / 2, 0);
+						o->scale = 1.f;
+						o->base = oWall;
+						o->mesh = oWall->mesh;
+						objects.push_back(o);
 					}
 				}
 
 				// towers
 				{
 					// right top
-					Object& o = Add1(objects);
-					o.pos = Vec3(int(0.85f*size) * 2 + 1.f, 1.f, int(0.85f*size) * 2 + 1.f);
-					o.rot = Vec3(0, 0, 0);
-					o.scale = 1.f;
-					o.base = oTower;
-					o.mesh = oTower->mesh;
+					Object* o = new Object;
+					o->pos = Vec3(int(0.85f*size) * 2 + 1.f, 1.f, int(0.85f*size) * 2 + 1.f);
+					o->rot = Vec3(0, 0, 0);
+					o->scale = 1.f;
+					o->base = oTower;
+					o->mesh = oTower->mesh;
+					objects.push_back(o);
 				}
 				{
 					// right bottom
-					Object& o = Add1(objects);
-					o.pos = Vec3(int(0.85f*size) * 2 + 1.f, 1.f, int(0.15f*size) * 2 + 1.f);
-					o.rot = Vec3(0, PI / 2, 0);
-					o.scale = 1.f;
-					o.base = oTower;
-					o.mesh = oTower->mesh;
+					Object* o = new Object;
+					o->pos = Vec3(int(0.85f*size) * 2 + 1.f, 1.f, int(0.15f*size) * 2 + 1.f);
+					o->rot = Vec3(0, PI / 2, 0);
+					o->scale = 1.f;
+					o->base = oTower;
+					o->mesh = oTower->mesh;
+					objects.push_back(o);
 				}
 				{
 					// left bottom
-					Object& o = Add1(objects);
-					o.pos = Vec3(int(0.15f*size) * 2 + 1.f, 1.f, int(0.15f*size) * 2 + 1.f);
-					o.rot = Vec3(0, PI, 0);
-					o.scale = 1.f;
-					o.base = oTower;
-					o.mesh = oTower->mesh;
+					Object* o = new Object;
+					o->pos = Vec3(int(0.15f*size) * 2 + 1.f, 1.f, int(0.15f*size) * 2 + 1.f);
+					o->rot = Vec3(0, PI, 0);
+					o->scale = 1.f;
+					o->base = oTower;
+					o->mesh = oTower->mesh;
+					objects.push_back(o);
 				}
 				{
 					// left top
-					Object& o = Add1(objects);
-					o.pos = Vec3(int(0.15f*size) * 2 + 1.f, 1.f, int(0.85f*size) * 2 + 1.f);
-					o.rot = Vec3(0, PI * 3 / 2, 0);
-					o.scale = 1.f;
-					o.base = oTower;
-					o.mesh = oTower->mesh;
+					Object* o = new Object;
+					o->pos = Vec3(int(0.15f*size) * 2 + 1.f, 1.f, int(0.85f*size) * 2 + 1.f);
+					o->rot = Vec3(0, PI * 3 / 2, 0);
+					o->scale = 1.f;
+					o->base = oTower;
+					o->mesh = oTower->mesh;
+					objects.push_back(o);
 				}
 
 				// gate
-				Object& o = Add1(objects);
-				o.rot.x = o.rot.z = 0.f;
-				o.scale = 1.f;
-				o.base = BaseObject::Get("gate");
-				o.mesh = o.base->mesh;
+				Object* o = new Object;
+				o->rot.x = o->rot.z = 0.f;
+				o->scale = 1.f;
+				o->base = BaseObject::Get("gate");
+				o->mesh = o->base->mesh;
 				switch(side)
 				{
 				case 0:
-					o.rot.y = 0;
-					o.pos = Vec3(0.5f*size * 2 + 1.f, 1.f, 0.85f*size * 2);
+					o->rot.y = 0;
+					o->pos = Vec3(0.5f*size * 2 + 1.f, 1.f, 0.85f*size * 2);
 					break;
 				case 1:
-					o.rot.y = PI * 3 / 2;
-					o.pos = Vec3(0.15f*size * 2, 1.f, 0.5f*size * 2 + 1.f);
+					o->rot.y = PI * 3 / 2;
+					o->pos = Vec3(0.15f*size * 2, 1.f, 0.5f*size * 2 + 1.f);
 					break;
 				case 2:
-					o.rot.y = PI;
-					o.pos = Vec3(0.5f*size * 2 + 1.f, 1.f, 0.15f*size * 2);
+					o->rot.y = PI;
+					o->pos = Vec3(0.5f*size * 2 + 1.f, 1.f, 0.15f*size * 2);
 					break;
 				case 3:
-					o.rot.y = PI / 2;
-					o.pos = Vec3(0.85f*size * 2, 1.f, 0.5f*size * 2 + 1.f);
+					o->rot.y = PI / 2;
+					o->pos = Vec3(0.85f*size * 2, 1.f, 0.5f*size * 2 + 1.f);
 					break;
 				}
+				objects.push_back(o);
 
 				// grate
-				Object& o2 = Add1(objects);
-				o2.pos = o.pos;
-				o2.rot = o.rot;
-				o2.scale = 1.f;
-				o2.base = BaseObject::Get("grate");
-				o2.mesh = o2.base->mesh;
+				Object* o2 = new Object;
+				o2->pos = o->pos;
+				o2->rot = o->rot;
+				o2->scale = 1.f;
+				o2->base = BaseObject::Get("grate");
+				o2->mesh = o2->base->mesh;
+				objects.push_back(o2);
 
 				// exit
 				EntryPoint& entry = Add1(entry_points);
@@ -469,7 +480,7 @@ void City::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 			if(last_visit != -1 && LOAD_VERSION < V_0_4)
 			{
 				bool need_fix = false;
-				Building* village_hall = content::FindOldBuilding(OLD_BUILDING::B_VILLAGE_HALL);
+				Building* village_hall = Building::GetOld(OLD_BUILDING::B_VILLAGE_HALL);
 
 				if(LOAD_VERSION < V_0_3)
 					need_fix = true;
@@ -483,23 +494,23 @@ void City::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 
 				if(need_fix)
 				{
-					Building* village_hall_old = content::FindOldBuilding(OLD_BUILDING::B_VILLAGE_HALL_OLD);
+					Building* village_hall_old = Building::GetOld(OLD_BUILDING::B_VILLAGE_HALL_OLD);
 					FindBuilding(village_hall)->type = village_hall_old;
-					for(Object& o : objects)
+					for(Object* obj : objects)
 					{
-						if(strcmp(o.mesh->filename, "soltys.qmsh") == 0)
+						if(strcmp(obj->mesh->filename, "soltys.qmsh") == 0)
 						{
-							o.mesh = ResourceManager::Get<Mesh>().GetLoaded("soltys_old.qmsh");
+							obj->mesh = ResourceManager::Get<Mesh>().GetLoaded("soltys_old.qmsh");
 							break;
 						}
 					}
 					InsideBuilding* b = FindInsideBuilding(village_hall);
 					b->type = village_hall_old;
-					for(Object& o : b->objects)
+					for(Object* obj : b->objects)
 					{
-						if(strcmp(o.mesh->filename, "soltys_srodek.qmsh") == 0)
+						if(strcmp(obj->mesh->filename, "soltys_srodek.qmsh") == 0)
 						{
-							o.mesh = ResourceManager::Get<Mesh>().GetLoaded("soltys_srodek_old.qmsh");
+							obj->mesh = ResourceManager::Get<Mesh>().GetLoaded("soltys_srodek_old.qmsh");
 							break;
 						}
 					}
@@ -508,16 +519,16 @@ void City::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 
 			if(state == LS_KNOWN)
 			{
-				buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_VILLAGE_HALL)));
-				buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_MERCHANT)));
-				buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_FOOD_SELLER)));
-				buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_VILLAGE_INN)));
+				buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_VILLAGE_HALL)));
+				buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_MERCHANT)));
+				buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_FOOD_SELLER)));
+				buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_VILLAGE_INN)));
 				if(v_buildings[0] != OLD_BUILDING::B_NONE)
-					buildings.push_back(CityBuilding(content::FindOldBuilding(v_buildings[0])));
+					buildings.push_back(CityBuilding(Building::GetOld(v_buildings[0])));
 				if(v_buildings[1] != OLD_BUILDING::B_NONE)
-					buildings.push_back(CityBuilding(content::FindOldBuilding(v_buildings[1])));
+					buildings.push_back(CityBuilding(Building::GetOld(v_buildings[1])));
 				std::random_shuffle(buildings.begin() + 1, buildings.end(), MyRand);
-				buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_BARRACKS)));
+				buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_BARRACKS)));
 
 				flags |= HaveInn | HaveMerchant | HaveFoodSeller;
 				if(v_buildings[0] == OLD_BUILDING::B_TRAINING_GROUNDS || v_buildings[1] == OLD_BUILDING::B_TRAINING_GROUNDS)
@@ -530,16 +541,16 @@ void City::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 		}
 		else if(state == LS_KNOWN)
 		{
-			buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_CITY_HALL)));
-			buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_ARENA)));
-			buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_MERCHANT)));
-			buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_FOOD_SELLER)));
-			buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_BLACKSMITH)));
-			buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_ALCHEMIST)));
-			buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_INN)));
-			buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_TRAINING_GROUNDS)));
+			buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_CITY_HALL)));
+			buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_ARENA)));
+			buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_MERCHANT)));
+			buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_FOOD_SELLER)));
+			buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_BLACKSMITH)));
+			buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_ALCHEMIST)));
+			buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_INN)));
+			buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_TRAINING_GROUNDS)));
 			std::random_shuffle(buildings.begin() + 2, buildings.end(), MyRand);
-			buildings.push_back(CityBuilding(content::FindOldBuilding(OLD_BUILDING::B_BARRACKS)));
+			buildings.push_back(CityBuilding(Building::GetOld(OLD_BUILDING::B_BARRACKS)));
 
 			flags |= HaveTrainingGrounds | HaveArena | HaveMerchant | HaveFoodSeller | HaveBlacksmith | HaveAlchemist | HaveInn;
 		}

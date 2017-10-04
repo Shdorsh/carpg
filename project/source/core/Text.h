@@ -24,6 +24,39 @@ struct AnyString
 	cstring s;
 };
 
+inline bool operator == (const string& s1, const AnyString& s2)
+{
+	return s1 == s2.s;
+}
+inline bool operator == (const AnyString& s1, const string& s2)
+{
+	return s2 == s1.s;
+}
+inline bool operator == (cstring s1, const AnyString& s2)
+{
+	return strcmp(s1, s2.s) == 0;
+}
+inline bool operator == (const AnyString& s1, cstring s2)
+{
+	return strcmp(s1.s, s2) == 0;
+}
+inline bool operator != (const string& s1, const AnyString& s2)
+{
+	return s1 != s2.s;
+}
+inline bool operator != (const AnyString& s1, const string& s2)
+{
+	return s2 != s1.s;
+}
+inline bool operator != (cstring s1, const AnyString& s2)
+{
+	return strcmp(s1, s2.s) != 0;
+}
+inline bool operator != (const AnyString& s1, cstring s2)
+{
+	return strcmp(s1.s, s2) != 0;
+}
+
 //-----------------------------------------------------------------------------
 struct AnyStringNull
 {
@@ -72,6 +105,7 @@ typedef _InString<true, 0> InStringN;
 
 cstring Format(cstring fmt, ...);
 cstring FormatList(cstring fmt, va_list lis);
+void FormatStr(string& str, cstring fmt, ...);
 cstring Upper(cstring str);
 void SplitText(char* buf, vector<cstring>& lines);
 bool Unescape(const string& str_in, uint pos, uint length, string& str_out);
@@ -85,6 +119,7 @@ cstring Escape(const InString& str, string& out, char quote = '"');
 cstring EscapeChar(char c);
 cstring EscapeChar(char c, string& out);
 string* ToString(const wchar_t* str);
+void Replace(string& s, cstring in_chars, cstring out_chars);
 
 // return index of character in cstring
 inline int StrCharIndex(cstring chrs, char c)

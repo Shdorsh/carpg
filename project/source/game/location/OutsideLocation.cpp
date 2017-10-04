@@ -30,6 +30,7 @@ OutsideLocation::~OutsideLocation()
 {
 	delete[] tiles;
 	delete[] h;
+	DeleteElements(objects);
 	DeleteElements(units);
 	DeleteElements(chests);
 	DeleteElements(usables);
@@ -74,8 +75,8 @@ void OutsideLocation::Save(HANDLE file, bool local)
 		// obiekty
 		ile = objects.size();
 		WriteFile(file, &ile, sizeof(ile), &tmp, nullptr);
-		for(vector<Object>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
-			it->Save(file);
+		for(vector<Object*>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
+			(*it)->Save(file);
 
 		// skrzynie
 		ile = chests.size();
@@ -131,8 +132,11 @@ void OutsideLocation::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 		// obiekty
 		ReadFile(file, &ile, sizeof(ile), &tmp, nullptr);
 		objects.resize(ile);
-		for(vector<Object>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
-			it->Load(file);
+		for(vector<Object*>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
+		{
+			*it = new Object;
+			(*it)->Load(file);
+		}
 
 		// skrzynie
 		ReadFile(file, &ile, sizeof(ile), &tmp, nullptr);
@@ -239,14 +243,16 @@ void OutsideLocation::Load(HANDLE file, bool local, LOCATION_TOKEN token)
 		// konwersja ³awy w obrócon¹ ³awê i ustawienie wariantu
 		if(LOAD_VERSION < V_0_2_20)
 		{
+			auto bench = BaseUsable::Get("bench"),
+				bench_dir = BaseUsable::Get("bench_dir");
 			for(vector<Usable*>::iterator it = usables.begin(), end = usables.end(); it != end; ++it)
 			{
 				Usable& u = **it;
-				if(u.type == U_BENCH)
+				if(u.base == bench)
 				{
 					if(type == L_CITY)
 					{
-						u.type = U_BENCH_ROT;
+						u.base = bench_dir;
 						u.variant = 0;
 					}
 					else

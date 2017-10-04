@@ -68,7 +68,7 @@ string ToString(asIScriptGeneric* gen, void* adr, int type_id)
 	return ret_str;
 }
 
-void FormatStr(asIScriptGeneric* gen)
+void FormatStrGeneric(asIScriptGeneric* gen)
 {
 	int count = gen->GetArgCount();
 
@@ -227,7 +227,7 @@ void RegisterScriptHelpers()
 	{
 		func_sign.pop_back();
 		func_sign += ", ?& in)";
-		CHECKED(engine->RegisterGlobalFunction(func_sign.c_str(), asFUNCTION(FormatStr), asCALL_GENERIC));
+		CHECKED(engine->RegisterGlobalFunction(func_sign.c_str(), asFUNCTION(FormatStrGeneric), asCALL_GENERIC));
 	}
 
 	sm.AddStruct<Int2>("Int2")

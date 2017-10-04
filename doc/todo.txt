@@ -7,34 +7,44 @@
 - UpdateGold but change is added too
 ===============================================================================================================
 CURRENT:
-- stupid website rewrite rule
+? 3 players usable tests
+- traps are out of sync for client/server
+- can talk to unit while it's exiting building, dialog is thru door then
+- town hall, kiepskie tekstury?
 ===============================================================================================================
 NEW:
-- with lag and speed player can move outside of building, require bullet physics
-+ convert objects on table to normal items, some precreated layouts of items
++ net devmode: show stamina for clients
+- green screen, cannot reproduce
+? using cheats to exit from arena/tournament
+- travel on worldmap is a bit out of sync, clicking instantly after travel will error on server, thinking that team not yet entered location, forward prediction should be easy here
+- changing vsync reset failed, cannot reproduce
++ 404 handling on website
++ when npc have item in his inventory and in pc, it will first ask for pc one
++ move chest to usables
++ particles in objects, not hardcoded water_effect, blood_effect
++ remove hardcoded bench variants in base usable
++ remove hardcoded ai to use read papers animation on chair, eat food on stool
++ remove obj_alpha
++ validate objects metadata (required objects, units)
+? why version/stats thread start at menu, not while loading
+- grass under moon well
++ exporter: when file has no ext or ends with .qmsh save as .qmsh.tmp
 + join dungeon & crypt
 + join herodata with unit, anyone can join team etc
 + JoinCost use skill check
 + order ai to fallow other unit, protect it
 ===============================================================================================================
 VERIFY:
-- da się pogadać gdy leży, wtedy wstaje od razu [da się pogadać jak wstaje]
+? da się pogadać gdy leży, wtedy wstaje od razu [da się pogadać jak wstaje]
 - w questowych lokacjach krew/zwłoki nie znikają
 - da sie wlezc w kogos
 - ANGLE!
-- fov may not work good when near borders
+- (tile?) fov may not work good when near borders
 - verify dialogs ending with end/restart
 - without human flag and mesh crash when spawned, log error
 - debug ai lag is too big!
-- oświetlenie na zewnątrz dla terenu, pod małym kątem jest biała trawa [na ziemie i trawie zato widać trawę pod kątem, mipmaping?]
 - magic bullets and fireballs don't hit on client, aims ground, ? argh happened once & i can't reproduce it; draw debug ray when ai is targeting
-- D3DX: Warning ID3DXEffect::EndPass. Changes have been made but not commited. CommitChange must be called before each DrawPrimitive call
-- po wejściu do gry i powrocie do menu jest obwódka wokół obrazka, przez multisampling
-- jeśli w mp osoba coś powie i zostanie usunięta w tej samej ramce to u klienta ten tekst się nie wyświetli
 - ai look at angle nie jest clipowane, albo coś?
-- Direct3D9: :Dynamic vertex buffer locked twice or more in a row without D3DLOCK_NOOVERWRITE or D3DLOCK_DISCARD. Could have severe performance penalty.
-- inventory icons disappear after alt-enter or changing multisampling [ł]; not happens on my gpu, need more info
 - trochę da się widzieć przez ściany :/
-- zmiana multisamplingu nie ma wpływu na wygenerowane obrazki przedmiotów
 ? heal and death_screen
 ? raknet wysyła wiadomości do zdisconnectowanych przy broadcast jeśli nie wyśle jeszcze disconnect

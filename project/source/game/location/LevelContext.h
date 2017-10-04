@@ -2,6 +2,7 @@
 #pragma once
 
 //-----------------------------------------------------------------------------
+#include "BaseUsable.h"
 #include "Bullet.h"
 #include "Collision.h"
 #include "SpellEffects.h"
@@ -54,7 +55,7 @@ struct LevelContext
 	};
 
 	vector<Unit*>* units;
-	vector<Object>* objects;
+	vector<Object*>* objects;
 	vector<Chest*>* chests; // nullable
 	vector<Trap*>* traps; // nullable
 	vector<Door*>* doors; // nullable
@@ -79,12 +80,16 @@ struct LevelContext
 	void SetTmpCtx(TmpLevelContext* ctx);
 	void RemoveDeadUnits();
 	Unit* FindUnitById(UnitData* ud);
-	Usable* FindUsableById(int _type);
+	Usable* FindUsable(BaseUsable* base);
+	Usable* FindUsable(cstring id)
+	{
+		return FindUsable(BaseUsable::Get(id));
+	}
 	bool RemoveItemFromWorld(const Item* item);
 	bool FindItemInCorpse(const Item* item, Unit** unit, int* slot);
 	bool RemoveGroundItem(const Item* item);
 	bool FindItemInChest(const Item* item, Chest** chest, int* slot);
-	Object* FindObject(BaseObject* obj);
+	Object* FindObject(BaseObject* base_obj);
 	Chest* FindChestInRoom(const Room& p);
 	Chest* GetRandomFarChest(const Int2& pt);
 };

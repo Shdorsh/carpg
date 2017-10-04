@@ -32,7 +32,7 @@ public:
 	void LoadData();
 
 	HANDLE check_version_thread;
-	cstring txInfoText, txUrl, txVersion;
+	cstring txInfoText, txVersion;
 
 private:
 	static const uint BUTTONS = 7u;
@@ -46,5 +46,5 @@ private:
 	DialogEvent event;
 	int check_version; // 0 - nie sprawdzono, 1 - trwa sprawdzanie, 2 - b³¹d, 3 - brak nowej wersji, 4 - jest nowa wersja
 	string version_text;
-	bool check_updates;
+	bool check_updates, send_stats;
 };

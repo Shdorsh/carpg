@@ -162,8 +162,6 @@ enum GMS
 {
 	GMS_NEED_WEAPON = 1,
 	GMS_NEED_KEY,
-	GMS_NEED_LADLE,
-	GMS_NEED_HAMMER,
 	GMS_DONT_LOOT_FOLLOWER,
 	GMS_JOURNAL_UPDATED,
 	GMS_GATHER_TEAM,
@@ -180,7 +178,6 @@ enum GMS
 	GMS_ONLY_LEADER_CAN_TRAVEL,
 	GMS_NO_POTION,
 	GMS_GAME_SAVED,
-	GMS_NEED_PICKAXE,
 	GMS_PICK_CHARACTER,
 	GMS_ADDED_ITEM
 };
@@ -414,6 +411,7 @@ struct Game final : public Engine, public UnitEventHandler
 	void StartGameMode();
 
 	QUICKSTART quickstart;
+	bool disable_net_stats;
 
 	// supershader
 	string sshader_code;
@@ -461,6 +459,7 @@ struct Game final : public Engine, public UnitEventHandler
 	void CleanScene();
 	void ListDrawObjects(LevelContext& ctx, FrustumPlanes& frustum, bool outside);
 	void ListDrawObjectsUnit(LevelContext* ctx, FrustumPlanes& frustum, bool outside, Unit& u);
+	void AddObjectToDrawBatch(LevelContext& ctx, const Object& o, FrustumPlanes& frustum);
 	void ListAreas(LevelContext& ctx);
 	void PrepareAreaPath();
 	void PrepareAreaPathCircle(Area2& area, float radius, float range, float rot, bool outside);
@@ -491,7 +490,9 @@ struct Game final : public Engine, public UnitEventHandler
 	void ClearQuadtree();
 	void ClearGrass();
 	void VerifyObjects();
-	void VerifyObjects(vector<Object>& objects, int& errors);
+	void VerifyObjects(vector<Object*>& objects, int& errors);
+	void CalculateQuadtree();
+	void ListQuadtreeNodes();
 
 	// profiler
 	int profiler_mode;
@@ -541,8 +542,8 @@ struct Game final : public Engine, public UnitEventHandler
 		txCantLoadGame, txLoadSignature, txLoadVersion, txLoadSaveVersionOld, txLoadMP, txLoadSP, txLoadError, txLoadErrorGeneric, txLoadOpenError;
 	cstring txPvpRefuse, txWin, txWinMp, txINeedWeapon, txNoHpp, txCantDo, txDontLootFollower, txDontLootArena, txUnlockedDoor,
 		txNeedKey, txLevelUp, txLevelDown, txLocationText, txLocationTextMap, txRegeneratingLevel, txGmsLooted, txGmsRumor, txGmsJournalUpdated, txGmsUsed,
-		txGmsUnitBusy, txGmsGatherTeam, txGmsNotLeader, txGmsNotInCombat, txGainTextAttrib, txGainTextSkill, txNeedLadle, txNeedPickaxe, txNeedHammer,
-		txNeedUnk, txReallyQuit, txSecretAppear, txGmsAddedItem, txGmsAddedItems;
+		txGmsUnitBusy, txGmsGatherTeam, txGmsNotLeader, txGmsNotInCombat, txGainTextAttrib, txGainTextSkill, txNeedItem, txReallyQuit, txSecretAppear,
+		txGmsAddedItem, txGmsAddedItems;
 	cstring txRumor[28], txRumorD[7];
 	cstring txMayorQFailed[3], txQuestAlreadyGiven[2], txMayorNoQ[2], txCaptainQFailed[2], txCaptainNoQ[2], txLocationDiscovered[2], txAllDiscovered[2], txCampDiscovered[2],
 		txAllCampDiscovered[2], txNoQRumors[2], txRumorQ[9], txNeedMoreGold, txNoNearLoc, txNearLoc, txNearLocEmpty[2], txNearLocCleared, txNearLocEnemy[2], txNoNews[2], txAllNews[2], txPvpTooFar,
@@ -1098,7 +1099,7 @@ public:
 #define DMG_MAGICAL (1<<1)
 	void GiveDmg(LevelContext& ctx, Unit* giver, float dmg, Unit& taker, const Vec3* hitpoint = nullptr, int dmg_flags = 0);
 	void UpdateUnits(LevelContext& ctx, float dt);
-	void UpdateUnitInventory(Unit& unit);
+	void UpdateUnitInventory(Unit& unit, bool notify = true);
 	bool FindPath(LevelContext& ctx, const Int2& start_tile, const Int2& target_tile, vector<Int2>& path, bool can_open_doors = true, bool wedrowanie = false, vector<Int2>* blocked = nullptr);
 	Int2 RandomNearTile(const Int2& tile);
 	bool CanLoadGame() const;
@@ -1197,7 +1198,7 @@ public:
 	int GetNearestLocation2(const Vec2& pos, int flags, bool not_quest, int flagi_cel = -1);
 	int GetNearestSettlement(const Vec2& pos) { return GetNearestLocation2(pos, (1 << L_CITY), false); }
 	void AddGameMsg(cstring msg, float time);
-	void AddGameMsg2(cstring msg, float time, int id);
+	void AddGameMsg2(cstring msg, float time, int id = -1);
 	void AddGameMsg3(GMS id);
 	int CalculateQuestReward(int gold);
 	void AddReward(int gold) { AddGold(CalculateQuestReward(gold), nullptr, true, txQuestCompletedGold, 4.f, false); }
@@ -1292,8 +1293,13 @@ public:
 	float PlayerAngleY();
 	Vec3 GetExitPos(Unit& u, bool force_border = false);
 	void AttackReaction(Unit& attacked, Unit& attacker);
-	// czy mo¿na opuœciæ lokacjê (0-tak, 1-dru¿yna za daleko, 2-wrogowie w pobli¿u)
-	int CanLeaveLocation(Unit& unit);
+	enum class CanLeaveLocationResult
+	{
+		Yes,
+		TeamTooFar,
+		InCombat
+	};
+	CanLeaveLocationResult CanLeaveLocation(Unit& unit);
 	void GenerateTraps();
 	void RegenerateTraps();
 	void SpawnHeroesInsideDungeon();
@@ -1380,10 +1386,6 @@ public:
 	{
 		return FindObjectByIdLocal(BaseObject::Get(id));
 	}
-	Usable* FindUsableByIdLocal(int type)
-	{
-		return local_ctx.FindUsableById(type);
-	}
 	Unit* GetRandomArenaHero();
 	cstring GetRandomIdleText(Unit& u);
 	UnitData* GetRandomHeroData();
@@ -1444,7 +1446,6 @@ public:
 	void SpawnDrunkmans();
 	void PlayerYell(Unit& u);
 	bool CanBuySell(const Item* item);
-	void ResetCollisionPointers();
 	void SetOutsideParams();
 	UnitData& GetHero(Class clas, bool crazy = false);
 	const Item* GetRandomBook();
@@ -1963,8 +1964,7 @@ public:
 #define SOE_DONT_SPAWN_PARTICLES (1<<0)
 #define SOE_MAGIC_LIGHT (1<<1)
 #define SOE_DONT_CREATE_LIGHT (1<<2)
-	void SpawnObjectExtras(LevelContext& ctx, BaseObject* obj, const Vec3& pos, float rot, void* user_ptr, btCollisionObject** phy_result, float scale = 1.f,
-		int flags = 0);
+	void SpawnObjectExtras(LevelContext& ctx, BaseObject* obj, const Vec3& pos, float rot, void* user_ptr, float scale = 1.f, int flags = 0);
 	void GenerateSecretLocation(Location& loc);
 	void SpawnSecretLocationObjects();
 	void SpawnSecretLocationUnits();

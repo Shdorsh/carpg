@@ -233,7 +233,7 @@ bool RunInstallScripts()
 					t.AssertKeyword(0);
 					t.Next();
 					if(t.MustGetInt() != 1)
-						t.Throw(Format("Unknown install script version '%d'.", t.MustGetInt()));
+						t.Throw("Unknown install script version '%d'.", t.MustGetInt());
 					t.Next();
 					t.AssertKeyword(1);
 					t.Next();
@@ -791,6 +791,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			game.screenshot_format = D3DXIFF_JPG;
 		}
 	}
+
+	game.disable_net_stats = cfg.GetBool("disable_net_stats");
 
 	game.SetConfigVarsFromFile();
 	game.ApplyConfigVars();

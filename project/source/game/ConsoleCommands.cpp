@@ -17,6 +17,7 @@
 #include "Team.h"
 #include "SaveState.h"
 #include "QuestManager.h"
+#include "BuildingGroup.h"
 #include "ScriptManager.h"
 
 //-----------------------------------------------------------------------------
@@ -994,7 +995,7 @@ void Game::ParseCommand(const string& _str, PrintMsgFunc print_func, PARSE_SOURC
 					if(t.Next())
 					{
 						const string& type = t.MustGetItem();
-						BuildingGroup* group = content::FindBuildingGroup(type);
+						BuildingGroup* group = BuildingGroup::TryGet(type);
 						if(!group)
 						{
 							Msg("Missing building group '%s'.", type.c_str());

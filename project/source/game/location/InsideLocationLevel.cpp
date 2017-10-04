@@ -9,6 +9,7 @@
 InsideLocationLevel::~InsideLocationLevel()
 {
 	delete[] map;
+	DeleteElements(objects);
 	DeleteElements(units);
 	DeleteElements(chests);
 	DeleteElements(doors);
@@ -185,8 +186,8 @@ void InsideLocationLevel::SaveLevel(HANDLE file, bool local)
 	// obiekty
 	ile = objects.size();
 	WriteFile(file, &ile, sizeof(ile), &tmp, nullptr);
-	for(vector<Object>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
-		it->Save(file);
+	for(vector<Object*>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
+		(*it)->Save(file);
 
 	// drzwi
 	ile = doors.size();
@@ -268,8 +269,11 @@ void InsideLocationLevel::LoadLevel(HANDLE file, bool local)
 	// obiekty
 	ReadFile(file, &ile, sizeof(ile), &tmp, nullptr);
 	objects.resize(ile);
-	for(vector<Object>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
-		it->Load(file);
+	for(vector<Object*>::iterator it = objects.begin(), end = objects.end(); it != end; ++it)
+	{
+		*it = new Object;
+		(*it)->Load(file);
+	}
 
 	// drzwi
 	ReadFile(file, &ile, sizeof(ile), &tmp, nullptr);
@@ -336,23 +340,27 @@ void InsideLocationLevel::LoadLevel(HANDLE file, bool local)
 	// konwersja krzese³ w sto³ki
 	if(LOAD_VERSION < V_0_2_12)
 	{
+		auto chair = BaseUsable::Get("chair"),
+			stool = BaseUsable::Get("stool");
 		for(vector<Usable*>::iterator it = usables.begin(), end = usables.end(); it != end; ++it)
 		{
 			Usable& u = **it;
-			if(u.type == U_CHAIR)
-				u.type = U_STOOL;
+			if(u.base == chair)
+				u.base = stool;
 		}
 	}
 
 	// konwersja ³awy w obrócon¹ ³awê i ustawienie wariantu
 	if(LOAD_VERSION < V_0_2_20)
 	{
+		auto bench = BaseUsable::Get("bench"),
+			bench_dir = BaseUsable::Get("bench_dir");
 		for(vector<Usable*>::iterator it = usables.begin(), end = usables.end(); it != end; ++it)
 		{
 			Usable& u = **it;
-			if(u.type == U_BENCH)
+			if(u.base == bench)
 			{
-				u.type = U_BENCH_ROT;
+				u.base = bench_dir;
 				u.variant = Rand() % 2;
 			}
 		}
