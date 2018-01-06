@@ -31,12 +31,10 @@ namespace FOV
 		{
 			return relativeSlope(point) > 0;
 		}
-
 		bool isBelowOrContains(const INT2& point) const
 		{
 			return relativeSlope(point) >= 0;
 		}
-
 		bool isAbove(const INT2& point) const
 		{
 			return relativeSlope(point) < 0;
@@ -51,7 +49,6 @@ namespace FOV
 		{
 			return relativeSlope(point) == 0;
 		}
-
 		// negative if the line is above the point.
 		// positive if the line is below the point.
 		// 0 if the line is on the point.
@@ -60,7 +57,6 @@ namespace FOV
 			return (far.y - near.y)*(far.x - point.x)
 				- (far.y - point.y)*(far.x - near.x);
 		}
-
 		INT2 near, far;
 	};
 

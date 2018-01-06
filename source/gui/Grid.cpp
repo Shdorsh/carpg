@@ -4,7 +4,7 @@
 #include "KeyStates.h"
 
 //=================================================================================================
-Grid::Grid() : items(0), height(20), selected(-1), selection_type(COLOR), selection_color(WHITE), single_line(false), select_event(nullptr)
+Grid::Grid() : items(0), height(20), selected(-1), selection_type(COLOR), select ion_color(WHITE), single_line(false), select_event(nullptr)
 {
 
 }
@@ -101,9 +101,9 @@ void Grid::Draw(ControlDrawData*)
 					color = selection_color;
 
 				r.left = x;
-				r.right = x + it->width;
+				r.right = x + it -> width;
 				r.top = y;
-				r.bottom = y+height;
+				r.bottom = y + height;
 
 				if(clip_state == 0)
 					GUI.DrawText(GUI.default_font, text, text_flags, color, r, &r);

@@ -1029,31 +1029,7 @@ typedef int (*out_func) OF((void FAR *, unsigned char FAR *, unsigned));
 ZEXTERN int ZEXPORT inflateBack OF((z_streamp strm,
                                     in_func in, void FAR *in_desc,
                                     out_func out, void FAR *out_desc));
-/*
-     inflateBack() does a raw inflate with a single call using a call-back
-   interface for input and output.  This is potentially more efficient than
-   inflate() for file i/o applications, in that it avoids copying between the
-   output and the sliding window by simply making the window itself the output
-   buffer.  inflate() can be faster on modern CPUs when used with large
-   buffers.  inflateBack() trusts the application to not change the output
-   buffer passed by the output function, at least until inflateBack() returns.
-
-     inflateBackInit() must be called first to allocate the internal state
-   and to initialize the state with the user-provided window buffer.
-   inflateBack() may then be used multiple times to inflate a complete, raw
-   deflate stream with each call.  inflateBackEnd() is then called to free the
-   allocated state.
-
-     A raw deflate stream is one with no zlib or gzip header or trailer.
-   This routine would normally be used in a utility that reads zip or gzip
-   files and writes out uncompressed files.  The utility would decode the
-   header and process the trailer on its own, hence this routine expects only
-   the raw deflate stream to decompress.  This is different from the normal
-   behavior of inflate(), which expects either a zlib or gzip header and
-   trailer around the deflate stream.
-
-     inflateBack() uses two subroutines supplied by the caller that are then
-   called by inflateBack() for input and output.  inflateBack() calls those
+/* r input and output.  inflateBack() calls those
    routines until it reads a complete deflate stream and writes out all of the
    uncompressed data, or until it encounters an error.  The function's
    parameters and return types are defined above in the in_func and out_func

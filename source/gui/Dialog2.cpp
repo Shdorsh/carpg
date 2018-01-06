@@ -86,6 +86,7 @@ void DialogWithCheckbox::Draw(ControlDrawData*)
 }
 
 //=================================================================================================
+
 void DialogWithCheckbox::Update(float dt)
 {
 	if(result == -1)
