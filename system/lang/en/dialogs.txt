@@ -5,14 +5,14 @@ dialog blacksmith {
 		"How can I help you?"
 		"Do you need anything? Sword? Shield? Or maybe armor?"
 	}
-	1 "Let's trade"
-	2 "What you do here?"
+	1 "Let's trade."
+	2 "What do you do here?"
 	3 "I'm a blacksmith. Creating various weapons and armors is my passion."
 	4 "Ask about strange stone"
 	5 {
-		"That's a first time I see such thing."
+		"That's the first time I see such a thing."
 		"I have no idea what it is. A stone?"
-		"Stone with some runes? I know nothing about this."
+		"A stone with some runes? I know nothing about this."
 	}
 	6 "End dialog"
 }
@@ -20,22 +20,22 @@ dialog blacksmith {
 //==============================================================================
 dialog merchant {
 	0 {
-		"Hello. Look please at my merchandise. I'm sure you find something useful to you."
-		"How can I help you?"
+		"Hello. Please take a look at my merchandise. I'm sure you will find something useful to you."
+		"How may I help you?"
 		"Hello! I feel that we will have a great deal."
 	}
-	1 "Let's trade"
-	2 "What you do here?"
-	3 "I'm a merchant. I buy items in one place and sell with profit somewhere else. I can buy your junk."
+	1 "Let's trade."
+	2 "What do you do here?"
+	3 "I'm a merchant. I buy items in one place and sell them for profit somewhere else. I can buy your junk."
 	4 "Ask about strange stone"
-	5 "I never seen anything like that. If you want I can buy it from you for 10 gold coins."
+	5 "I've never seen anything like that. If you want I can buy it from you for 10 gold coins."
 	6 "Sell it"
 	7 "Here's your gold. I wonder if this stone has any use?"
 	8 "Don't sell it"
 	9 "Too bad."
 	10 "End dialog"
 	11 "Training"
-	12 "I offer training in haggle or increasing your charisma. Training takes 10 days and costs 100 gold pieces. What do you require?"
+	12 "I offer training in haggling or charisma. The training takes 10 days and costs 100 gold pieces. What do you require?"
 	13 "$train_lab/haggle$"
 	14 "$train_lab/cha$"
 	15 "Cancel"
@@ -44,16 +44,16 @@ dialog merchant {
 //==============================================================================
 dialog alchemist {
 	0 {
-		"Hello. I have a wide variety of potions and elixirs."
+		"Hello. I have a wide variety of potions and elixirs that may peak your interest."
 		"How can I help you?"
-		"You need healing potions? You are in right place."
+		"You need healing potions? You are in the right place."
 	}
-	1 "Buy potion of clear mind (150 gp)"
+	1 "Buy a potion of clear mind (150 gp)"
 	2 "That should help."
 	3 "You need more gold."
 	4 "Let's trade"
-	5 "What you do here?"
-	6 "I'm alchemist. I create potions and sell to adventurers like you."
+	5 "What do you do here?"
+	6 "I'm an alchemist. I create potions and sell them to adventurers like you."
 	7 "Ask about strange stone"
 	8 {
 		"That's a first time I see such thing."
@@ -69,9 +69,9 @@ dialog mayor {
 	0 {
 		"Hello."
 		"How can I help you?"
-		"You need something?"
+		"Do you need anything?"
 	}
-	1 "I need Summoning book"
+	1 "I need a summoning book"
 	2 "Deliver a letter"
 	3 "Deliver a package"
 	4 "Return a package"
@@ -82,9 +82,9 @@ dialog mayor {
 	9 "I'm the $(Level::IsCity() ? \"mayor\" : \"soltys\"). Dealing with official matters on behalf of the king. Sometimes I have a task for adventurers like you."
 	10 "Ask about strange stone"
 	11 {
-		"That's a first time I see such thing."
+		"That's the first time I see such a thing."
 		"I have no idea what it is. A stone?"
-		"Stone with some runes? I know nothing about this."
+		"A stone with some runes? I know nothing about this."
 	}
 	12 "End dialog"
 }
@@ -94,16 +94,16 @@ dialog citizen {
 	0 {
 		"Hello."
 		"How can I help you?"
-		"You need something?"
+		"Do you need anything?"
 	}
 	1 "Anything happened recently?"
 	2 "Tell me about this area"
 	3 "Gossip"
 	4 "Ask about strange stone"
 	5 {
-		"That's a first time I see such thing."
+		"That's the first time I see such a thing."
 		"I have no idea what it is. A stone?"
-		"Stone with some runes? I know nothing about this."
+		"A stone with some runes? I know nothing about this."
 	}
 	6 "End dialog"
 }
@@ -112,7 +112,7 @@ dialog citizen {
 dialog viewer {
 	0 {
 		"I came here to watch the fight, not to talk."
-		"You're blocking my view. Stand there, in corner."
+		"You're blocking my view. Stand there, in the corner."
 	}
 }
 
@@ -120,7 +120,7 @@ dialog viewer {
 dialog guard {
 	0 {
 		"Don't make any trouble."
-		"Maybe the captain will have a task for such an adventurer like you. You can find him near the barracks."
+		"Maybe the captain will have a task for an adventurer like you. You can find him near the barracks."
 		"We have an eye on you."
 		"Let me guess, someone stole your sweetroll?"
 	}
@@ -131,7 +131,7 @@ dialog trainer {
 	0 {
 		"Hello."
 		"How can I help you?"
-		"You need something?"
+		"Do you need anything?"
 	}
 	1 "Training"
 	2 "Training lasts 10 days and costs 200 gold pieces."
@@ -155,12 +155,12 @@ dialog trainer {
 	20 "Feat"
 	21 "Hmm... Currently, I can't teach you any new feats."
 	22 "What do you do here?"
-	23 "I'm a trainer, I train warriors, hunters and rogues fighting and defense."
+	23 "I'm a trainer, I train warriors, hunters and rogues in fighting and defense."
 	24 "Ask about strange stone"
 	25 {
-		"That's a first time I see such thing."
+		"That's the first time I see such a thing."
 		"I have no idea what it is. A stone?"
-		"Stone with some runes? I know nothing about this."
+		"A stone with some runes? I know nothing about this."
 	}
 	26 "End dialog"
 }
@@ -173,18 +173,18 @@ dialog guard_captain {
 	3 "Have you dealt with these orcs?"
 	4 "We have a problem with the orcs, if you are interested in it, just tell me."
 	5 "Orc problem"
-	6 "I need Summoning book"
+	6 "I need a summoning book"
 	7 {
 		"Hello."
 		"How can I help you?"
 		"You need something?"
 	}
-	8 "Tell about golem"
+	8 "Tell him about the golem"
 	9 "Recruit guards"
 	10 "Quest"
-	11 "First take care about what I have assigned to you."
+	11 "Take care of what I already have assigned to you first."
 	12 "What do you do here?"
-	13 "I'm the captain of the guard. I train guards, determine watch, send patrols in the area."
+	13 "I'm the captain of the guard. I train guards, determine watchman shifts and send patrols in the area."
 	14 "Ask about strange stone"
 	15 {
 		"That's a first time I see such thing."
@@ -196,7 +196,7 @@ dialog guard_captain {
 
 //==============================================================================
 dialog innkeeper {
-	0 "We will talk after contest."
+	0 "We will talk after the contest."
 	1 {
 		"Welcome to my inn."
 		"What do you need? Beer? Vodka? Maybe you are hungry?"
@@ -204,9 +204,9 @@ dialog innkeeper {
 	}
 	2 "Ask about nobleman"
 	3 "Take your prize"
-	4 "In addition to glory take this magic elixir. It will help you in the adventures!"
-	5 "Soon the contest will start. Wait a minute."
-	6 "Want to take part in contest in drinking?"
+	4 "In addition to glory take this magic elixir. It will help you in your adventures!"
+	5 "The contest will start soon. Wait a minute."
+	6 "Want to take part in a drinking contest?"
 	7 "Yes"
 	8 "Alright, wait a minute, I need to see how many competitors are here."
 	9 "No"
@@ -233,22 +233,22 @@ dialog innkeeper {
 	30 "Cancel"
 	31 "Drinking contest"
 	32 "The contest took place earlier this year."
-	33 "We are preparing for contest, free entry!"
+	33 "We are preparing for a contest, free entry!"
 	34 "Want to join?"
 	35 "Yes"
 	36 "Alright, wait a minute, I need to see how many competitors are here."
 	37 "No"
 	38 "Regret..."
-	39 "Contest are held here 21.09. If you want, come back then."
-	40 "Contest are held 21.09 in $contest_loc$."
+	39 "Contests are held here on the 21.09. If you want, come back then."
+	40 "Contests are held on the 21.09 in $contest_loc$."
 	41 "What do you do here?"
-	42 "I am owner of this inn. I sell drinks and food, rent rooms for travelers."
+	42 "I am the owner of this inn. I sell drinks and food, rent rooms for travelers."
 	43 "Gossip"
 	44 "Ask about strange stone"
 	45 {
-		"That's a first time I see such thing."
+		"That's the first time I see such a thing."
 		"I have no idea what it is. A stone?"
-		"Stone with some runes? I know nothing about this."
+		"A stone with some runes? I know nothing about this."
 	}
 	46 "End dialog"
 }
@@ -265,14 +265,14 @@ dialog clerk {
 //==============================================================================
 dialog arena_master {
 	0 "Wait a minute, I need to see how many people are willing to participate in the tournament."
-	1 "Tournament will start in a moment, you want to join? Entrance fee is 100 gold."
+	1 "Tournament will start in a moment, do you want to join? Entrance fee is 100 gold."
 	2 "Yes"
 	3 "Good. Wait until everyone will join."
 	4 "You need more gold..."
 	5 "No"
-	6 "Too bad. If you want something you need to wait for end of tournament."
-	7 "Currently there is tournament at arena. Talk to me when it end."
-	8 "Currently there is fight at arena, come back after its end."
+	6 "Too bad. If you want something you need to wait for the end of tournament."
+	7 "Currently, there is a tournament at the arena. Talk to me when it end."
+	8 "Currently, there is a fight at the arena. Come back once it's over."
 	9 "Wait for a while, someone is waiting for duel."
 	10 "Congratulations!"
 	11 "Train with master"
@@ -283,16 +283,16 @@ dialog arena_master {
 		"You need something?"
 	}
 	14 "Fight at arena"
-	15 "If you have any companions that they will join the fight if they are near."
-	16 "What enemies you want to fight?"
+	15 "If you have any companions nearby, they will join the fight."
+	16 "What enemies do you wish to fight?"
 	17 "Weak"
 	18 "Average"
 	19 "Strong"
 	20 "Cancel"
-	21 "In this ten-day week there was combat at arena."
+	21 "There already was a combat at the arena in this ten-day week."
 	22 "Duel"
 	23 "If you want to fight with another player in the arena they must be nearby and agree."
-	24 "You can fight in the arena with your companion. If you want, talk to him."
+	24 "You can fight with your companion inside the arena. If you want, talk to him."
 	25 "$player/1$"
 	26 "$player/2$"
 	27 "$player/3$"
@@ -301,11 +301,11 @@ dialog arena_master {
 	30 "$player/6$"
 	31 "$player/7$"
 	32 "Not now."
-	33 "You have no companion which you might face in the arena."
+	33 "You have no companion who you could face in the arena."
 	34 "Tournament"
 	35 "What do you want to know about tournament?"
 	36 "Join"
-	37 "The entrance fee is 100 gold pieces. You won't be able to leave the city until end of tournament. As soon as you join the others will have a minute to sign-up."
+	37 "The entrance fee is 100 gold pieces. You won't be able to leave the city until the end of the tournament. As soon as you join the others will have a minute to sign-up."
 	38 "Do you really want to join?"
 	39 "Yes"
 	40 "All right. Let's see how many people are ready to fight!"
@@ -314,25 +314,25 @@ dialog arena_master {
 	43 "What is it?"
 	44 "Every warrior, rogue, hunter or mage strives to be the best in their field."
 	45 "During the tournament, you can check whether you are the best!"
-	46 "Fighting is one on one. Winning person goes to the next round."
-	47 "After each round you get healing potions if you are injured."
+	46 "Fighting is one on one. The winning person goes to the next round."
+	47 "After each round you get healing potions if you were injured."
 	48 "The entrance fee is 100 gold pieces."
 	49 "When?"
 	50 "The competition took place earlier this year. Ask in the next, then you will know where will be next."
-	51 "The tournament takes place always at 7.03, which is today. This year they are here, you want to join?"
-	52 "The tournament takes place always at 7.03 in one of the cities. This year here."
-	53 "The tournament takes place always at 7.03 in one of the cities. This year in $ironfist_city$."
+	51 "The tournament always takes place at 7.03, which is today. This year they are here, you want to join?"
+	52 "The tournament always takes place at 7.03 in one of the cities. This year, it is here."
+	53 "The tournament always takes place at 7.03 in one of the cities. This year, it is held in in $ironfist_city$."
 	54 "Any reward?"
-	55 "Except gold winner will be able to train for ten days with one of the best trainers."
+	55 "Except for gold, winner will be able to train for ten days with one of the best trainers."
 	56 "Ask about something else"
 	57 "What do you do here?"
-	58 "I am the master of the local arena. Organizing fights between monsters and heroes. Want to check yourself?"
+	58 "I am the master of the local arena. I organize the fights between monsters and heroes. Want to check yourself?"
 	59 "Do not worry, during fight you cannot die."
 	60 "Ask about strange stone"
 	61 {
-		"That's a first time I see such thing."
+		"That's the first time I see such a thing."
 		"I have no idea what it is. A stone?"
-		"Stone with some runes? I know nothing about this."
+		"A stone with some runes? I know nothing about this."
 	}
 	62 "End dialog"
 }
@@ -345,13 +345,13 @@ dialog hero {
 	}
 	1 "Fight with me at arena"
 	2 {
-		"Maybe later. I need to have some work before somebody beat me again."
-		"Not today, firstly I need to improve after the last fight."
+		"Maybe later. I need to do some more training before somebody beats me again."
+		"Not today, first I need to improve after the last fight."
 	}
 	3 {
 		"Let's see who is better!"
-		"I'll beat shit out of you!"
-		"Prepare for defeat!"
+		"I'll beat the shit out of you!"
+		"Prepare for your defeat!"
 	}
 	4 "Currently there is some fight in the arena, we have to wait."
 	5 {
@@ -361,7 +361,7 @@ dialog hero {
 	6 "Do what you want"
 	7 {
 		"Alright. I'll be somewhere nearby."
-		"Ok. But don't forget about me when going to dungeon!"
+		"Ok. But don't forget about me when going to a dungeon!"
 	}
 	8 "Follow me"
 	9 {
@@ -383,16 +383,16 @@ dialog hero {
 		"Ok, I'll carry your trash."
 		"I'll carry our loot."
 	}
-	16 "Attack enemy from distance unit it's close"
+	16 "Attack enemy from distance until it's close"
 	17 "Okay, I'll soften them."
 	18 "Attack enemy in close combat"
 	19 "Okay, I'll remember that."
 	20 "Kick out of team"
-	21 "You want to get rid of me already?"
+	21 "You already want to get rid of me?"
 	22 "Yes"
 	23 {
 		"Oh well, maybe we'll meet again."
-		"I never liked you, you are bad leader."
+		"I never liked you, you are a bad leader."
 	}
 	24 "No"
 	25 {
@@ -411,23 +411,23 @@ dialog hero {
 	29 {
 		"Welcome back."
 		"Hello."
-		"Welcome $player_name$."
+		"Welcome, $player_name$."
 	}
 	30 "Show wanted poster"
 	31 {
 		"Oh fuck!"
 		"Then I have to kill you!"
-		"You won't rat me out to the guards? You would?!"
+		"You won't rat me out to the guards, would you?!"
 		"I'll kill you just like the others!"
-		"You'll pay for it with you live!"
+		"You'll pay for it with your life!"
 	}
 	32 "Recruit"
 	33 {
-		"Your team it too large."
-		"There is no space in your team."
+		"Your team is too big."
+		"There is no free slot in your team."
 	}
 	34 "I do not have too much experience, everyone started someday."
-	35 "If you want I can join you for part of profits. What do you think?"
+	35 "If you want I can join you for part of your profits. What do you think?"
 	36 "Yes"
 	37 "It's time for our first adventure!"
 	38 "No"
@@ -472,7 +472,7 @@ dialog hero_pvp {
 	}
 	1 {
 		"Yeah! Another victory!"
-		"You still have much to learn in order to have any chance with me."
+		"You still have much to learn in order to have any chance against me."
 	}
 }
 
@@ -489,11 +489,11 @@ dialog crazy {
 	2 {
 		"Later!"
 		"I need to gather strength for the next fight."
-		"Do not you seen that I just lost!"
+		"Didn't you see that I just lost!"
 	}
 	3 {
-		"You want me to beat you to a pulp and showed that you are a worthless piece of shit There is no problem!"
-		"I'll show you what is true strength!"
+		"You want me to beat you to a pulp and show everyone that you are a worthless piece of shit? That's no problem!"
+		"I'll show you what true strength is!"
 		"I hope you like pain!"
 		"Don't cry if you lose again."
 	}
@@ -503,8 +503,8 @@ dialog crazy {
 	}
 	5 {
 		"Don't you see that I bleed, you fool!"
-		"After I heal I'll plant a kick in your ass."
-		"Give me a damn healing potion and I beat you hard!"
+		"Once I'm healed I'll plant a kick in your ass."
+		"Give me a damn healing potion and I'll beat you hard!"
 	}
 	6 "Do what you want"
 	7 {
@@ -535,7 +535,7 @@ dialog crazy {
 		"Ok, I'll carry your trash."
 		"Give that loot!"
 	}
-	16 "Attack enemy from distance unit it's close"
+	16 "Attack enemy from distance until it's close"
 	17 "Okay, I'll soften them."
 	18 "Attack enemy in close combat"
 	19 "Okay, I'll remember that."
@@ -554,11 +554,11 @@ dialog crazy {
 	25 "No"
 	26 {
 		"I thought so."
-		"I see in you a glimpse of the intellect."
+		"I see a glimpse of intellect in you."
 	}
 	27 {
 		"We'll talk about those stupid things in a safer place!"
-		"I', not going anywhere while evil is lurking around!"
+		"I'm not going anywhere while evil is lurking around!"
 	}
 	28 "End dialog"
 	29 {
@@ -576,7 +576,7 @@ dialog crazy {
 	32 {
 		"Oh fuck!"
 		"Then I have to kill you!"
-		"You won't rat me out to the guards? You would?!"
+		"You won't rat me out to the guards, would you?!"
 		"I'll kill you just like the others!"
 		"You'll pay for it with you live!"
 	}
@@ -586,7 +586,7 @@ dialog crazy {
 	36 {
 		"There is no place for me in your team."
 		"Your team is full, you can join me?"
-		"As someone die come back for me."
+		"Come back for me once someone died."
 	}
 	37 "If you want I can join you for $join_cost$ gp and part of profits. What do you think?"
 	38 "Yes"
@@ -596,7 +596,7 @@ dialog crazy {
 		"It's time for another adventure!"
 		"I cannot wait until this game is more complex! For now, let's murder."
 	}
-	40 "You poor man! Do not have enough gold."
+	40 "You poor man! You don't have enough gold."
 	41 "No"
 	42 "What do you do here?"
 	43 {
@@ -605,7 +605,7 @@ dialog crazy {
 	}
 	44 "Why are you crazy?"
 	45 "I!? I gone mad???"
-	46 "You know nothing! You will talk otherwise when they come for you!!!"
+	46 "You know nothing! You will talk differently when they come for you!!!"
 	47 "Ask about strange stone"
 	48 "Take it from me or I'll sell you a kick!"
 	49 "End dialog"
@@ -625,7 +625,7 @@ dialog crazy_get_item {
 //==============================================================================
 dialog crazy_buy_item {
 	0 "I do not know how you do this but $item$ is just what I needed."
-	1 "I've got $item_value$ gold pieces that could become yours. So what, the exchange?"
+	1 "I've got $item_value$ gold pieces that could become yours. So what would you give, in exchange?"
 	2 "Yes"
 	3 "At last we meet. Already my favorite item!"
 	4 "No"
@@ -662,7 +662,7 @@ dialog bandits {
 	}
 	5 "Pay 100 gold pieces"
 	6 "A wise choice, you can go on."
-	7 "Damn poor thing, even gold is gone!"
+	7 "Damn poor thing, even the gold is gone!"
 	8 "Get the hell out and do not show up without gold!"
 	9 "Too bad, we will earn from the sale of your inventory."
 	10 "Kill them!"
@@ -679,9 +679,9 @@ dialog bandit {
 	1 "..."
 	2 "Did I say that out loud?"
 	3 {
-		"My fists tingles."
+		"My fists tingle."
 		"What are you staring at? Fair bandit not seen?"
-		"Look at me again and you lose that eye!"
+		"Look at me again and you'll lose those eyes!"
 	}
 }
 
@@ -690,7 +690,7 @@ dialog crazy_mage_encounter {
 	0 "Welcome traveler! May I cast a spell on you?"
 	1 "Yes"
 	2 "Finally some volunteers for magical experiments."
-	3 "Damn! For this spell I needs someone with hair."
+	3 "Damn! I need someone with hair for this spell."
 	4 "Huh tearg roloc riah tenrffid evah uoy won sukop sukoh!"
 	5 "Em ot sgnoleb luos ruoy!"
 	6 "Huh tearg roloc riah tenrffid evah uoy won sukop sukoh!"
@@ -725,7 +725,7 @@ dialog captive {
 
 //==============================================================================
 dialog guards_encounter {
-	0 "If not you would have killed us all. Take this 250 gold pieces in thanks."
+	0 "If not you would have killed us all. Take this: 250 gold pieces in thanks."
 	1 {
 		"Thanks again for your help."
 		"Thanks for your help."
@@ -765,11 +765,11 @@ dialog q_mine {
 //==============================================================================
 dialog miner {
 	0 {
-		"Hope we not dug into some of the underworld!"
+		"Hope we didn't dig into some part of the underworld!"
 		"Do you have any corn salve?"
-		"A little more time underground and I turn into a dwarf!"
+		"A little more time underground and I'll turn into a dwarf!"
 		"If I had a diamond pickaxe I would definitely work faster..."
-		"Did you hear that? I'll get crazy from these noises, this is definitely some monsters!"
+		"Did you hear that? I'll get crazy from these noises, these are definitely some monsters!"
 	}
 }
 
@@ -778,7 +778,7 @@ dialog drunkman {
 	0 {
 		"I came here to get fucking drunk for free!"
 		"Ahhhh, another contest. These memories..."
-		"What the hell we are waiting for?!"
+		"What the hell are we waiting for?!"
 	}
 }
 
@@ -814,7 +814,7 @@ dialog q_evil {
 dialog q_tutorial {
 	0 "Hello!"
 	1 "Who are you?"
-	2 "I am traveling merchant, I came across this dungeon by accident."
+	2 "I am a traveling merchant, I came across this dungeon by accident."
 	3 "I thought I might find some artifacts here. But there's nothing there."
 	4 "Let's trade"
 	5 "End dialog"
@@ -823,14 +823,14 @@ dialog q_tutorial {
 //==============================================================================
 dialog q_crazies {
 	0 "You will never get me alive! NEVER!"
-	1 "Stone told me clearly what they will do with me!"
+	1 "The stone told me clearly what they will do with me!"
 	2 "They will come for you too! I will shorten your suffering!"
 }
 
 //==============================================================================
 dialog crazies_encounter {
 	0 {
-		"We meet again $rhero$! I gone rip out your guts!"
+		"We meet again $rhero$! I am going to rip out your guts!"
 		"I guess you thought that I won't find you $rhero$? As you can see you were wrong!"
 		"Voices tell me to kill you!"
 		"Now is the winter of your life $player_name$!"
@@ -838,7 +838,7 @@ dialog crazies_encounter {
 	}
 	1 "Stop!"
 	2 "This is my road! Passing it costs a piece of gold!"
-	3 "You pay or you die?"
+	3 "Do you pay or do you die?"
 	4 "Pay piece of gold"
 	5 "Good! You can go."
 	6 "Fuck! Poorer then me!"
@@ -919,7 +919,7 @@ dialog bodyguard {
 dialog mage_bodyguard {
 	0 {
 		"Prepare to die."
-		"Why are you here? You want to die?"
+		"Why are you here? Do you seek death?"
 		"I wonder who will have to clean up your charred corpse? Hopefully not me..."
 	}
 }
@@ -927,18 +927,18 @@ dialog mage_bodyguard {
 //==============================================================================
 dialog foodseller {
 	0 {
-		"Welcome! Want to buy something?"
+		"Welcome! Do you want to buy anything?"
 		"Welcome! I have fresh food specially for you!"
 		"How can I help you?"
 	}
 	1 "Trade"
 	2 "What you do here?"
-	3 "I am a reseller of food. Buys goods from local farmers and sell here. Only fresh products!"
+	3 "I am a grocer, reseller of food. I buy produce from local farmers and sell here. Only fresh products!"
 	4 "Ask about strange stone"
 	5 {
-		"That's a first time I see such thing."
+		"That's the first time I see such a thing."
 		"I have no idea what it is. A stone?"
-		"Stone with some runes? I know nothing about this."
+		"A stone with some runes? I know nothing about this."
 	}
 	6 "End dialog"
 }
@@ -946,25 +946,25 @@ dialog foodseller {
 //==============================================================================
 dialog q_bandits_master {
 	0 "Hello adventurer!"
-	1 "I'm Arto, master agents of His Majesty."
+	1 "I'm Arto, master agent of His Majesty."
 	2 "I have a task for someone like you."
-	3 "Bandits formed base near here but no one knows where it is, preparing to take over the city, unofficially of course."
+	3 "Bandits formed a base near here but no one knows where it is, preparing to take over the city, unofficially of course."
 	4 "I need someone who can help me get rid of them."
 	5 "Are you interested in working for me?"
 	6 "Yes"
 	7 "No"
-	8 "Come back when you change your mind."
+	8 "Come back when you changed your mind."
 	9 "Welcome back."
 	10 "Changed your mind when it comes to work for me?"
 	11 "Yes"
 	12 "No"
-	13 "Come back when you change your mind."
+	13 "Come back when you changed your mind."
 	14 "Okay, here's the plan."
 	15 "We'll catch their boss and then the rest of the bandits will not be a too big threat."
 	16 "Unfortunately we do not know where he is, maybe even here."
 	17 "I'll give you this package and spread rumors that there's something valuable inside it."
 	18 "You will go to $other_loc$ to the $other_dir$ from here, maybe bandits will attack you on the road."
-	19 "I hope that it will be those that are looking for and not some riffraff."
+	19 "I hope that it will be those that we are looking for and not some riffraff."
 	20 "You'll get the necessary information from them and return to me."
 	21 "Good luck!"
 	22 "Hello!"
@@ -987,13 +987,13 @@ dialog q_bandits_master {
 	39 "Let's see ... This letter changed this way and that gives you..."
 	40 "Piece of cake!"
 	41 "It is written here 'Meet the second leader in the camp at $camp_dir$ from $start_loc$, get the loot to vault - D.'"
-	42 "You should go there, bring a few guards. Talk to the captain of the guard."
+	42 "You should go there, take a few guards with you. Talk to the captain of the guard."
 	43 "Good luck!"
 	44 "Talk to the captain of the guard to attack the camp."
 	45 "We'll talk when you take care of the camp of bandits."
 	46 "We'll talk when you take care of the camp of bandits."
 	47 "Welcome back!"
-	48 "Now that we know where is the bandits vault you need to go there and do cleaning."
+	48 "Now that we know where the bandit's vault is you need to go there and do the cleaning."
 	49 "$target_loc$ is to the $target_dir$ from here."
 	50 "Good luck!"
 	51 "Welcome back!"
@@ -1008,12 +1008,12 @@ dialog q_bandits_master {
 //==============================================================================
 dialog q_bandits_encounter {
 	0 "Stop!"
-	1 "Give this package or say goodbye to life!"
+	1 "Give me this package or say goodbye to life!"
 	2 "Give package"
 	3 "What the fuck is this?! Stones?!"
 	4 "Kill him!"
 	5 "I don't have it"
-	6 "You are smart whore?"
+	6 "Are you a smart whore?"
 	7 "I'll bash your face until you remember where you lost it!"
 	8 "No!"
 	9 "What the fuck?!"
@@ -1022,7 +1022,7 @@ dialog q_bandits_encounter {
 
 //==============================================================================
 dialog q_bandits_captain {
-	0 "So you work for the agents of the king."
+	0 "So, you work for the agents of the king."
 	1 "I'll give you who you need, but try to keep them alive."
 	2 "Go to the camp to the $camp_dir$ from here, guards already be there waiting for you."
 }
@@ -1030,7 +1030,7 @@ dialog q_bandits_captain {
 //==============================================================================
 dialog q_bandits_guard {
 	0 {
-		"Let's show the bandits that the guards are not weaklings!"
+		"Let's show the bandits that the guards are no weaklings!"
 		"Lead on!"
 		"I'm right behind you."
 	}
@@ -1053,7 +1053,7 @@ dialog q_bandits_agent {
 //==============================================================================
 dialog q_bandits_boss {
 	0 "You dumb fuck!"
-	1 "You think you can just come on here to kill my comrades and steal what you like?!"
+	1 "You think you can just come in here, kill my comrades and steal what you like?!"
 	2 "I'll torn you into pieces!"
 }
 
@@ -1069,20 +1069,20 @@ dialog q_bandits_collect_toll_start {
 
 //==============================================================================
 dialog q_bandits_collect_toll_timeout {
-	0 "You could not get rid of these thugs out of the way?"
-	1 "Ehhh, now probably moved elsewhere. I'm disappointed in you."
+	0 "You could not get rid of these thugs that stood in our way?"
+	1 "Ehhh, now they probably moved elsewhere. I'm disappointed in you."
 }
 
 //==============================================================================
 dialog q_bandits_collect_toll_end {
-	0 "Finally, someone on whom you can rely on. Well done with these bandits, that will teach them for some time."
-	1 "Take this 400 gold pieces as reward."
+	0 "Finally, someone you can rely on. Well done with these bandits, that will teach them for some time."
+	1 "Take these 400 gold pieces as reward."
 }
 
 //==============================================================================
 dialog q_bandits_collect_toll_talk {
 	0 "Stop!"
-	1 "This is our road, if you want to go you have to pay 500 gold pieces!"
+	1 "This is our road, if you want to use it you have to pay 500 gold pieces!"
 	2 "Pay"
 	3 "You can go. Do not forget to visit us again, hehehe..."
 	4 "You do not have enough gold damn poor thing!"
@@ -1095,29 +1095,29 @@ dialog q_bandits_collect_toll_talk {
 dialog q_camp_near_city_start {
 	0 "Can you imagine that?! $Bandyci_zalozyli$ created camp just near $naszego_miasta$!"
 	1 "I think they want to attack the $miasto$! We have to do something about it!"
-	2 "Why do not you go there and take care of them?"
+	2 "Why don't you go there and take care of them?"
 	3 "Yes"
 	4 "This camp is located $dir$ from here. You must take care of it within a month."
-	5 "Just do not get yourself killed."
+	5 "Just don't get yourself killed."
 	6 "No"
 }
 
 //==============================================================================
 dialog q_camp_near_city_timeout {
-	0 "When you weren't here $bandyci_zaatakowali$ $miasto$! Somehow we defended but many people have died!"
+	0 "When you weren't here $bandyci_zaatakowali$ $miasto$! We managed to defend ourselves somehow, but many people have died!"
 	1 "Do not show up here again!"
 }
 
 //==============================================================================
 dialog q_camp_near_city_end {
-	0 "If not for you I do not know whether we repelled this attack."
+	0 "I don't know whether we could have repelled this attack if it weren't for you."
 	1 "Please, take this 2500 gold pieces."
 }
 
 //==============================================================================
 dialog q_crazies_trainer {
 	0 "I've heard stories about this stone."
-	1 "His presence attracts some creatures and cause madness."
+	1 "Its presence attracts some creatures and cause madness."
 	2 "You'd better get rid of it quickly..."
 	3 "Apparently you can get rid of it after it is inserted into the chest in $target_loc$."
 	4 "It's to the $target_dir$ from here. Good luck!"
@@ -1137,14 +1137,14 @@ dialog q_deliver_letter_start {
 
 //==============================================================================
 dialog q_deliver_letter_timeout {
-	0 "You disappointed me. You should deliver letter to $target_burmistrza$ in $target_locname$. Do not expect that I will give you any task."
+	0 "You disappointed me. You should have delivered letter to $target_burmistrza$ in $target_locname$. Do not expect that I will give you any task."
 }
 
 //==============================================================================
 dialog q_deliver_letter_give {
 	0 "Show me that letter."
 	1 "Hm..."
-	2 "You had me deliver this letter before. Now this information is worth nothing."
+	2 "You gqve me deliver this letter before. This information is worth nothing now."
 	3 {
 		"This information is very important."
 		"Interesting news."
@@ -1155,7 +1155,7 @@ dialog q_deliver_letter_give {
 
 //==============================================================================
 dialog q_deliver_letter_end {
-	0 "Good. Show me that letter with answer."
+	0 "Good. Show me that letter with the answer."
 	1 "I see that you are responsible, here's your 100 gold pieces."
 	2 "I could use more people like you."
 }
@@ -1175,13 +1175,13 @@ dialog q_deliver_parcel_give {
 	0 "What have you got for me?"
 	1 "You were supposed to deliver the parcel sooner, but better late than never."
 	2 "Take this 125 gold pieces."
-	3 "You were supposed to deliver the parcel before. Now its contents is good for nothing!"
+	3 "You were supposed to deliver the parcel before. Now its contents are good for nothing!"
 	4 "Good job. Here's your 250 gold pieces."
 }
 
 //==============================================================================
 dialog q_deliver_parcel_timeout {
-	0 "I'm disappointed. You were supposed to deliver a package for $target_burmistrza$ in $target_locname$. Do not expect that you will appoint some responsible task from me."
+	0 "I'm disappointed. You were supposed to deliver a package for $target_burmistrza$ in $target_locname$. Do not expect me to appoint you any task from me in the future."
 }
 
 //==============================================================================
@@ -1198,16 +1198,16 @@ dialog q_deliver_parcel_bandits {
 dialog q_evil_cleric {
 	0 "Good job! One portal closed, two left."
 	1 "Only one portal left!"
-	2 "Perfect! All the portals closed!"
-	3 "Now we have to kill their leader, stays where it all began, at $target_loc$."
+	2 "Perfect! All the portals are closed!"
+	3 "Now we have to kill their leader. He stays where it all began, at $target_loc$."
 	4 "You! Yes you. I need your help."
 	5 "My lord has sent me a vision!"
-	6 "Necromancer wants to open a portal to the realm of the dead and summon undead out of there!"
+	6 "A necromancer wants to open a portal to the realm of the dead and summon undead out of there!"
 	7 "Please help me!"
 	8 "Help him"
 	9 "Don't help him"
 	10 "No! Soon the armies of the undead will conquer this land, come back!"
-	11 "Returning! Decided to help me?"
+	11 "You returned! Did you decide to help me?"
 	12 "Yes"
 	13 "No"
 	14 "No! Soon the armies of the undead will conquer this land, come back!"
@@ -1215,8 +1215,8 @@ dialog q_evil_cleric {
 	16 "You have to go to $target_loc$ to the $target_dir$ from here. This is where the necromancer wants to open a portal!"
 	17 "Please, hurry up before it's too late!"
 	18 "By the way, my name is Jozan."
-	19 "You have to hurry., This necromancer at any time can open the portal!"
-	20 "What happened there? Felt a dark emanation!"
+	19 "You have to hurry., This necromancer can open the portal at any time now!"
+	20 "What happened there? I felt a dark emanation!"
 	21 "You could not get there in time?! Shit!"
 	22 "We need to find the Summoning book, apparently a mage in $mage_loc$ has it. It's $mage_dir$ from here."
 	23 "Come back when you get it. I will in this time specify where the portals were created."
@@ -1227,13 +1227,13 @@ dialog q_evil_cleric {
 	28 "$t2$ is to the $t2d$ from $t2n$."
 	29 "$t3$ is to the $t3d$ from $t3n$."
 	30 "The order does not matter, let's go!"
-	31 "Come back with Summoning book."
+	31 "Come back with the Summoning book."
 	32 "Somewhere here is the portal. I'll close it when we find it."
 	33 "To the $close_dir$ from here there is $close_loc$. We must close this portal!"
 	34 "Be on your guard, somewhere there lurks a true evil!"
 	35 "We have to go to $target_loc$ that is $target_dir$ from $start_loc$ and kill leader of undead."
 	36 "Whew! Seems that the undead will not destroy the world this year."
-	37 "Thank you for your help! Without you I do not know what would happen."
+	37 "Thank you for your help! Without you I do not know what would have happened."
 	38 "Maybe we'll meet again!"
 	39 "Welcome back my friend!"
 }
@@ -1241,9 +1241,9 @@ dialog q_evil_cleric {
 //==============================================================================
 dialog q_evil_mage {
 	0 "What are you staring at me?! Do you want something?"
-	1 "I need Summoning book"
-	2 "And what do you need it? You do not look like a mage."
-	3 "Besides, it not matter now."
+	1 "I need the Summoning book"
+	2 "And what do you need it for? You do not look like a mage."
+	3 "Besides, it is no longer a matter now."
 	4 "Damn guards confiscated it from me."
 	5 "I do not think they liked the idea of summoning elementals."
 	6 "End dialog"
@@ -1253,7 +1253,7 @@ dialog q_evil_mage {
 //==============================================================================
 dialog q_evil_captain {
 	0 "And what's with the book?"
-	1 "You want to stop summoning of the undead?"
+	1 "You want to stop the summoning of the undead?"
 	2 "Talk to the $(Level::IsCity() ? \"mayor\" : \"soltys\"), without his permission nothing can be done."
 	3 "You won't get anything without $(Level::IsCity() ? \"mayor\" : \"soltys\") permission."
 	4 "Okay, here's the book."
@@ -1262,7 +1262,7 @@ dialog q_evil_captain {
 
 //==============================================================================
 dialog q_evil_mayor {
-	0 "You need this book to stop summoning of the undead?"
+	0 "You need this book to stop the summoning of the undead?"
 	1 "Of course, you can take. Talk with the captain, he will hand it to you."
 }
 
@@ -1284,13 +1284,13 @@ dialog q_find_artifact_start {
 
 //==============================================================================
 dialog q_find_artifact_end {
-	0 "Thank you for this artifact, take this 1000 gold pieces in thanks."
+	0 "Thank you for this artifact, take these 1000 gold pieces as a reward."
 }
 
 //==============================================================================
 dialog q_find_artifact_timeout {
 	0 "You could not find this artifact? Too bad..."
-	1 "Apparently close to $random_loc$ people found some new artifacts, there I leave."
+	1 "Apparently, close to $random_loc$ people found some new artifacts, there I leave."
 	2 "Good luck in your adventures!"
 }
 
